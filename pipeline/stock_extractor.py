@@ -164,12 +164,24 @@ def _get_irbank_session() -> requests.Session:
 def _scrape_irbank(trading_date: str) -> str:
     """irbank.netから決算データをスクレイピングしてテキスト形式で返す。"""
     url = f"https://irbank.net/market/kessan?y={trading_date}"
-    try:
-        session = _get_irbank_session()
-        resp = session.get(url, timeout=15)
-        resp.raise_for_status()
-    except Exception as e:
-        logger.warning(f"irbank.net取得失敗: {e}")
+    # 403対策: 最大3回リトライ、待機時間を増やしながら試みる
+    for attempt in range(3):
+        try:
+            session = _get_irbank_session()
+            time.sleep(2 + attempt * 3)  # 2秒→5秒→8秒
+            resp = session.get(url, timeout=15)
+            if resp.status_code == 403:
+                logger.warning(f"irbank.net 403 (attempt {attempt+1}/3)")
+                time.sleep(10 + attempt * 10)
+                continue
+            resp.raise_for_status()
+            break
+        except Exception as e:
+            logger.warning(f"irbank.net取得失敗 (attempt {attempt+1}/3): {e}")
+            if attempt == 2:
+                return ""
+            time.sleep(10)
+    else:
         return ""
 
     soup = BeautifulSoup(resp.text, "lxml")
