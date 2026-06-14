@@ -1,0 +1,104 @@
+name: 決算投稿パイプライン
+
+on:
+  # 毎日 日本時間 18:30 に自動実行（UTC 09:30）
+  schedule:
+    - cron: "30 9 * * 1-5"
+
+  # iOSショートカット or GitHub画面から手動実行
+  workflow_dispatch:
+    inputs:
+      skip_tdnet:
+        description: "TDnetダウンロードをスキップ（Drive既存ファイルを使用）"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      dry_run:
+        description: "ドライラン（APIコールなし・テスト用）"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python 3.11 セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 依存パッケージインストール
+        run: pip install -r requirements.txt
+
+      - name: パイプライン実行
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+          DRIVE_FOLDER_URL: ${{ secrets.DRIVE_FOLDER_URL }}
+          AFFILIATE_LINK: ${{ secrets.AFFILIATE_LINK }}
+        run: |
+          FLAGS=""
+          if [ "${{ github.event.inputs.skip_tdnet }}" = "true" ]; then
+            FLAGS="$FLAGS --skip-tdnet"
+          fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            FLAGS="$FLAGS --dry-run"
+          fi
+          python pipeline/main.py $FLAGS
+
+      - name: 出力ファイルをアーティファクトとして保存
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: output-${{ github.run_id }}
+          path: output/
+          retention-days: 30
+
+      - name: 出力ファイルをリポジトリにコミット
+        if: success() && github.event.inputs.dry_run != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add output/
+          git diff --staged --quiet || git commit -m "📊 $(date +%Y-%m-%d) 決算投稿コンテンツ自動生成"
+          git push
+
+      - name: 完了通知メール（X投稿文をメール本文に含める）
+        if: success() && github.event.inputs.dry_run != 'true' && secrets.NOTIFY_EMAIL != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_ADDRESS }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: "@kessan_class Bot <${{ secrets.GMAIL_ADDRESS }}>"
+          subject: "📊 決算投稿コンテンツ準備完了 $(date +%Y/%m/%d)"
+          body: |
+            本日分の投稿コンテンツが生成されました。
+
+            ▼ X投稿文（コピペして使用）
+            ────────────────────────────
+            $(cat output/$(date +%Y-%m-%d)/x_posts.txt 2>/dev/null || echo "ファイルが見つかりません")
+            ────────────────────────────
+
+            ▼ ChatGPT画像生成プロンプト
+            ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/output/$(date +%Y-%m-%d)/image_prompts.txt
+
+            ▼ GitHub Actionsログ
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
