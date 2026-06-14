@@ -143,10 +143,10 @@ def generate_content(
         prompt = CONTENT_PROMPT_TEMPLATE.format(pdf_text=text[:8000])
 
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="llama3-8b-8192",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.4,
-            max_tokens=4000,
+            max_tokens=2000,
         )
         raw_text = response.choices[0].message.content
         all_raw.append(f"=== {filename} ===\n{raw_text}")

@@ -124,10 +124,10 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     )
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="llama3-8b-8192",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
-        max_tokens=3000,
+        max_tokens=2000,
     )
     raw_text = response.choices[0].message.content
     logger.debug(f"Groq response length: {len(raw_text)} chars")
@@ -156,11 +156,22 @@ def _get_latest_trading_date() -> str:
     return candidate.strftime("%Y-%m-%d")
 
 
+_SCRAPE_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
+}
+
+
 def _scrape_irbank(trading_date: str) -> str:
     """irbank.netから決算データをスクレイピングしてテキスト形式で返す。"""
     url = f"https://irbank.net/market/kessan?y={trading_date}"
     try:
-        resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
         resp.raise_for_status()
     except Exception as e:
         logger.warning(f"irbank.net取得失敗: {e}")
@@ -186,7 +197,7 @@ def _scrape_stop_high() -> str:
     """株探からストップ高銘柄をスクレイピングしてテキスト形式で返す。"""
     url = "https://kabutan.jp/warning/?val=stock_h&market=0"
     try:
-        resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
         resp.raise_for_status()
     except Exception as e:
         logger.warning(f"株探ストップ高取得失敗: {e}")
@@ -205,7 +216,7 @@ def _scrape_top_gainers() -> str:
     """株探から値上がり率上位銘柄をスクレイピングしてテキスト形式で返す。"""
     url = "https://kabutan.jp/stock/ranking/?val=t&market=0"
     try:
-        resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
         resp.raise_for_status()
     except Exception as e:
         logger.warning(f"株探値上がり率取得失敗: {e}")
