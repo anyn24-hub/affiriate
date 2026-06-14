@@ -29,3 +29,16 @@
 2026-06-14 08:11:56,227 [INFO] main:   Posts created : 2
 2026-06-14 08:11:56,227 [INFO] main:   Output folder : /home/runner/work/affiriate/affiriate/output/2026-06-14
 2026-06-14 08:11:56,227 [INFO] main: ============================================================
+2026-06-14 08:19:08,216 [INFO] main: Output directory: output/2026-06-14
+2026-06-14 08:19:08,216 [INFO] main: ============================================================
+2026-06-14 08:19:08,216 [INFO] main: STEP 1: Extracting stocks (Claude API)
+2026-06-14 08:19:08,217 [INFO] main: ============================================================
+2026-06-14 08:19:08,217 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12
+2026-06-14 08:19:08,321 [WARNING] pipeline.stock_extractor: irbank.net取得失敗: 403 Client Error: Forbidden for url: https://irbank.net/market/kessan?y=2026-06-12
+2026-06-14 08:19:08,321 [INFO] pipeline.stock_extractor: irbank.netから0行のデータを取得
+2026-06-14 08:19:08,322 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-14 08:19:08,957 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:19:08,971 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-14 08:19:08,971 [INFO] main: Raw stock extraction saved to output/2026-06-14/raw_stock_extraction.txt
+2026-06-14 08:19:08,971 [INFO] main: Stocks JSON saved to output/2026-06-14/stocks.json (0 stocks)
+2026-06-14 08:19:08,971 [WARNING] main: No stocks extracted. Stopping pipeline.
