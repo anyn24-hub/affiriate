@@ -8,7 +8,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 
-import google.generativeai as genai
+from google import genai
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +67,12 @@ def generate_content(
     prompt = CONTENT_GENERATION_PROMPT_TEMPLATE.format(drive_url=drive_folder_url)
 
     logger.info(f"Calling Gemini API for content generation. Drive URL: {drive_folder_url}")
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name="gemini-2.0-flash")
+    client = genai.Client(api_key=api_key)
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt,
+    )
     raw_text = response.text
     logger.debug(f"Content generation response length: {len(raw_text)} chars")
 

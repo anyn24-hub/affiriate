@@ -7,7 +7,8 @@ import logging
 import re
 from dataclasses import dataclass, field
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class Stock:
     category: str = ""
     content: str = ""
     notes: str = ""
-    section: str = ""  # A, B, or C
+    section: str = ""
 
 
 @dataclass
@@ -60,13 +61,17 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
         )
 
     logger.info("Calling Gemini API for stock extraction...")
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
-        tools="google_search",
+    client = genai.Client(api_key=api_key)
+
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=STOCK_EXTRACTION_PROMPT,
+        config=types.GenerateContentConfig(
+            tools=[types.Tool(google_search=types.GoogleSearch())],
+            temperature=0.3,
+        ),
     )
 
-    response = model.generate_content(STOCK_EXTRACTION_PROMPT)
     raw_text = response.text
     logger.debug(f"Raw Gemini response length: {len(raw_text)} chars")
 
