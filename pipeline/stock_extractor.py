@@ -1,29 +1,60 @@
 """
 stock_extractor.py
-Calls Gemini API to extract stock tickers that had earnings reports on the latest trading day.
+irbank.net をスクレイピングして決算銘柄を取得し、
+Groq API（無料）で整形・分析する。
 """
 
 import logging
 import re
 from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
 
-from google import genai
-from google.genai import types
+import requests
+from bs4 import BeautifulSoup
+from groq import Groq
 
 logger = logging.getLogger(__name__)
 
-STOCK_EXTRACTION_PROMPT = """あなたは「日本市場リサーチ専門のエージェント」として、以下の手順を厳守し、「未来の予定」を一切含まず、直近で「完了した」最新取引日の情報のみを整理してください。 STEP 0: 対象取引日の動的特定（遡りロジック） 実行時の日時から、**「データが確定し、市場が閉まっている最新の平日（祝日を除く）」**を特定してください。
+# 日本の祝日（固定分・主要なもの）
+_JP_HOLIDAYS = {
+    (1, 1), (2, 11), (2, 23), (3, 20), (4, 29),
+    (5, 3), (5, 4), (5, 5), (7, 15), (8, 11),
+    (9, 15), (9, 23), (10, 13), (11, 3), (11, 23), (12, 23),
+}
 
-1. 「今」が平日の16:00以降： 今日を対象とする。
-2. それ以外（午前中・夜間・土日祝日）： 「今日より前」の最も近い営業日（平日かつ非祝日）まで遡って特定する。 ※GW等の連休中は、連休が始まる前の「最終取引日」まで自動で遡ること。 ※冒頭に「▼ 対象取引日: YYYY年MM月DD日（曜日）」を明記。 STEP 1: 決算データ取得（実績確定分のみ）
+FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエージェント」です。
+以下の決算データ（irbank.netから取得済み）をもとに、指定フォーマットで出力してください。
 
-* URL: `https://irbank.net/market/kessan?y=[Target Date]`
-* 【厳守】 上記URLのリストから、「（予定）」と記載されている未来の情報は全て除外し、実際に決算発表が**「完了した」**時価総額上位10社を抽出してください。 STEP 2: ストップ高・急騰銘柄の厳選
-* 条件： 本日のランキング上位から、**「過去1ヶ月以内に決算発表を行った企業」**のみを最大5社ずつ抽出。
-* 決算と無関係な急騰や、発表から1ヶ月以上経過した銘柄は除外。 出力形式（テキストのみ・シンプル構成） ━━【A】本日決算の大手企業（10社）━━ ■ [証券コード] 企業名 ・カテゴリー：本決算 or 第X四半期 ・事業内容：（15文字程度で直感的に） ━━【B】ストップ高（直近決算発表銘柄 / 5社）━━ ■ [証券コード] 企業名 ・事業内容：（15文字程度） ・注目材料：[発表日] 決算内容等の急騰理由を簡潔に ━━【C】値上がり率上位（直近決算発表銘柄 / 5社）━━ ■ [証券コード] 企業名 ・事業内容：（15文字程度） ・注目材料：[発表日] 決算内容等の急騰理由を簡潔に @kessan_class #決算 自己検証（末尾に記載） 【検証ログ】
-* 対象取引日の特定根拠（何日前まで遡ったか）
-* 未来の「予定」銘柄を含んでいないかの再確認結果
-* 「決算から1ヶ月以内」の条件合致確認結果"""
+【取得済み決算データ】
+対象取引日: {trading_date}
+
+{earnings_data}
+
+出力形式（テキストのみ・シンプル構成）:
+▼ 対象取引日: {trading_date}
+
+━━【A】本日決算の大手企業（時価総額上位・最大10社）━━
+■ [証券コード] 企業名
+・カテゴリー：本決算 or 第X四半期
+・事業内容：（15文字程度で直感的に）
+
+━━【B】ストップ高（直近決算発表銘柄 / 最大5社）━━
+■ [証券コード] 企業名
+・事業内容：（15文字程度）
+・注目材料：[発表日] 決算内容等の急騰理由を簡潔に
+
+━━【C】値上がり率上位（直近決算発表銘柄 / 最大5社）━━
+■ [証券コード] 企業名
+・事業内容：（15文字程度）
+・注目材料：[発表日] 決算内容等の急騰理由を簡潔に
+
+@kessan_class #決算
+
+【検証ログ】
+・対象取引日の特定根拠
+・未来の「予定」銘柄を含んでいないかの確認
+・「決算から1ヶ月以内」の条件合致確認
+"""
 
 
 @dataclass
@@ -50,7 +81,7 @@ class ExtractionResult:
 
 def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     if dry_run:
-        logger.info("[DRY RUN] Would call Gemini API for stock extraction.")
+        logger.info("[DRY RUN] Would call Groq API for stock extraction.")
         return ExtractionResult(
             raw_text="[DRY RUN] No API call made.",
             trading_date="2025-01-01",
@@ -60,33 +91,82 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
             ],
         )
 
-    logger.info("Calling Gemini API for stock extraction...")
-    client = genai.Client(api_key=api_key)
+    # Step 1: 対象取引日を特定
+    trading_date = _get_latest_trading_date()
+    logger.info(f"対象取引日: {trading_date}")
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=STOCK_EXTRACTION_PROMPT,
-        config=types.GenerateContentConfig(
-            tools=[types.Tool(google_search=types.GoogleSearch())],
-            temperature=0.3,
-        ),
+    # Step 2: irbank.netから決算データをスクレイピング
+    earnings_data = _scrape_irbank(trading_date)
+    logger.info(f"irbank.netから{len(earnings_data.splitlines())}行のデータを取得")
+
+    # Step 3: Groq APIで整形
+    logger.info("Groq APIで整形中...")
+    client = Groq(api_key=api_key)
+    prompt = FORMAT_PROMPT_TEMPLATE.format(
+        trading_date=trading_date,
+        earnings_data=earnings_data if earnings_data else "（本日の決算データなし）",
     )
 
-    raw_text = response.text
-    logger.debug(f"Raw Gemini response length: {len(raw_text)} chars")
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.3,
+        max_tokens=3000,
+    )
+    raw_text = response.choices[0].message.content
+    logger.debug(f"Groq response length: {len(raw_text)} chars")
 
-    result = _parse_extraction_output(raw_text)
+    result = _parse_extraction_output(raw_text, trading_date)
     logger.info(
-        f"Parsed {len(result.stocks_a)} stocks in A, "
+        f"Parsed {len(result.stocks_a)} in A, "
         f"{len(result.stocks_b)} in B, "
-        f"{len(result.stocks_c)} in C. "
-        f"Trading date: {result.trading_date}"
+        f"{len(result.stocks_c)} in C."
     )
     return result
 
 
-def _parse_extraction_output(text: str) -> ExtractionResult:
-    trading_date = _extract_trading_date(text)
+def _get_latest_trading_date() -> str:
+    """市場が閉まっている最新の取引日を返す（YYYY-MM-DD形式）。"""
+    now = datetime.now()
+    # 今日が平日16:00以降なら今日、それ以外は直前の営業日
+    candidate = now.date()
+    if now.weekday() >= 5 or now.hour < 16:
+        candidate -= timedelta(days=1)
+    # 土日・祝日を遡る
+    for _ in range(14):
+        if candidate.weekday() < 5 and (candidate.month, candidate.day) not in _JP_HOLIDAYS:
+            break
+        candidate -= timedelta(days=1)
+    return candidate.strftime("%Y-%m-%d")
+
+
+def _scrape_irbank(trading_date: str) -> str:
+    """irbank.netから決算データをスクレイピングしてテキスト形式で返す。"""
+    url = f"https://irbank.net/market/kessan?y={trading_date}"
+    try:
+        resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+    except Exception as e:
+        logger.warning(f"irbank.net取得失敗: {e}")
+        return ""
+
+    soup = BeautifulSoup(resp.text, "lxml")
+    lines = []
+
+    # テーブル行を抽出（予定を除外）
+    for row in soup.select("table tr"):
+        cells = [td.get_text(strip=True) for td in row.select("td, th")]
+        if not cells:
+            continue
+        row_text = " | ".join(cells)
+        if "予定" in row_text:
+            continue
+        lines.append(row_text)
+
+    return "\n".join(lines[:60])  # 上位60行に絞る
+
+
+def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
     stocks_a = _parse_section(text, "A")
     stocks_b = _parse_section(text, "B")
     stocks_c = _parse_section(text, "C")
@@ -99,16 +179,6 @@ def _parse_extraction_output(text: str) -> ExtractionResult:
     )
 
 
-def _extract_trading_date(text: str) -> str:
-    match = re.search(r"▼\s*対象取引日[：:]\s*(\d{4}年\d{1,2}月\d{1,2}日)", text)
-    if match:
-        return match.group(1)
-    match = re.search(r"(\d{4}-\d{2}-\d{2})", text)
-    if match:
-        return match.group(1)
-    return "unknown"
-
-
 def _parse_section(text: str, section_letter: str) -> list[Stock]:
     stocks = []
     section_pattern = rf"━━【{section_letter}】[^━]*━━(.*?)(?=━━【[A-Z]】|$)"
@@ -117,7 +187,7 @@ def _parse_section(text: str, section_letter: str) -> list[Stock]:
         return stocks
 
     section_text = match.group(1)
-    entry_pattern = r"■\s*\[?(\d{4,5})\]?\s+(.+?)(?=■|\Z)"
+    entry_pattern = r"■\s*\[?(\d{4,5}[A-Z]?)\]?\s+(.+?)(?=■|\Z)"
     for entry_match in re.finditer(entry_pattern, section_text, re.DOTALL):
         code = entry_match.group(1).strip()
         rest = entry_match.group(2).strip()

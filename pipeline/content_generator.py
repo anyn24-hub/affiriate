@@ -8,7 +8,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 
-from google import genai
+from groq import Groq
 
 logger = logging.getLogger(__name__)
 
@@ -66,14 +66,16 @@ def generate_content(
 
     prompt = CONTENT_GENERATION_PROMPT_TEMPLATE.format(drive_url=drive_folder_url)
 
-    logger.info(f"Calling Gemini API for content generation. Drive URL: {drive_folder_url}")
-    client = genai.Client(api_key=api_key)
+    logger.info(f"Calling Groq API for content generation. Drive URL: {drive_folder_url}")
+    client = Groq(api_key=api_key)
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.5,
+        max_tokens=8000,
     )
-    raw_text = response.text
+    raw_text = response.choices[0].message.content
     logger.debug(f"Content generation response length: {len(raw_text)} chars")
 
     companies = _parse_content_output(raw_text, affiliate_link)

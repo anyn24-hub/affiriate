@@ -63,7 +63,7 @@ def run(dry_run: bool = False, skip_tdnet: bool = False):
     logger.info("STEP 1: Extracting stocks (Claude API)")
     logger.info("=" * 60)
 
-    extraction = extract_stocks(api_key=config.GEMINI_API_KEY, dry_run=dry_run)
+    extraction = extract_stocks(api_key=config.GROQ_API_KEY, dry_run=dry_run)
 
     # Save raw Claude output
     raw_path = out_dir / "raw_stock_extraction.txt"
@@ -132,7 +132,7 @@ def run(dry_run: bool = False, skip_tdnet: bool = False):
     logger.info(f"Affiliate link selected: {affiliate_link}")
 
     generation = generate_content(
-        api_key=config.GEMINI_API_KEY,
+        api_key=config.GROQ_API_KEY,
         drive_folder_url=config.DRIVE_FOLDER_URL,
         affiliate_link=affiliate_link,
         dry_run=dry_run,
