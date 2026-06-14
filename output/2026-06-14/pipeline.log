@@ -284,3 +284,14 @@
 2026-06-14 10:26:10,830 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-14 10:26:10,845 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-14 10:26:10,845 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-14/stocks.json
+2026-06-14 10:30:01,156 [INFO] main: Output directory: output/2026-06-14
+2026-06-14 10:30:01,156 [INFO] main: ============================================================
+2026-06-14 10:30:01,156 [INFO] main: STEP 1: 銘柄抽出
+2026-06-14 10:30:01,156 [INFO] main: ============================================================
+2026-06-14 10:30:01,156 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12
+2026-06-14 10:30:02,301 [WARNING] pipeline.stock_extractor: irbank.net取得失敗: 403 Client Error: Forbidden for url: https://irbank.net/market/kessan?y=2026-06-12
+2026-06-14 10:30:02,301 [INFO] pipeline.stock_extractor: irbank決算: 0行
+2026-06-14 10:30:02,302 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-14 10:30:02,815 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 10:30:02,827 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-14 10:30:02,828 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-14/stocks.json
