@@ -153,6 +153,8 @@ def _get_latest_trading_date() -> str:
     return candidate.strftime("%Y-%m-%d")
 
 
+import time
+
 _SCRAPE_HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -161,14 +163,28 @@ _SCRAPE_HEADERS = {
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
+    "Referer": "https://irbank.net/",
 }
+
+
+def _get_irbank_session() -> requests.Session:
+    """Cookie付きセッションを取得（Bot検知回避）。"""
+    s = requests.Session()
+    s.headers.update(_SCRAPE_HEADERS)
+    try:
+        s.get("https://irbank.net/", timeout=10)
+        time.sleep(1)
+    except Exception:
+        pass
+    return s
 
 
 def _scrape_irbank(trading_date: str) -> str:
     """irbank.netから決算データをスクレイピングしてテキスト形式で返す。"""
     url = f"https://irbank.net/market/kessan?d={trading_date}"
     try:
-        resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
+        session = _get_irbank_session()
+        resp = session.get(url, timeout=15)
         resp.raise_for_status()
     except Exception as e:
         logger.warning(f"irbank.net取得失敗: {e}")
@@ -195,7 +211,9 @@ def _scrape_top_gainers() -> str:
     import re as _re
     url = "https://irbank.net/market/rise"
     try:
-        resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
+        session = _get_irbank_session()
+        time.sleep(1)
+        resp = session.get(url, timeout=15)
         resp.raise_for_status()
     except Exception as e:
         logger.warning(f"irbank値上がり率取得失敗: {e}")
