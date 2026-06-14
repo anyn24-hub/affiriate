@@ -73,3 +73,77 @@
 2026-06-14 08:32:43,781 [INFO] main:   Posts created : 0
 2026-06-14 08:32:43,781 [INFO] main:   Output folder : /home/runner/work/affiriate/affiriate/output/2026-06-14
 2026-06-14 08:32:43,781 [INFO] main: ============================================================
+2026-06-14 08:45:26,845 [INFO] main: Output directory: output/2026-06-14
+2026-06-14 08:45:26,845 [INFO] main: ============================================================
+2026-06-14 08:45:26,845 [INFO] main: STEP 1: Extracting stocks (Claude API)
+2026-06-14 08:45:26,845 [INFO] main: ============================================================
+2026-06-14 08:45:26,845 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12
+2026-06-14 08:45:27,371 [INFO] pipeline.stock_extractor: irbank.netから60行のデータを取得
+2026-06-14 08:45:27,371 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-14 08:45:29,448 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:45:29,465 [INFO] pipeline.stock_extractor: Parsed 10 in A, 5 in B, 5 in C.
+2026-06-14 08:45:29,465 [INFO] main: Raw stock extraction saved to output/2026-06-14/raw_stock_extraction.txt
+2026-06-14 08:45:29,465 [INFO] main: Stocks JSON saved to output/2026-06-14/stocks.json (20 stocks)
+2026-06-14 08:45:29,465 [INFO] main: ============================================================
+2026-06-14 08:45:29,465 [INFO] main: STEP 2: Downloading earnings PDFs from TDnet → Google Drive
+2026-06-14 08:45:29,465 [INFO] main: ============================================================
+2026-06-14 08:45:29,508 [INFO] googleapiclient.discovery_cache: file_cache is only supported with oauth2client<4.0.0
+2026-06-14 08:45:29,510 [INFO] pipeline.tdnet_downloader: Processing stock 2695 on TDnet...
+2026-06-14 08:45:29,751 [WARNING] pipeline.tdnet_downloader: [2695] No earnings documents found on TDnet.
+2026-06-14 08:45:31,252 [INFO] pipeline.tdnet_downloader: Processing stock 4431 on TDnet...
+2026-06-14 08:45:31,383 [WARNING] pipeline.tdnet_downloader: [4431] No earnings documents found on TDnet.
+2026-06-14 08:45:32,883 [INFO] pipeline.tdnet_downloader: Processing stock 3480 on TDnet...
+2026-06-14 08:45:33,018 [WARNING] pipeline.tdnet_downloader: [3480] No earnings documents found on TDnet.
+2026-06-14 08:45:34,518 [INFO] pipeline.tdnet_downloader: Processing stock 2923 on TDnet...
+2026-06-14 08:45:34,652 [WARNING] pipeline.tdnet_downloader: [2923] No earnings documents found on TDnet.
+2026-06-14 08:45:36,152 [INFO] pipeline.tdnet_downloader: Processing stock 3399 on TDnet...
+2026-06-14 08:45:36,292 [WARNING] pipeline.tdnet_downloader: [3399] No earnings documents found on TDnet.
+2026-06-14 08:45:37,792 [INFO] pipeline.tdnet_downloader: Processing stock 3539 on TDnet...
+2026-06-14 08:45:37,923 [WARNING] pipeline.tdnet_downloader: [3539] No earnings documents found on TDnet.
+2026-06-14 08:45:39,423 [INFO] pipeline.tdnet_downloader: Processing stock 5889 on TDnet...
+2026-06-14 08:45:39,556 [WARNING] pipeline.tdnet_downloader: [5889] No earnings documents found on TDnet.
+2026-06-14 08:45:41,057 [INFO] pipeline.tdnet_downloader: Processing stock 5218 on TDnet...
+2026-06-14 08:45:41,188 [WARNING] pipeline.tdnet_downloader: [5218] No earnings documents found on TDnet.
+2026-06-14 08:45:42,688 [INFO] pipeline.tdnet_downloader: Processing stock 5572 on TDnet...
+2026-06-14 08:45:42,829 [WARNING] pipeline.tdnet_downloader: [5572] No earnings documents found on TDnet.
+2026-06-14 08:45:44,329 [INFO] pipeline.tdnet_downloader: Processing stock 6037 on TDnet...
+2026-06-14 08:45:44,461 [WARNING] pipeline.tdnet_downloader: [6037] No earnings documents found on TDnet.
+2026-06-14 08:45:45,962 [INFO] pipeline.tdnet_downloader: Processing stock 3843 on TDnet...
+2026-06-14 08:45:46,096 [WARNING] pipeline.tdnet_downloader: [3843] No earnings documents found on TDnet.
+2026-06-14 08:45:47,597 [INFO] pipeline.tdnet_downloader: Processing stock 4382 on TDnet...
+2026-06-14 08:45:47,730 [WARNING] pipeline.tdnet_downloader: [4382] No earnings documents found on TDnet.
+2026-06-14 08:45:49,230 [INFO] pipeline.tdnet_downloader: Processing stock 3931 on TDnet...
+2026-06-14 08:45:49,364 [WARNING] pipeline.tdnet_downloader: [3931] No earnings documents found on TDnet.
+2026-06-14 08:45:50,865 [INFO] pipeline.tdnet_downloader: Processing stock 3974 on TDnet...
+2026-06-14 08:45:51,002 [WARNING] pipeline.tdnet_downloader: [3974] No earnings documents found on TDnet.
+2026-06-14 08:45:52,502 [INFO] pipeline.tdnet_downloader: Processing stock 4996 on TDnet...
+2026-06-14 08:45:52,637 [WARNING] pipeline.tdnet_downloader: [4996] No earnings documents found on TDnet.
+2026-06-14 08:45:54,138 [INFO] pipeline.tdnet_downloader: Processing stock 3843 on TDnet...
+2026-06-14 08:45:54,276 [WARNING] pipeline.tdnet_downloader: [3843] No earnings documents found on TDnet.
+2026-06-14 08:45:55,777 [INFO] pipeline.tdnet_downloader: Processing stock 4382 on TDnet...
+2026-06-14 08:45:55,906 [WARNING] pipeline.tdnet_downloader: [4382] No earnings documents found on TDnet.
+2026-06-14 08:45:57,406 [INFO] pipeline.tdnet_downloader: Processing stock 3931 on TDnet...
+2026-06-14 08:45:57,533 [WARNING] pipeline.tdnet_downloader: [3931] No earnings documents found on TDnet.
+2026-06-14 08:45:59,033 [INFO] pipeline.tdnet_downloader: Processing stock 3974 on TDnet...
+2026-06-14 08:45:59,159 [WARNING] pipeline.tdnet_downloader: [3974] No earnings documents found on TDnet.
+2026-06-14 08:46:00,660 [INFO] pipeline.tdnet_downloader: Processing stock 4996 on TDnet...
+2026-06-14 08:46:00,787 [WARNING] pipeline.tdnet_downloader: [4996] No earnings documents found on TDnet.
+2026-06-14 08:46:02,288 [INFO] pipeline.tdnet_downloader: TDnet processing complete. 0 files uploaded.
+2026-06-14 08:46:02,289 [INFO] main: TDnet results saved to output/2026-06-14/tdnet_uploads.json
+2026-06-14 08:46:02,289 [INFO] main: ============================================================
+2026-06-14 08:46:02,289 [INFO] main: STEP 3: Generating X posts + image prompts (Claude API)
+2026-06-14 08:46:02,289 [INFO] main: ============================================================
+2026-06-14 08:46:03,855 [WARNING] affiliate_links: 楽天API取得エラー: 400 Client Error: 400 for url: https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=53ffe77a-e8a3-4b5c-bee7-ca3bd2744dca&affiliateId=5335e187.bd9b90cd.5335e188.d302f85f&keyword=%E6%B1%BA%E7%AE%97%E6%9B%B8&booksGenreId=001&hits=20&sort=sales&format=json。フォールバックURLを使用します。
+2026-06-14 08:46:03,856 [INFO] main: Affiliate link selected: https://books.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8
+2026-06-14 08:46:03,897 [INFO] googleapiclient.discovery_cache: file_cache is only supported with oauth2client<4.0.0
+2026-06-14 08:46:04,158 [ERROR] pipeline.content_generator: Drive ファイル一覧取得エラー: <HttpError 404 when requesting https://www.googleapis.com/drive/v3/files?q=%27%27+in+parents+and+mimeType%3D%27application%2Fpdf%27+and+trashed%3Dfalse&fields=files%28id%2C+name%2C+createdTime%29&orderBy=createdTime+desc&pageSize=20&alt=json returned "File not found: .". Details: "[{'message': 'File not found: .', 'domain': 'global', 'reason': 'notFound', 'location': 'fileId', 'locationType': 'parameter'}]">
+2026-06-14 08:46:04,158 [WARNING] pipeline.content_generator: DriveにPDFが見つかりませんでした。ドライブのフォルダを確認してください。
+2026-06-14 08:46:04,158 [INFO] main: X posts saved to output/2026-06-14/x_posts.txt
+2026-06-14 08:46:04,158 [INFO] main: Image prompts saved to output/2026-06-14/image_prompts.txt
+2026-06-14 08:46:04,158 [INFO] main: ============================================================
+2026-06-14 08:46:04,158 [INFO] main: Pipeline complete.
+2026-06-14 08:46:04,159 [INFO] main:   Trading date  : 2026-06-12
+2026-06-14 08:46:04,159 [INFO] main:   Stocks found  : 20
+2026-06-14 08:46:04,159 [INFO] main:   Posts created : 0
+2026-06-14 08:46:04,159 [INFO] main:   Output folder : /home/runner/work/affiriate/affiriate/output/2026-06-14
+2026-06-14 08:46:04,159 [INFO] main: ============================================================

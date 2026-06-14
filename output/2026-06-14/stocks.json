@@ -8,35 +8,11 @@
     "notes": ""
   },
   {
-    "code": "3399",
-    "name": "丸千代山岡家",
-    "section": "A",
-    "category": "第１四半期",
-    "content": "食品スーパー",
-    "notes": ""
-  },
-  {
     "code": "4431",
     "name": "スマレジ",
     "section": "A",
     "category": "本決算",
     "content": "POSシステム",
-    "notes": ""
-  },
-  {
-    "code": "5889",
-    "name": "Japan Eyewear Holdings",
-    "section": "A",
-    "category": "第１四半期",
-    "content": "メガネ販売",
-    "notes": ""
-  },
-  {
-    "code": "2923",
-    "name": "サトウ食品",
-    "section": "A",
-    "category": "本決算",
-    "content": "食品製造",
     "notes": ""
   },
   {
@@ -48,27 +24,35 @@
     "notes": ""
   },
   {
-    "code": "3475",
-    "name": "グッドコムアセット",
+    "code": "2923",
+    "name": "サトウ食品",
     "section": "A",
-    "category": "第２四半期",
-    "content": "不動産関連",
+    "category": "本決算",
+    "content": "食品製造",
     "notes": ""
   },
   {
-    "code": "3038",
-    "name": "神戸物産",
+    "code": "3399",
+    "name": "丸千代山岡家",
     "section": "A",
-    "category": "第２四半期",
-    "content": "物産関連",
+    "category": "第１四半期",
+    "content": "不動産",
     "notes": ""
   },
   {
-    "code": "4996",
-    "name": "クミアイ化学工業",
+    "code": "3539",
+    "name": "JMホールディングス",
     "section": "A",
-    "category": "第２四半期",
-    "content": "化学製品",
+    "category": "第３四半期",
+    "content": "不動産",
+    "notes": ""
+  },
+  {
+    "code": "5889",
+    "name": "Japan Eyewear Holdings",
+    "section": "A",
+    "category": "第１四半期",
+    "content": "メガネ販売",
     "notes": ""
   },
   {
@@ -76,23 +60,103 @@
     "name": "オハラ",
     "section": "A",
     "category": "第２四半期",
-    "content": "建設関連",
+    "content": "食品製造",
     "notes": ""
   },
   {
-    "code": "2695",
-    "name": "くら寿司",
-    "section": "C",
-    "category": "",
-    "content": "寿司チェーン",
-    "notes": "[2026-06-12] 営業利益の増加"
+    "code": "5572",
+    "name": "Ridge-i",
+    "section": "A",
+    "category": "第３四半期",
+    "content": "不動産",
+    "notes": ""
   },
   {
-    "code": "3399",
-    "name": "丸千代山岡家",
+    "code": "6037",
+    "name": "楽待",
+    "section": "A",
+    "category": "第３四半期",
+    "content": "不動産",
+    "notes": ""
+  },
+  {
+    "code": "3843",
+    "name": "フリービット",
+    "section": "B",
+    "category": "",
+    "content": "ITサービス",
+    "notes": "2026-06-12 決算発表によるストップ高"
+  },
+  {
+    "code": "4382",
+    "name": "HEROZ",
+    "section": "B",
+    "category": "",
+    "content": "ゲーム開発",
+    "notes": "2026-06-12 決算発表によるストップ高"
+  },
+  {
+    "code": "3931",
+    "name": "バリューゴルフ",
+    "section": "B",
+    "category": "",
+    "content": "ゴルフ関連",
+    "notes": "2026-06-12 決算発表によるストップ高"
+  },
+  {
+    "code": "3974",
+    "name": "SCAT",
+    "section": "B",
+    "category": "",
+    "content": "ITサービス",
+    "notes": "2026-06-12 決算発表によるストップ高"
+  },
+  {
+    "code": "4996",
+    "name": "クミアイ化学工業",
+    "section": "B",
+    "category": "",
+    "content": "化学製品",
+    "notes": "2026-06-12 決算発表によるストップ高"
+  },
+  {
+    "code": "3843",
+    "name": "フリービット",
     "section": "C",
     "category": "",
-    "content": "食品スーパー",
-    "notes": "[2026-06-12] 収益の増加"
+    "content": "ITサービス",
+    "notes": "2026-06-12 決算発表による値上がり"
+  },
+  {
+    "code": "4382",
+    "name": "HEROZ",
+    "section": "C",
+    "category": "",
+    "content": "ゲーム開発",
+    "notes": "2026-06-12 決算発表による値上がり"
+  },
+  {
+    "code": "3931",
+    "name": "バリューゴルフ",
+    "section": "C",
+    "category": "",
+    "content": "ゴルフ関連",
+    "notes": "2026-06-12 決算発表による値上がり"
+  },
+  {
+    "code": "3974",
+    "name": "SCAT",
+    "section": "C",
+    "category": "",
+    "content": "ITサービス",
+    "notes": "2026-06-12 決算発表による値上がり"
+  },
+  {
+    "code": "4996",
+    "name": "クミアイ化学工業",
+    "section": "C",
+    "category": "",
+    "content": "化学製品",
+    "notes": "2026-06-12 決算発表による値上がり"
   }
 ]
