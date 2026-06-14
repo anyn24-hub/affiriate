@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="決算Bot">
+<title>@kessan_class 決算Bot</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0D1B2A;
+    color: #fff;
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+  }
+  h1 { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #8899aa; text-align: center; margin-bottom: 24px; }
+
+  /* 設定パネル */
+  .settings-toggle {
+    background: none; border: 1px solid #334; color: #8899aa;
+    border-radius: 8px; padding: 8px 16px; font-size: 13px;
+    width: 100%; cursor: pointer; margin-bottom: 16px;
+  }
+  .settings-panel { display: none; background: #1a2a3a; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .settings-panel.open { display: block; }
+  label { font-size: 12px; color: #8899aa; display: block; margin-bottom: 4px; }
+  input[type=text], input[type=password] {
+    width: 100%; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid #334; background: #0D1B2A; color: #fff;
+    font-size: 14px; margin-bottom: 12px;
+  }
+  .save-btn {
+    background: #334; color: #fff; border: none; border-radius: 8px;
+    padding: 10px; width: 100%; font-size: 14px; cursor: pointer;
+  }
+
+  /* ステップカード */
+  .step-card {
+    background: #1a2a3a; border-radius: 16px; padding: 20px; margin-bottom: 16px;
+  }
+  .step-num {
+    font-size: 11px; font-weight: 700; color: #4488cc;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
+  }
+  .step-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: #8899aa; margin-bottom: 16px; line-height: 1.5; }
+  .manual-badge {
+    display: inline-block; background: #2a3a2a; color: #88cc88;
+    border-radius: 6px; padding: 4px 10px; font-size: 12px; margin-bottom: 16px;
+  }
+
+  /* ボタン */
+  .btn {
+    width: 100%; padding: 16px; border-radius: 12px; border: none;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn-primary { background: #2266dd; color: #fff; }
+  .btn-success { background: #22aa66; color: #fff; }
+  .btn-disabled { background: #334; color: #556; cursor: not-allowed; }
+
+  /* ステータス */
+  .status {
+    margin-top: 12px; padding: 12px; border-radius: 10px;
+    font-size: 13px; line-height: 1.6; display: none;
+  }
+  .status.show { display: block; }
+  .status.running { background: #1a2a4a; color: #88aaff; }
+  .status.done { background: #1a3a2a; color: #88ffaa; }
+  .status.error { background: #3a1a1a; color: #ff8888; }
+
+  /* 結果表示 */
+  .result-area { margin-top: 12px; display: none; }
+  .result-area.show { display: block; }
+  .result-box {
+    background: #0D1B2A; border: 1px solid #334; border-radius: 10px;
+    padding: 12px; margin-bottom: 10px;
+  }
+  .result-label { font-size: 11px; color: #4488cc; font-weight: 700; margin-bottom: 6px; }
+  .result-text {
+    font-size: 13px; line-height: 1.7; white-space: pre-wrap;
+    word-break: break-word; color: #ddeeff;
+    max-height: 300px; overflow-y: auto;
+  }
+  .copy-btn {
+    width: 100%; margin-top: 8px; padding: 10px; border-radius: 8px;
+    border: 1px solid #334; background: #1a2a3a; color: #88aaff;
+    font-size: 13px; cursor: pointer;
+  }
+  .copy-btn:active { background: #2a3a4a; }
+
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<h1>📊 @kessan_class</h1>
+<p class="sub">決算投稿Bot</p>
+
+<!-- 設定 -->
+<button class="settings-toggle" onclick="toggleSettings()">⚙️ GitHub設定</button>
+<div class="settings-panel" id="settingsPanel">
+  <label>GitHub Personal Access Token</label>
+  <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+  <label>リポジトリ（owner/repo）</label>
+  <input type="text" id="ghRepo" placeholder="anyn24-hub/affiriate">
+  <label>ブランチ</label>
+  <input type="text" id="ghBranch" placeholder="main">
+  <button class="save-btn" onclick="saveSettings()">💾 保存</button>
+</div>
+
+<!-- STEP 1: 銘柄抽出 -->
+<div class="step-card">
+  <div class="step-num">Step 1 · 自動</div>
+  <div class="step-title">📋 銘柄抽出</div>
+  <div class="step-desc">irbank.netから本日の決算銘柄を自動取得・整理します（約1分）</div>
+  <button class="btn btn-primary" id="btn1" onclick="runStep1()">銘柄抽出を実行</button>
+  <div class="status" id="status1"></div>
+  <div class="result-area" id="result1">
+    <div class="result-box">
+      <div class="result-label">抽出結果</div>
+      <div class="result-text" id="result1text"></div>
+      <button class="copy-btn" onclick="copyText('result1text')">📋 コピー</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: 手動 -->
+<div class="step-card">
+  <div class="step-num">Step 2 · 手動</div>
+  <div class="step-title">📥 決算書をDriveに保存</div>
+  <div class="step-desc">
+    抽出された銘柄の決算短信PDFをTDnetからダウンロードし、
+    Googleドライブの所定フォルダに保存してください。
+  </div>
+  <span class="manual-badge">✋ 手動作業</span><br>
+  <a href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank"
+     style="display:block; padding:14px; background:#1a3a5a; border-radius:10px;
+            color:#88ccff; text-align:center; font-size:14px; font-weight:700;
+            text-decoration:none;">
+    🔗 TDnetを開く
+  </a>
+</div>
+
+<!-- STEP 3: 投稿文生成 -->
+<div class="step-card">
+  <div class="step-num">Step 3 · 自動</div>
+  <div class="step-title">✍️ 投稿文・画像指示書を生成</div>
+  <div class="step-desc">DriveのPDFを読み取り、X投稿文とChatGPT画像生成指示書を作成します（約3分）</div>
+  <button class="btn btn-success" id="btn3" onclick="runStep3()">投稿文を生成</button>
+  <div class="status" id="status3"></div>
+  <div class="result-area" id="result3">
+    <div class="result-box">
+      <div class="result-label">X投稿文（アフィリエイトリンク付き）</div>
+      <div class="result-text" id="result3xpost"></div>
+      <button class="copy-btn" onclick="copyText('result3xpost')">📋 コピー</button>
+    </div>
+    <div class="result-box">
+      <div class="result-label">ChatGPT画像生成指示書</div>
+      <div class="result-text" id="result3img"></div>
+      <button class="copy-btn" onclick="copyText('result3img')">📋 コピー</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const OWNER_REPO_DEFAULT = 'anyn24-hub/affiriate';
+const BRANCH_DEFAULT = 'main';
+
+function loadSettings() {
+  document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
+  document.getElementById('ghRepo').value = localStorage.getItem('ghRepo') || OWNER_REPO_DEFAULT;
+  document.getElementById('ghBranch').value = localStorage.getItem('ghBranch') || BRANCH_DEFAULT;
+}
+
+function saveSettings() {
+  localStorage.setItem('ghToken', document.getElementById('ghToken').value.trim());
+  localStorage.setItem('ghRepo', document.getElementById('ghRepo').value.trim());
+  localStorage.setItem('ghBranch', document.getElementById('ghBranch').value.trim());
+  document.getElementById('settingsPanel').classList.remove('open');
+  alert('保存しました！');
+}
+
+function toggleSettings() {
+  document.getElementById('settingsPanel').classList.toggle('open');
+}
+
+function getSettings() {
+  return {
+    token: localStorage.getItem('ghToken') || '',
+    repo: localStorage.getItem('ghRepo') || OWNER_REPO_DEFAULT,
+    branch: localStorage.getItem('ghBranch') || BRANCH_DEFAULT,
+  };
+}
+
+function setStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = `status show ${type}`;
+  el.innerHTML = msg;
+}
+
+async function triggerWorkflow(workflowFile) {
+  const { token, repo, branch } = getSettings();
+  if (!token) { alert('GitHubトークンを設定してください（⚙️ GitHub設定）'); return false; }
+  const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/${workflowFile}/dispatches`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ref: branch }),
+  });
+  return res.status === 204;
+}
+
+async function waitForWorkflow(workflowFile, timeoutMs = 300000) {
+  const { token, repo } = getSettings();
+  const start = Date.now();
+  await new Promise(r => setTimeout(r, 5000));
+  while (Date.now() - start < timeoutMs) {
+    const res = await fetch(
+      `https://api.github.com/repos/${repo}/actions/workflows/${workflowFile}/runs?per_page=1`,
+      { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } }
+    );
+    const data = await res.json();
+    const run = data.workflow_runs?.[0];
+    if (!run) { await new Promise(r => setTimeout(r, 5000)); continue; }
+    if (run.status === 'completed') return run.conclusion === 'success';
+    await new Promise(r => setTimeout(r, 5000));
+  }
+  return false;
+}
+
+async function fetchFileContent(path) {
+  const { token, repo, branch } = getSettings();
+  const today = new Date().toISOString().slice(0, 10);
+  const fullPath = `output/${today}/${path}`;
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}/contents/${fullPath}?ref=${branch}`,
+    { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } }
+  );
+  if (!res.ok) return null;
+  const data = await res.json();
+  return atob(data.content.replace(/\n/g, ''));
+}
+
+async function runStep1() {
+  const btn = document.getElementById('btn1');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>実行中...';
+  setStatus('status1', 'running', '⏳ 銘柄抽出を開始しました。約1〜2分お待ちください...');
+  document.getElementById('result1').classList.remove('show');
+
+  const ok = await triggerWorkflow('step1_extract.yml');
+  if (!ok) {
+    setStatus('status1', 'error', '❌ 起動失敗。GitHubトークンを確認してください。');
+    btn.disabled = false; btn.innerHTML = '銘柄抽出を実行';
+    return;
+  }
+
+  const success = await waitForWorkflow('step1_extract.yml');
+  if (success) {
+    const text = await fetchFileContent('raw_stock_extraction.txt');
+    if (text) {
+      document.getElementById('result1text').textContent = text;
+      document.getElementById('result1').classList.add('show');
+      setStatus('status1', 'done', '✅ 銘柄抽出完了！結果を確認してTDnetからPDFをダウンロードしてください。');
+    } else {
+      setStatus('status1', 'done', '✅ 完了。GitHubのoutputフォルダで結果を確認してください。');
+    }
+  } else {
+    setStatus('status1', 'error', '❌ エラーが発生しました。GitHub Actionsのログを確認してください。');
+  }
+
+  btn.disabled = false; btn.innerHTML = '銘柄抽出を実行';
+}
+
+async function runStep3() {
+  const btn = document.getElementById('btn3');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>生成中...';
+  setStatus('status3', 'running', '⏳ 投稿文を生成中です。Driveを読み取っています（約3分）...');
+  document.getElementById('result3').classList.remove('show');
+
+  const ok = await triggerWorkflow('step2_generate.yml');
+  if (!ok) {
+    setStatus('status3', 'error', '❌ 起動失敗。GitHubトークンを確認してください。');
+    btn.disabled = false; btn.innerHTML = '投稿文を生成';
+    return;
+  }
+
+  const success = await waitForWorkflow('step2_generate.yml');
+  if (success) {
+    const xpost = await fetchFileContent('x_posts.txt');
+    const imgprompt = await fetchFileContent('image_prompts.txt');
+    if (xpost || imgprompt) {
+      if (xpost) document.getElementById('result3xpost').textContent = xpost;
+      if (imgprompt) document.getElementById('result3img').textContent = imgprompt;
+      document.getElementById('result3').classList.add('show');
+      setStatus('status3', 'done', '✅ 生成完了！投稿文をコピーしてXに投稿、画像指示書をChatGPTに貼り付けてください。');
+    } else {
+      setStatus('status3', 'done', '✅ 完了。GitHubのoutputフォルダで結果を確認してください。');
+    }
+  } else {
+    setStatus('status3', 'error', '❌ エラーが発生しました。GitHub Actionsのログを確認してください。');
+  }
+
+  btn.disabled = false; btn.innerHTML = '投稿文を生成';
+}
+
+function copyText(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('コピーしました！');
+  });
+}
+
+loadSettings();
+</script>
+</body>
+</html>

@@ -55,154 +55,91 @@ def setup_output_dir(base: str = "output") -> Path:
     return out_dir
 
 
-def run(dry_run: bool = False, skip_tdnet: bool = False):
+def run(dry_run: bool = False, skip_tdnet: bool = True, step: str = "all"):
     out_dir = setup_output_dir()
 
-    # ── STEP 1: Stock Extraction ─────────────────────────────────────────────
-    logger.info("=" * 60)
-    logger.info("STEP 1: Extracting stocks (Claude API)")
-    logger.info("=" * 60)
-
-    extraction = extract_stocks(api_key=config.GROQ_API_KEY, dry_run=dry_run)
-
-    # Save raw Claude output
-    raw_path = out_dir / "raw_stock_extraction.txt"
-    raw_path.write_text(extraction.raw_text, encoding="utf-8")
-    logger.info(f"Raw stock extraction saved to {raw_path}")
-
-    # Save structured stocks as JSON
-    all_stocks = extraction.all_stocks()
-    stocks_data = [
-        {
-            "code": s.code,
-            "name": s.name,
-            "section": s.section,
-            "category": s.category,
-            "content": s.content,
-            "notes": s.notes,
-        }
-        for s in all_stocks
-    ]
-    stocks_path = out_dir / "stocks.json"
-    stocks_path.write_text(
-        json.dumps(stocks_data, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    logger.info(f"Stocks JSON saved to {stocks_path} ({len(stocks_data)} stocks)")
-
-    if not all_stocks:
-        logger.warning("No stocks extracted. Stopping pipeline.")
-        return
-
-    # ── STEP 2: TDnet Download ───────────────────────────────────────────────
-    if skip_tdnet:
-        logger.info("STEP 2: Skipping TDnet download (--skip-tdnet flag).")
-    else:
+    # ── STEP 1: 銘柄抽出 ────────────────────────────────────────────────────
+    if step in ("extract", "all"):
         logger.info("=" * 60)
-        logger.info("STEP 2: Downloading earnings PDFs from TDnet → Google Drive")
+        logger.info("STEP 1: 銘柄抽出")
         logger.info("=" * 60)
 
-        if not config.GOOGLE_SERVICE_ACCOUNT_JSON and not dry_run:
-            logger.warning(
-                "GOOGLE_SERVICE_ACCOUNT_JSON not set. Skipping TDnet upload. "
-                "Set this env var to enable Google Drive upload."
-            )
-        else:
-            stock_codes = [s.code for s in all_stocks]
-            tdnet_results = process_stocks(
-                stock_codes=stock_codes,
-                folder_id=config.DRIVE_FOLDER_ID,
-                service_account_json=config.GOOGLE_SERVICE_ACCOUNT_JSON or "{}",
-                dry_run=dry_run,
-                trading_date=extraction.trading_date,
-            )
-            tdnet_path = out_dir / "tdnet_uploads.json"
-            tdnet_path.write_text(
-                json.dumps(tdnet_results, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
-            logger.info(f"TDnet results saved to {tdnet_path}")
+        extraction = extract_stocks(api_key=config.GROQ_API_KEY, dry_run=dry_run)
 
-    # ── STEP 3: Content Generation ───────────────────────────────────────────
-    logger.info("=" * 60)
-    logger.info("STEP 3: Generating X posts + image prompts (Claude API)")
-    logger.info("=" * 60)
+        raw_path = out_dir / "raw_stock_extraction.txt"
+        raw_path.write_text(extraction.raw_text, encoding="utf-8")
 
-    affiliate_link = get_random_affiliate_link(
-        app_id=config.RAKUTEN_APP_ID,
-        affiliate_id=config.RAKUTEN_AFFILIATE_ID,
-    )
-    logger.info(f"Affiliate link selected: {affiliate_link}")
+        all_stocks = extraction.all_stocks()
+        stocks_data = [
+            {"code": s.code, "name": s.name, "section": s.section,
+             "category": s.category, "content": s.content, "notes": s.notes}
+            for s in all_stocks
+        ]
+        stocks_path = out_dir / "stocks.json"
+        stocks_path.write_text(json.dumps(stocks_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        logger.info(f"銘柄抽出完了: {len(stocks_data)}社 → {stocks_path}")
 
-    generation = generate_content(
-        api_key=config.GROQ_API_KEY,
-        drive_folder_url=config.DRIVE_FOLDER_URL,
-        affiliate_link=affiliate_link,
-        dry_run=dry_run,
-        service_account_json=config.GOOGLE_SERVICE_ACCOUNT_JSON,
-        folder_id=config.DRIVE_FOLDER_ID,
-    )
+        if step == "extract":
+            print(f"\n✅ 銘柄抽出完了！{out_dir}/raw_stock_extraction.txt を確認してください。")
+            return
 
-    # Save raw content generation output
-    raw_content_path = out_dir / "raw_content_generation.txt"
-    raw_content_path.write_text(generation.raw_text, encoding="utf-8")
+    # ── STEP 3: 投稿文生成 ──────────────────────────────────────────────────
+    if step in ("generate", "all"):
+        logger.info("=" * 60)
+        logger.info("STEP 3: 投稿文・画像指示書生成")
+        logger.info("=" * 60)
 
-    # Save X posts
-    x_posts_lines = []
-    for company in generation.companies:
-        x_posts_lines.append(f"# {company.company_identifier}")
-        x_posts_lines.append(company.x_post)
-        x_posts_lines.append("\n" + "─" * 40 + "\n")
+        affiliate_link = get_random_affiliate_link(
+            app_id=config.RAKUTEN_APP_ID,
+            affiliate_id=config.RAKUTEN_AFFILIATE_ID,
+        )
+        logger.info(f"アフィリエイトリンク: {affiliate_link}")
 
-    x_posts_path = out_dir / "x_posts.txt"
-    x_posts_path.write_text("\n".join(x_posts_lines), encoding="utf-8")
-    logger.info(f"X posts saved to {x_posts_path}")
+        generation = generate_content(
+            api_key=config.GROQ_API_KEY,
+            drive_folder_url=config.DRIVE_FOLDER_URL,
+            affiliate_link=affiliate_link,
+            dry_run=dry_run,
+            service_account_json=config.GOOGLE_SERVICE_ACCOUNT_JSON,
+            folder_id=config.DRIVE_FOLDER_ID,
+        )
 
-    # Save image prompts
-    image_prompt_lines = []
-    for company in generation.companies:
-        image_prompt_lines.append(f"# {company.company_identifier}")
-        image_prompt_lines.append(company.image_prompt)
-        image_prompt_lines.append("\n" + "─" * 40 + "\n")
+        (out_dir / "raw_content_generation.txt").write_text(generation.raw_text, encoding="utf-8")
 
-    image_prompts_path = out_dir / "image_prompts.txt"
-    image_prompts_path.write_text("\n".join(image_prompt_lines), encoding="utf-8")
-    logger.info(f"Image prompts saved to {image_prompts_path}")
+        x_posts_lines = []
+        for company in generation.companies:
+            x_posts_lines.append(f"# {company.company_identifier}")
+            x_posts_lines.append(company.x_post)
+            x_posts_lines.append("\n" + "─" * 40 + "\n")
+        (out_dir / "x_posts.txt").write_text("\n".join(x_posts_lines), encoding="utf-8")
 
-    # ── Summary ──────────────────────────────────────────────────────────────
-    logger.info("=" * 60)
-    logger.info("Pipeline complete.")
-    logger.info(f"  Trading date  : {extraction.trading_date}")
-    logger.info(f"  Stocks found  : {len(all_stocks)}")
-    logger.info(f"  Posts created : {len(generation.companies)}")
-    logger.info(f"  Output folder : {out_dir.resolve()}")
-    logger.info("=" * 60)
+        image_prompt_lines = []
+        for company in generation.companies:
+            image_prompt_lines.append(f"# {company.company_identifier}")
+            image_prompt_lines.append(company.image_prompt)
+            image_prompt_lines.append("\n" + "─" * 40 + "\n")
+        (out_dir / "image_prompts.txt").write_text("\n".join(image_prompt_lines), encoding="utf-8")
 
-    print(f"\n✅ 完了！出力フォルダ: {out_dir.resolve()}")
-    print(f"   stocks.json      → 抽出銘柄リスト")
-    print(f"   x_posts.txt      → X投稿文（アフィリエイトリンク付き）")
-    print(f"   image_prompts.txt → ChatGPT画像生成指示書")
+        logger.info(f"投稿文生成完了: {len(generation.companies)}社")
+        print(f"\n✅ 投稿文生成完了！{out_dir}/x_posts.txt を確認してください。")
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="@kessan_class X posting automation pipeline"
     )
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--skip-tdnet", action="store_true")
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Run without making real API calls (for testing)",
-    )
-    parser.add_argument(
-        "--skip-tdnet",
-        action="store_true",
-        help="Skip TDnet download step (use existing Drive files)",
+        "--step",
+        choices=["extract", "generate", "all"],
+        default="all",
+        help="extract=銘柄抽出のみ / generate=投稿文生成のみ / all=全実行",
     )
     args = parser.parse_args()
 
-    if args.dry_run:
-        logger.info("🔍 DRY RUN MODE - No real API calls will be made.")
-
     try:
-        run(dry_run=args.dry_run, skip_tdnet=args.skip_tdnet)
+        run(dry_run=args.dry_run, skip_tdnet=args.skip_tdnet, step=args.step)
     except KeyboardInterrupt:
         logger.info("Interrupted by user.")
         sys.exit(0)
