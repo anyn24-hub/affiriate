@@ -124,7 +124,7 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     )
 
     response = client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         max_tokens=2000,
@@ -214,7 +214,7 @@ def _scrape_stop_high() -> str:
 
 def _scrape_top_gainers() -> str:
     """株探から値上がり率上位銘柄をスクレイピングしてテキスト形式で返す。"""
-    url = "https://kabutan.jp/stock/ranking/?val=t&market=0"
+    url = "https://kabutan.jp/stock/ranking/?val=increase_rate_day&market=0"
     try:
         resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
         resp.raise_for_status()
