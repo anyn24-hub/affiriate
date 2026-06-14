@@ -32,10 +32,10 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Python 3.11 セットアップ
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: "3.11"
           cache: "pip"
@@ -62,7 +62,7 @@ jobs:
           python pipeline/main.py $FLAGS
 
       - name: 出力ファイルをアーティファクトとして保存
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: output-${{ github.run_id }}
