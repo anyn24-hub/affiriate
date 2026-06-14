@@ -49,6 +49,8 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
           DRIVE_FOLDER_URL: ${{ secrets.DRIVE_FOLDER_URL }}
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
         run: |
           FLAGS=""
           if [ "${{ github.event.inputs.skip_tdnet }}" = "true" ]; then

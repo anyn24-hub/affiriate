@@ -125,7 +125,10 @@ def run(dry_run: bool = False, skip_tdnet: bool = False):
     logger.info("STEP 3: Generating X posts + image prompts (Claude API)")
     logger.info("=" * 60)
 
-    affiliate_link = get_random_affiliate_link()
+    affiliate_link = get_random_affiliate_link(
+        app_id=config.RAKUTEN_APP_ID,
+        affiliate_id=config.RAKUTEN_AFFILIATE_ID,
+    )
     logger.info(f"Affiliate link selected: {affiliate_link}")
 
     generation = generate_content(
