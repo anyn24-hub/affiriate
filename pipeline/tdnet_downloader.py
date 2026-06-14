@@ -1,13 +1,12 @@
 """
 tdnet_downloader.py
-Downloads latest earnings PDFs from TDnet for given stock codes,
-then uploads them to Google Drive.
+TDnetから指定日の決算短信PDFを取得してGoogle Driveにアップロードする。
+銘柄コードではなく「対象日付 × 決算カテゴリ」で全件検索する方式。
 """
 
 import io
 import json
 import logging
-import os
 import time
 from typing import Optional
 
@@ -20,11 +19,7 @@ from googleapiclient.http import MediaIoBaseUpload
 logger = logging.getLogger(__name__)
 
 TDNET_BASE = "https://www.release.tdnet.info"
-TDNET_SEARCH_URL = f"{TDNET_BASE}/inbs/I_main_00.html"
 DRIVE_SCOPES = ["https://www.googleapis.com/auth/drive"]
-
-# Keywords that identify earnings documents
-EARNINGS_KEYWORDS = ["決算", "業績", "financial", "earnings", "結果"]
 
 HEADERS = {
     "User-Agent": (
@@ -33,11 +28,13 @@ HEADERS = {
         "Chrome/120.0.0.0 Safari/537.36"
     ),
     "Accept-Language": "ja,en;q=0.9",
+    "Referer": "https://www.release.tdnet.info/",
 }
+
+EARNINGS_KEYWORDS = ["決算短信", "決算説明", "業績予想", "四半期報告", "通期"]
 
 
 def build_drive_service(service_account_json: str):
-    """Build Google Drive API service from service account JSON string."""
     info = json.loads(service_account_json)
     credentials = service_account.Credentials.from_service_account_info(
         info, scopes=DRIVE_SCOPES
@@ -45,108 +42,123 @@ def build_drive_service(service_account_json: str):
     return build("drive", "v3", credentials=credentials)
 
 
-def search_tdnet_for_stock(stock_code: str, session: requests.Session) -> list[dict]:
+def search_tdnet_by_date(trading_date: str, stock_codes: list[str], session: requests.Session) -> list[dict]:
     """
-    Search TDnet for the latest earnings PDF for a given stock code.
-    Returns list of dicts with keys: title, url, date.
+    TDnetを日付で検索して、対象銘柄コードの決算短信PDFリンクを取得する。
+    trading_date: "YYYY-MM-DD" 形式
     """
+    date_str = trading_date.replace("-", "")  # → YYYYMMDD
+
+    # TDnetの日付別開示一覧URL
+    url = f"{TDNET_BASE}/inbs/I_main_00.html"
     params = {
-        "sc": stock_code,
         "dv": "",
-        "stpr": "B",  # filter: earnings reports
+        "stpr": "B",   # 決算短信カテゴリ
+        "dm": date_str,
     }
 
     try:
-        resp = session.get(TDNET_SEARCH_URL, params=params, headers=HEADERS, timeout=15)
+        resp = session.get(url, params=params, headers=HEADERS, timeout=20)
         resp.raise_for_status()
+        resp.encoding = "utf-8"
     except requests.RequestException as e:
-        logger.warning(f"[{stock_code}] TDnet request failed: {e}")
+        logger.warning(f"TDnet日付検索失敗: {e}")
         return []
 
-    soup = BeautifulSoup(resp.text, "html.parser")
+    soup = BeautifulSoup(resp.text, "lxml")
     results = []
+    stock_code_set = set(stock_codes)
 
-    # TDnet table rows contain document links
-    for row in soup.select("table tr"):
+    for row in soup.select("table#kaiji-list-main tr, table tr"):
         cells = row.find_all("td")
         if len(cells) < 3:
             continue
 
-        # Look for PDF links
-        link_tag = row.find("a", href=True)
-        if not link_tag:
+        row_text = row.get_text()
+
+        # 銘柄コードが対象リストに含まれるか確認
+        matched_code = None
+        for code in stock_code_set:
+            if code in row_text:
+                matched_code = code
+                break
+        if not matched_code:
             continue
 
-        href = link_tag["href"]
-        title = link_tag.get_text(strip=True)
-
-        # Filter for earnings-related documents
-        is_earnings = any(kw in title for kw in EARNINGS_KEYWORDS)
-        if not is_earnings:
+        # 決算関連キーワードが含まれるか確認
+        if not any(kw in row_text for kw in EARNINGS_KEYWORDS):
             continue
 
-        # Build full URL
-        if href.startswith("http"):
-            full_url = href
-        else:
-            full_url = TDNET_BASE + "/" + href.lstrip("/")
+        # PDFリンクを取得
+        for a in row.find_all("a", href=True):
+            href = a["href"]
+            if ".pdf" in href.lower() or "pdf" in href.lower():
+                full_url = href if href.startswith("http") else TDNET_BASE + "/" + href.lstrip("/")
+                title = a.get_text(strip=True) or row_text.strip()[:50]
+                results.append({
+                    "stock_code": matched_code,
+                    "title": title,
+                    "url": full_url,
+                })
+                logger.info(f"[{matched_code}] TDnet PDF発見: {title}")
+                break
 
-        # Extract date from row if available
-        date_text = cells[0].get_text(strip=True) if cells else ""
-
-        results.append({
-            "title": title,
-            "url": full_url,
-            "date": date_text,
-            "stock_code": stock_code,
-        })
+    if not results:
+        logger.warning(f"TDnet日付検索（{trading_date}）: 対象銘柄の決算PDFが見つかりませんでした。")
+        logger.info("代替: 銘柄コード別に個別検索を試みます...")
+        results = _search_by_stock_codes(stock_codes, session)
 
     return results
 
 
+def _search_by_stock_codes(stock_codes: list[str], session: requests.Session) -> list[dict]:
+    """フォールバック: 銘柄コード別にTDnetを検索する。"""
+    results = []
+    for code in stock_codes[:5]:  # 上位5件に絞る
+        url = f"{TDNET_BASE}/inbs/I_main_00.html"
+        params = {"sc": code, "dv": "", "stpr": "B"}
+        try:
+            resp = session.get(url, params=params, headers=HEADERS, timeout=15)
+            resp.raise_for_status()
+            resp.encoding = "utf-8"
+            soup = BeautifulSoup(resp.text, "lxml")
+            for row in soup.select("table tr"):
+                row_text = row.get_text()
+                if not any(kw in row_text for kw in EARNINGS_KEYWORDS):
+                    continue
+                for a in row.find_all("a", href=True):
+                    href = a["href"]
+                    if ".pdf" in href.lower():
+                        full_url = href if href.startswith("http") else TDNET_BASE + "/" + href.lstrip("/")
+                        results.append({"stock_code": code, "title": a.get_text(strip=True), "url": full_url})
+                        break
+        except Exception as e:
+            logger.warning(f"[{code}] 個別検索失敗: {e}")
+        time.sleep(1.0)
+    return results
+
+
 def download_pdf(url: str, session: requests.Session) -> Optional[bytes]:
-    """Download a PDF file and return its bytes."""
     try:
         resp = session.get(url, headers=HEADERS, timeout=30)
         resp.raise_for_status()
-        content_type = resp.headers.get("Content-Type", "")
-        if "pdf" not in content_type.lower() and not url.lower().endswith(".pdf"):
-            logger.warning(f"URL may not be a PDF (Content-Type: {content_type}): {url}")
         return resp.content
     except requests.RequestException as e:
-        logger.warning(f"Failed to download PDF from {url}: {e}")
+        logger.warning(f"PDF ダウンロード失敗 {url}: {e}")
         return None
 
 
-def upload_to_drive(
-    drive_service,
-    file_bytes: bytes,
-    filename: str,
-    folder_id: str,
-    mime_type: str = "application/pdf",
-) -> Optional[str]:
-    """
-    Upload file bytes to Google Drive folder.
-    Returns the file ID if successful, None otherwise.
-    """
-    file_metadata = {
-        "name": filename,
-        "parents": [folder_id],
-    }
-    media = MediaIoBaseUpload(io.BytesIO(file_bytes), mimetype=mime_type, resumable=True)
-
+def upload_to_drive(drive_service, file_bytes: bytes, filename: str, folder_id: str) -> Optional[str]:
+    file_metadata = {"name": filename, "parents": [folder_id]}
+    media = MediaIoBaseUpload(io.BytesIO(file_bytes), mimetype="application/pdf", resumable=True)
     try:
-        file = (
-            drive_service.files()
-            .create(body=file_metadata, media_body=media, fields="id, webViewLink")
-            .execute()
-        )
-        file_id = file.get("id")
-        link = file.get("webViewLink", "")
-        logger.info(f"Uploaded '{filename}' to Drive: {link}")
-        return file_id
+        f = drive_service.files().create(
+            body=file_metadata, media_body=media, fields="id, webViewLink"
+        ).execute()
+        logger.info(f"Drive アップロード完了: {filename} → {f.get('webViewLink', '')}")
+        return f.get("id")
     except Exception as e:
-        logger.error(f"Drive upload failed for '{filename}': {e}")
+        logger.error(f"Drive アップロード失敗 ({filename}): {e}")
         return None
 
 
@@ -155,55 +167,43 @@ def process_stocks(
     folder_id: str,
     service_account_json: str,
     dry_run: bool = False,
+    trading_date: str = "",
     rate_limit_delay: float = 1.5,
 ) -> dict[str, list[str]]:
-    """
-    For each stock code: search TDnet, download latest earnings PDF, upload to Drive.
-
-    Returns dict mapping stock_code -> list of uploaded Drive file IDs.
-    """
     if dry_run:
-        logger.info(f"[DRY RUN] Would process {len(stock_codes)} stocks for TDnet download.")
+        logger.info(f"[DRY RUN] {len(stock_codes)}銘柄のTDnet処理をスキップ。")
         return {code: ["dry-run-file-id"] for code in stock_codes}
+
+    if not folder_id:
+        logger.error("DRIVE_FOLDER_ID が未設定です。GitHub Secretsに追加してください。")
+        return {}
 
     drive_service = build_drive_service(service_account_json)
     session = requests.Session()
     results: dict[str, list[str]] = {}
 
-    for code in stock_codes:
-        logger.info(f"Processing stock {code} on TDnet...")
-        file_ids = []
+    # 日付一括検索
+    docs = search_tdnet_by_date(trading_date, stock_codes, session)
 
-        docs = search_tdnet_for_stock(code, session)
-        if not docs:
-            logger.warning(f"[{code}] No earnings documents found on TDnet.")
-            results[code] = []
-            time.sleep(rate_limit_delay)
+    if not docs:
+        logger.warning("TDnetからPDFが取得できませんでした。")
+        return {code: [] for code in stock_codes}
+
+    for doc in docs:
+        code = doc["stock_code"]
+        logger.info(f"[{code}] PDF ダウンロード中: {doc['url']}")
+        pdf_bytes = download_pdf(doc["url"], session)
+        if not pdf_bytes:
+            results.setdefault(code, [])
             continue
 
-        # Take only the most recent document
-        latest = docs[0]
-        logger.info(f"[{code}] Found document: {latest['title']} ({latest['date']})")
-
-        pdf_bytes = download_pdf(latest["url"], session)
-        if pdf_bytes is None:
-            logger.warning(f"[{code}] Could not download PDF.")
-            results[code] = []
-            time.sleep(rate_limit_delay)
-            continue
-
-        safe_title = latest["title"].replace("/", "_").replace("\\", "_")[:80]
-        filename = f"{code}_{safe_title}.pdf"
-
+        filename = f"{code}_{doc['title'][:60].replace('/', '_')}.pdf"
         file_id = upload_to_drive(drive_service, pdf_bytes, filename, folder_id)
+        results.setdefault(code, [])
         if file_id:
-            file_ids.append(file_id)
+            results[code].append(file_id)
+        time.sleep(rate_limit_delay)
 
-        results[code] = file_ids
-        time.sleep(rate_limit_delay)  # be polite to TDnet
-
-    logger.info(
-        f"TDnet processing complete. "
-        f"{sum(len(v) for v in results.values())} files uploaded."
-    )
+    uploaded = sum(len(v) for v in results.values())
+    logger.info(f"TDnet処理完了: {uploaded}件アップロード。")
     return results

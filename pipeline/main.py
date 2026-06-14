@@ -113,6 +113,7 @@ def run(dry_run: bool = False, skip_tdnet: bool = False):
                 folder_id=config.DRIVE_FOLDER_ID,
                 service_account_json=config.GOOGLE_SERVICE_ACCOUNT_JSON or "{}",
                 dry_run=dry_run,
+                trading_date=extraction.trading_date,
             )
             tdnet_path = out_dir / "tdnet_uploads.json"
             tdnet_path.write_text(
