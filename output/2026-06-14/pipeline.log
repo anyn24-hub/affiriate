@@ -42,3 +42,34 @@
 2026-06-14 08:19:08,971 [INFO] main: Raw stock extraction saved to output/2026-06-14/raw_stock_extraction.txt
 2026-06-14 08:19:08,971 [INFO] main: Stocks JSON saved to output/2026-06-14/stocks.json (0 stocks)
 2026-06-14 08:19:08,971 [WARNING] main: No stocks extracted. Stopping pipeline.
+2026-06-14 08:32:40,444 [INFO] main: Output directory: output/2026-06-14
+2026-06-14 08:32:40,444 [INFO] main: ============================================================
+2026-06-14 08:32:40,444 [INFO] main: STEP 1: Extracting stocks (Claude API)
+2026-06-14 08:32:40,444 [INFO] main: ============================================================
+2026-06-14 08:32:40,444 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12
+2026-06-14 08:32:40,548 [INFO] pipeline.stock_extractor: irbank.netから60行のデータを取得
+2026-06-14 08:32:40,548 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-14 08:32:42,585 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:32:42,599 [INFO] pipeline.stock_extractor: Parsed 10 in A, 0 in B, 2 in C.
+2026-06-14 08:32:42,599 [INFO] main: Raw stock extraction saved to output/2026-06-14/raw_stock_extraction.txt
+2026-06-14 08:32:42,599 [INFO] main: Stocks JSON saved to output/2026-06-14/stocks.json (12 stocks)
+2026-06-14 08:32:42,599 [INFO] main: ============================================================
+2026-06-14 08:32:42,600 [INFO] main: STEP 2: Downloading earnings PDFs from TDnet → Google Drive
+2026-06-14 08:32:42,600 [INFO] main: ============================================================
+2026-06-14 08:32:42,600 [WARNING] main: GOOGLE_SERVICE_ACCOUNT_JSON not set. Skipping TDnet upload. Set this env var to enable Google Drive upload.
+2026-06-14 08:32:42,600 [INFO] main: ============================================================
+2026-06-14 08:32:42,600 [INFO] main: STEP 3: Generating X posts + image prompts (Claude API)
+2026-06-14 08:32:42,600 [INFO] main: ============================================================
+2026-06-14 08:32:43,779 [WARNING] affiliate_links: 楽天API取得エラー: 400 Client Error: 400 for url: https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=53ffe77a-e8a3-4b5c-bee7-ca3bd2744dca&affiliateId=5335e187.bd9b90cd.5335e188.d302f85f&keyword=%E8%B2%A1%E5%8B%99%E5%88%86%E6%9E%90&booksGenreId=001&hits=20&sort=sales&format=json。フォールバックURLを使用します。
+2026-06-14 08:32:43,780 [INFO] main: Affiliate link selected: https://books.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8
+2026-06-14 08:32:43,780 [WARNING] pipeline.content_generator: GOOGLE_SERVICE_ACCOUNT_JSON が未設定。Drive PDFの取得をスキップ。
+2026-06-14 08:32:43,780 [WARNING] pipeline.content_generator: DriveにPDFが見つかりませんでした。ドライブのフォルダを確認してください。
+2026-06-14 08:32:43,781 [INFO] main: X posts saved to output/2026-06-14/x_posts.txt
+2026-06-14 08:32:43,781 [INFO] main: Image prompts saved to output/2026-06-14/image_prompts.txt
+2026-06-14 08:32:43,781 [INFO] main: ============================================================
+2026-06-14 08:32:43,781 [INFO] main: Pipeline complete.
+2026-06-14 08:32:43,781 [INFO] main:   Trading date  : 2026-06-12
+2026-06-14 08:32:43,781 [INFO] main:   Stocks found  : 12
+2026-06-14 08:32:43,781 [INFO] main:   Posts created : 0
+2026-06-14 08:32:43,781 [INFO] main:   Output folder : /home/runner/work/affiriate/affiriate/output/2026-06-14
+2026-06-14 08:32:43,781 [INFO] main: ============================================================

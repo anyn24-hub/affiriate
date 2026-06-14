@@ -1,1 +1,98 @@
-[]
+[
+  {
+    "code": "2695",
+    "name": "くら寿司",
+    "section": "A",
+    "category": "第２四半期",
+    "content": "寿司チェーン",
+    "notes": ""
+  },
+  {
+    "code": "3399",
+    "name": "丸千代山岡家",
+    "section": "A",
+    "category": "第１四半期",
+    "content": "食品スーパー",
+    "notes": ""
+  },
+  {
+    "code": "4431",
+    "name": "スマレジ",
+    "section": "A",
+    "category": "本決算",
+    "content": "POSシステム",
+    "notes": ""
+  },
+  {
+    "code": "5889",
+    "name": "Japan Eyewear Holdings",
+    "section": "A",
+    "category": "第１四半期",
+    "content": "メガネ販売",
+    "notes": ""
+  },
+  {
+    "code": "2923",
+    "name": "サトウ食品",
+    "section": "A",
+    "category": "本決算",
+    "content": "食品製造",
+    "notes": ""
+  },
+  {
+    "code": "3480",
+    "name": "ジェイ・エス・ビー",
+    "section": "A",
+    "category": "第２四半期",
+    "content": "建設関連",
+    "notes": ""
+  },
+  {
+    "code": "3475",
+    "name": "グッドコムアセット",
+    "section": "A",
+    "category": "第２四半期",
+    "content": "不動産関連",
+    "notes": ""
+  },
+  {
+    "code": "3038",
+    "name": "神戸物産",
+    "section": "A",
+    "category": "第２四半期",
+    "content": "物産関連",
+    "notes": ""
+  },
+  {
+    "code": "4996",
+    "name": "クミアイ化学工業",
+    "section": "A",
+    "category": "第２四半期",
+    "content": "化学製品",
+    "notes": ""
+  },
+  {
+    "code": "5218",
+    "name": "オハラ",
+    "section": "A",
+    "category": "第２四半期",
+    "content": "建設関連",
+    "notes": ""
+  },
+  {
+    "code": "2695",
+    "name": "くら寿司",
+    "section": "C",
+    "category": "",
+    "content": "寿司チェーン",
+    "notes": "[2026-06-12] 営業利益の増加"
+  },
+  {
+    "code": "3399",
+    "name": "丸千代山岡家",
+    "section": "C",
+    "category": "",
+    "content": "食品スーパー",
+    "notes": "[2026-06-12] 収益の増加"
+  }
+]
