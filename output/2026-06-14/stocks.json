@@ -4,7 +4,7 @@
     "name": "星野リゾート・リート投資法人",
     "section": "A",
     "category": "-",
-    "content": "リゾート事業",
+    "content": "リゾート開発",
     "notes": ""
   },
   {
@@ -20,7 +20,7 @@
     "name": "パーク24",
     "section": "A",
     "category": "第２四半期",
-    "content": "パーキング事業",
+    "content": "パーキング管理",
     "notes": ""
   },
   {
@@ -28,7 +28,23 @@
     "name": "ギフトホールディングス",
     "section": "A",
     "category": "第２四半期",
-    "content": "ギフト事業",
+    "content": "ギフトサービス",
+    "notes": ""
+  },
+  {
+    "code": "3415",
+    "name": "TOKYO BASE",
+    "section": "A",
+    "category": "第１四半期",
+    "content": "不動産開発",
+    "notes": ""
+  },
+  {
+    "code": "4380",
+    "name": "Mマート",
+    "section": "A",
+    "category": "第１四半期",
+    "content": "小売業",
     "notes": ""
   },
   {
@@ -40,27 +56,51 @@
     "notes": ""
   },
   {
-    "code": "4380",
-    "name": "Mマート",
+    "code": "5136",
+    "name": "tripla",
     "section": "A",
-    "category": "第１四半期",
-    "content": "小売事業",
+    "category": "第２四半期",
+    "content": "不動産管理",
     "notes": ""
   },
   {
-    "code": "3415",
-    "name": "TOKYO BASE",
-    "section": "A",
-    "category": "第１四半期",
-    "content": "不動産事業",
-    "notes": ""
+    "code": "3825",
+    "name": "リミックスポイント",
+    "section": "C",
+    "category": "",
+    "content": "リサイクル事業",
+    "notes": "+37.31% 急騰理由不明"
   },
   {
-    "code": "8979",
-    "name": "スターツプロシード投資法人",
-    "section": "A",
-    "category": "-",
-    "content": "不動産投資",
-    "notes": ""
+    "code": "7878",
+    "name": "光・彩",
+    "section": "C",
+    "category": "",
+    "content": "光学機器",
+    "notes": "+28.68% 急騰理由不明"
+  },
+  {
+    "code": "6264",
+    "name": "マルマエ",
+    "section": "C",
+    "category": "",
+    "content": "マーケティング",
+    "notes": "+20.88% 急騰理由不明"
+  },
+  {
+    "code": "6731",
+    "name": "ピクセラ",
+    "section": "C",
+    "category": "",
+    "content": "画像処理",
+    "notes": "+20.32% 急騰理由不明"
+  },
+  {
+    "code": "4179",
+    "name": "ジーネクスト",
+    "section": "C",
+    "category": "",
+    "content": "人材紹介",
+    "notes": "+19.04% 急騰理由不明"
   }
 ]
