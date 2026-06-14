@@ -23,24 +23,24 @@ _JP_HOLIDAYS = {
 }
 
 FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエージェント」です。
-以下の3種類のデータをもとに、指定フォーマットで出力してください。
+以下のデータをもとに、指定フォーマットで出力してください。
 
 対象取引日: {trading_date}
 
 【決算データ（irbank.net）】
+※{trading_date}に決算発表した企業一覧（確定済み）
 {earnings_data}
 
-【ストップ高銘柄（株探）】
-{stop_high_data}
-
-【値上がり率上位（株探）】
+【値上がり率上位（irbank.net）】
+※{trading_date}の株価値上がり率ランキング
 {top_gainers_data}
 
 出力ルール:
-- 【A】は決算データから時価総額上位を最大10社
-- 【B】はストップ高のうち「直近1ヶ月以内に決算発表した銘柄」を最大5社
-- 【C】は値上がり率上位のうち「直近1ヶ月以内に決算発表した銘柄」を最大5社
+- 【A】は決算データから時価総額上位を最大10社（予定・未発表は除外）
+- 【B】は値上がり率上位のうち「決算データにも登場する銘柄」を最大5社（決算発表直後に急騰した銘柄）
+- 【C】は値上がり率上位から上位5社（決算関係なく当日の注目銘柄）
 - データがない場合は「（該当なし）」と記載
+- 事業内容は実際の事業を15文字以内で記載（「建設関連」「不動産」などの汎用ラベルは使わず具体的に）
 
 出力形式:
 ▼ 対象取引日: {trading_date}
@@ -50,22 +50,21 @@ FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエ�
 ・カテゴリー：本決算 or 第X四半期
 ・事業内容：（15文字程度で直感的に）
 
-━━【B】ストップ高（直近決算発表銘柄 / 最大5社）━━
+━━【B】決算発表後に急騰した銘柄（最大5社）━━
 ■ [証券コード] 企業名
 ・事業内容：（15文字程度）
-・注目材料：[発表日] 決算内容等の急騰理由を簡潔に
+・注目材料：決算発表後の急騰理由を簡潔に（値上がり率も記載）
 
-━━【C】値上がり率上位（直近決算発表銘柄 / 最大5社）━━
+━━【C】値上がり率上位（当日注目銘柄 / 最大5社）━━
 ■ [証券コード] 企業名
 ・事業内容：（15文字程度）
-・注目材料：[発表日] 決算内容等の急騰理由を簡潔に
+・注目材料：急騰理由を簡潔に（値上がり率も記載）
 
 @kessan_class #決算
 
 【検証ログ】
 ・対象取引日の特定根拠
 ・未来の「予定」銘柄を含んでいないかの確認
-・「決算から1ヶ月以内」の条件合致確認
 """
 
 
@@ -109,17 +108,15 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
 
     # Step 2: 各種データをスクレイピング
     earnings_data = _scrape_irbank(trading_date)
-    stop_high_data = _scrape_stop_high()
     top_gainers_data = _scrape_top_gainers()
-    logger.info(f"irbank: {len(earnings_data.splitlines())}行 / ストップ高: {len(stop_high_data.splitlines())}行 / 値上がり: {len(top_gainers_data.splitlines())}行")
+    logger.info(f"irbank決算: {len(earnings_data.splitlines())}行 / 値上がり: {len(top_gainers_data.splitlines())}行")
 
     # Step 3: Groq APIで整形
     logger.info("Groq APIで整形中...")
     client = Groq(api_key=api_key)
     prompt = FORMAT_PROMPT_TEMPLATE.format(
         trading_date=trading_date,
-        earnings_data=earnings_data if earnings_data else "（本日の決算データなし）",
-        stop_high_data=stop_high_data if stop_high_data else "（データなし）",
+        earnings_data=earnings_data if earnings_data else "（決算データなし）",
         top_gainers_data=top_gainers_data if top_gainers_data else "（データなし）",
     )
 
@@ -193,42 +190,23 @@ def _scrape_irbank(trading_date: str) -> str:
     return "\n".join(lines[:60])  # 上位60行に絞る
 
 
-def _scrape_stop_high() -> str:
-    """株探からストップ高銘柄をスクレイピングしてテキスト形式で返す。"""
-    url = "https://kabutan.jp/warning/?val=stock_h&market=0"
-    try:
-        resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
-        resp.raise_for_status()
-    except Exception as e:
-        logger.warning(f"株探ストップ高取得失敗: {e}")
-        return ""
-
-    soup = BeautifulSoup(resp.text, "lxml")
-    lines = []
-    for row in soup.select("table tr"):
-        cells = [td.get_text(strip=True) for td in row.select("td, th")]
-        if len(cells) >= 2:
-            lines.append(" | ".join(cells))
-    return "\n".join(lines[:40])
-
-
 def _scrape_top_gainers() -> str:
-    """株探から値上がり率上位銘柄をスクレイピングしてテキスト形式で返す。"""
-    url = "https://kabutan.jp/stock/ranking/?val=increase_rate_day&market=0"
+    """irbank.netから値上がり率ランキングをスクレイピングしてテキスト形式で返す。"""
+    import re as _re
+    url = "https://irbank.net/market/rise"
     try:
         resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
         resp.raise_for_status()
     except Exception as e:
-        logger.warning(f"株探値上がり率取得失敗: {e}")
+        logger.warning(f"irbank値上がり率取得失敗: {e}")
         return ""
 
     soup = BeautifulSoup(resp.text, "lxml")
-    lines = []
-    for row in soup.select("table tr"):
-        cells = [td.get_text(strip=True) for td in row.select("td, th")]
-        if len(cells) >= 2:
-            lines.append(" | ".join(cells))
-    return "\n".join(lines[:40])
+    text = soup.get_text()
+    pattern = r"(\d{4}[A-Z]?)\s+(.+?)\+(\d+\.\d+)%"
+    matches = _re.findall(pattern, text)
+    lines = [f"{code} {name.strip()} +{pct}%" for code, name, pct in matches[:40]]
+    return "\n".join(lines)
 
 
 def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
