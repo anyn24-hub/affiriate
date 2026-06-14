@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "code": "3287",
+    "name": "星野リゾート・リート投資法人",
+    "section": "A",
+    "category": "-",
+    "content": "リゾート事業",
+    "notes": ""
+  },
+  {
+    "code": "3309",
+    "name": "積水ハウス・リート投資法人",
+    "section": "A",
+    "category": "-",
+    "content": "不動産投資",
+    "notes": ""
+  },
+  {
+    "code": "4666",
+    "name": "パーク24",
+    "section": "A",
+    "category": "第２四半期",
+    "content": "パーキング事業",
+    "notes": ""
+  },
+  {
+    "code": "9279",
+    "name": "ギフトホールディングス",
+    "section": "A",
+    "category": "第２四半期",
+    "content": "ギフト事業",
+    "notes": ""
+  },
+  {
+    "code": "5248",
+    "name": "テクノロジーズ",
+    "section": "A",
+    "category": "第１四半期",
+    "content": "技術開発",
+    "notes": ""
+  },
+  {
+    "code": "4380",
+    "name": "Mマート",
+    "section": "A",
+    "category": "第１四半期",
+    "content": "小売事業",
+    "notes": ""
+  },
+  {
+    "code": "3415",
+    "name": "TOKYO BASE",
+    "section": "A",
+    "category": "第１四半期",
+    "content": "不動産事業",
+    "notes": ""
+  },
+  {
+    "code": "8979",
+    "name": "スターツプロシード投資法人",
+    "section": "A",
+    "category": "-",
+    "content": "不動産投資",
+    "notes": ""
+  }
+]
