@@ -1,6 +1,6 @@
 import os
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GOOGLE_SERVICE_ACCOUNT_JSON = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 DRIVE_FOLDER_ID = os.environ.get("DRIVE_FOLDER_ID", "18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0")
 DRIVE_FOLDER_URL = os.environ.get("DRIVE_FOLDER_URL", f"https://drive.google.com/drive/folders/{DRIVE_FOLDER_ID}")

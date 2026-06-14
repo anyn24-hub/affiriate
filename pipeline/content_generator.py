@@ -8,7 +8,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 
-import anthropic
+import google.generativeai as genai
 
 logger = logging.getLogger(__name__)
 
@@ -66,29 +66,18 @@ def generate_content(
 
     prompt = CONTENT_GENERATION_PROMPT_TEMPLATE.format(drive_url=drive_folder_url)
 
-    logger.info(f"Calling Claude API for content generation. Drive URL: {drive_folder_url}")
-    client = anthropic.Anthropic(api_key=api_key)
+    logger.info(f"Calling Gemini API for content generation. Drive URL: {drive_folder_url}")
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model_name="gemini-2.0-flash")
 
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=8000,
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-    raw_text = _extract_text(response)
+    response = model.generate_content(prompt)
+    raw_text = response.text
     logger.debug(f"Content generation response length: {len(raw_text)} chars")
 
     companies = _parse_content_output(raw_text, affiliate_link)
     logger.info(f"Generated content for {len(companies)} companies.")
     return GenerationResult(raw_text=raw_text, companies=companies)
 
-
-def _extract_text(response) -> str:
-    parts = []
-    for block in response.content:
-        if hasattr(block, "text"):
-            parts.append(block.text)
-    return "\n".join(parts)
 
 
 def _parse_content_output(text: str, affiliate_link: str) -> list[CompanyContent]:
