@@ -24,6 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import config
+from affiliate_links import get_random_affiliate_link
 from pipeline.content_generator import generate_content
 from pipeline.stock_extractor import extract_stocks
 from pipeline.tdnet_downloader import process_stocks
@@ -124,10 +125,13 @@ def run(dry_run: bool = False, skip_tdnet: bool = False):
     logger.info("STEP 3: Generating X posts + image prompts (Claude API)")
     logger.info("=" * 60)
 
+    affiliate_link = get_random_affiliate_link()
+    logger.info(f"Affiliate link selected: {affiliate_link}")
+
     generation = generate_content(
         api_key=config.ANTHROPIC_API_KEY,
         drive_folder_url=config.DRIVE_FOLDER_URL,
-        affiliate_link=config.AFFILIATE_LINK,
+        affiliate_link=affiliate_link,
         dry_run=dry_run,
     )
 
