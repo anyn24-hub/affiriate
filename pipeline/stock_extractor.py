@@ -28,43 +28,27 @@ FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエ�
 対象取引日: {trading_date}
 
 【決算データ（irbank.net）】
-※{trading_date}に決算発表した企業一覧（確定済み）
+※{trading_date}に決算発表した企業一覧
 {earnings_data}
 
-【値上がり率上位（irbank.net）】
-※{trading_date}の株価値上がり率ランキング
-{top_gainers_data}
-
 出力ルール:
-- 【A】は決算データから時価総額上位を最大10社（予定・未発表は除外）
-- 【B】は値上がり率上位のうち「決算データにも登場する銘柄」を最大5社（決算発表直後に急騰した銘柄）
-- 【C】は値上がり率上位から上位5社（決算関係なく当日の注目銘柄）
+- 上記リストから時価総額上位を最大10社を選ぶ
+- 時価総額が記載されていない場合は後回し
+- 事業内容は実際の事業を15文字以内で具体的に記載
 - データがない場合は「（該当なし）」と記載
-- 事業内容は実際の事業を15文字以内で記載（「建設関連」「不動産」などの汎用ラベルは使わず具体的に）
 
 出力形式:
 ▼ 対象取引日: {trading_date}
 
-━━【A】本日決算の大手企業（時価総額上位・最大10社）━━
+━━ 本日決算の大手企業（時価総額上位・最大10社）━━
 ■ [証券コード] 企業名
 ・カテゴリー：本決算 or 第X四半期
-・事業内容：（15文字程度で直感的に）
-
-━━【B】決算発表後に急騰した銘柄（最大5社）━━
-■ [証券コード] 企業名
 ・事業内容：（15文字程度）
-・注目材料：決算発表後の急騰理由を簡潔に（値上がり率も記載）
-
-━━【C】値上がり率上位（当日注目銘柄 / 最大5社）━━
-■ [証券コード] 企業名
-・事業内容：（15文字程度）
-・注目材料：急騰理由を簡潔に（値上がり率も記載）
 
 @kessan_class #決算
 
 【検証ログ】
-・対象取引日の特定根拠
-・未来の「予定」銘柄を含んでいないかの確認
+・選定した銘柄数と根拠
 """
 
 
@@ -106,10 +90,9 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     trading_date = _get_latest_trading_date()
     logger.info(f"対象取引日: {trading_date}")
 
-    # Step 2: 各種データをスクレイピング
+    # Step 2: 決算データをスクレイピング
     earnings_data = _scrape_irbank(trading_date)
-    top_gainers_data = _scrape_top_gainers()
-    logger.info(f"irbank決算: {len(earnings_data.splitlines())}行 / 値上がり: {len(top_gainers_data.splitlines())}行")
+    logger.info(f"irbank決算: {len(earnings_data.splitlines())}行")
 
     # Step 3: Groq APIで整形
     logger.info("Groq APIで整形中...")
@@ -117,7 +100,6 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     prompt = FORMAT_PROMPT_TEMPLATE.format(
         trading_date=trading_date,
         earnings_data=earnings_data if earnings_data else "（決算データなし）",
-        top_gainers_data=top_gainers_data if top_gainers_data else "（データなし）",
     )
 
     response = client.chat.completions.create(
