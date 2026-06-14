@@ -23,14 +23,26 @@ _JP_HOLIDAYS = {
 }
 
 FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエージェント」です。
-以下の決算データ（irbank.netから取得済み）をもとに、指定フォーマットで出力してください。
+以下の3種類のデータをもとに、指定フォーマットで出力してください。
 
-【取得済み決算データ】
 対象取引日: {trading_date}
 
+【決算データ（irbank.net）】
 {earnings_data}
 
-出力形式（テキストのみ・シンプル構成）:
+【ストップ高銘柄（株探）】
+{stop_high_data}
+
+【値上がり率上位（株探）】
+{top_gainers_data}
+
+出力ルール:
+- 【A】は決算データから時価総額上位を最大10社
+- 【B】はストップ高のうち「直近1ヶ月以内に決算発表した銘柄」を最大5社
+- 【C】は値上がり率上位のうち「直近1ヶ月以内に決算発表した銘柄」を最大5社
+- データがない場合は「（該当なし）」と記載
+
+出力形式:
 ▼ 対象取引日: {trading_date}
 
 ━━【A】本日決算の大手企業（時価総額上位・最大10社）━━
@@ -95,9 +107,11 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     trading_date = _get_latest_trading_date()
     logger.info(f"対象取引日: {trading_date}")
 
-    # Step 2: irbank.netから決算データをスクレイピング
+    # Step 2: 各種データをスクレイピング
     earnings_data = _scrape_irbank(trading_date)
-    logger.info(f"irbank.netから{len(earnings_data.splitlines())}行のデータを取得")
+    stop_high_data = _scrape_stop_high()
+    top_gainers_data = _scrape_top_gainers()
+    logger.info(f"irbank: {len(earnings_data.splitlines())}行 / ストップ高: {len(stop_high_data.splitlines())}行 / 値上がり: {len(top_gainers_data.splitlines())}行")
 
     # Step 3: Groq APIで整形
     logger.info("Groq APIで整形中...")
@@ -105,6 +119,8 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     prompt = FORMAT_PROMPT_TEMPLATE.format(
         trading_date=trading_date,
         earnings_data=earnings_data if earnings_data else "（本日の決算データなし）",
+        stop_high_data=stop_high_data if stop_high_data else "（データなし）",
+        top_gainers_data=top_gainers_data if top_gainers_data else "（データなし）",
     )
 
     response = client.chat.completions.create(
@@ -164,6 +180,44 @@ def _scrape_irbank(trading_date: str) -> str:
         lines.append(row_text)
 
     return "\n".join(lines[:60])  # 上位60行に絞る
+
+
+def _scrape_stop_high() -> str:
+    """株探からストップ高銘柄をスクレイピングしてテキスト形式で返す。"""
+    url = "https://kabutan.jp/warning/?val=stock_h&market=0"
+    try:
+        resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+    except Exception as e:
+        logger.warning(f"株探ストップ高取得失敗: {e}")
+        return ""
+
+    soup = BeautifulSoup(resp.text, "lxml")
+    lines = []
+    for row in soup.select("table tr"):
+        cells = [td.get_text(strip=True) for td in row.select("td, th")]
+        if len(cells) >= 2:
+            lines.append(" | ".join(cells))
+    return "\n".join(lines[:40])
+
+
+def _scrape_top_gainers() -> str:
+    """株探から値上がり率上位銘柄をスクレイピングしてテキスト形式で返す。"""
+    url = "https://kabutan.jp/stock/ranking/?val=t&market=0"
+    try:
+        resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+    except Exception as e:
+        logger.warning(f"株探値上がり率取得失敗: {e}")
+        return ""
+
+    soup = BeautifulSoup(resp.text, "lxml")
+    lines = []
+    for row in soup.select("table tr"):
+        cells = [td.get_text(strip=True) for td in row.select("td, th")]
+        if len(cells) >= 2:
+            lines.append(" | ".join(cells))
+    return "\n".join(lines[:40])
 
 
 def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
