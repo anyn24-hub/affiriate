@@ -229,3 +229,16 @@
 2026-06-14 09:22:40,869 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-14 09:22:40,883 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-14 09:22:40,884 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-14/stocks.json
+2026-06-14 09:37:28,945 [INFO] main: Output directory: output/2026-06-14
+2026-06-14 09:37:28,945 [INFO] main: ============================================================
+2026-06-14 09:37:28,945 [INFO] main: STEP 1: 銘柄抽出
+2026-06-14 09:37:28,945 [INFO] main: ============================================================
+2026-06-14 09:37:28,945 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12
+2026-06-14 09:37:29,069 [WARNING] pipeline.stock_extractor: irbank.net取得失敗: 403 Client Error: Forbidden for url: https://irbank.net/market/kessan?y=2026-06-12
+2026-06-14 09:37:29,569 [WARNING] pipeline.stock_extractor: 株探ストップ高取得失敗: 405 Client Error: Not Allowed for url: https://kabutan.jp/warning/?val=stock_h&market=0
+2026-06-14 09:37:30,052 [WARNING] pipeline.stock_extractor: 株探値上がり率取得失敗: 405 Client Error: Not Allowed for url: https://kabutan.jp/stock/ranking/?val=increase_rate_day&market=0
+2026-06-14 09:37:30,052 [INFO] pipeline.stock_extractor: irbank: 0行 / ストップ高: 0行 / 値上がり: 0行
+2026-06-14 09:37:30,053 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-14 09:37:30,586 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 09:37:30,601 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-14 09:37:30,601 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-14/stocks.json
