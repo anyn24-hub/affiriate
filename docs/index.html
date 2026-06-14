@@ -223,7 +223,12 @@ async function triggerWorkflow(workflowFile) {
     },
     body: JSON.stringify({ ref: branch }),
   });
-  return res.status === 204;
+  if (res.status !== 204) {
+    const body = await res.json().catch(() => ({}));
+    const msg = body.message || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return true;
 }
 
 async function waitForWorkflow(workflowFile, timeoutMs = 300000) {
@@ -266,9 +271,11 @@ async function runStep1() {
   setStatus('status1', 'running', '⏳ 銘柄抽出を開始しました。約1〜2分お待ちください...');
   document.getElementById('result1').classList.remove('show');
 
-  const ok = await triggerWorkflow('step1_extract.yml');
-  if (!ok) {
-    setStatus('status1', 'error', '❌ 起動失敗。GitHubトークンを確認してください。');
+  let ok;
+  try {
+    ok = await triggerWorkflow('step1_extract.yml');
+  } catch(e) {
+    setStatus('status1', 'error', `❌ 起動失敗: ${e.message}`);
     btn.disabled = false; btn.innerHTML = '銘柄抽出を実行';
     return;
   }
@@ -297,9 +304,11 @@ async function runStep3() {
   setStatus('status3', 'running', '⏳ 投稿文を生成中です。Driveを読み取っています（約3分）...');
   document.getElementById('result3').classList.remove('show');
 
-  const ok = await triggerWorkflow('step2_generate.yml');
-  if (!ok) {
-    setStatus('status3', 'error', '❌ 起動失敗。GitHubトークンを確認してください。');
+  let ok;
+  try {
+    ok = await triggerWorkflow('step2_generate.yml');
+  } catch(e) {
+    setStatus('status3', 'error', `❌ 起動失敗: ${e.message}`);
     btn.disabled = false; btn.innerHTML = '投稿文を生成';
     return;
   }
