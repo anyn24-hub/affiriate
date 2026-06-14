@@ -147,3 +147,63 @@
 2026-06-14 08:46:04,159 [INFO] main:   Posts created : 0
 2026-06-14 08:46:04,159 [INFO] main:   Output folder : /home/runner/work/affiriate/affiriate/output/2026-06-14
 2026-06-14 08:46:04,159 [INFO] main: ============================================================
+2026-06-14 08:51:44,447 [INFO] main: Output directory: output/2026-06-14
+2026-06-14 08:51:44,447 [INFO] main: ============================================================
+2026-06-14 08:51:44,447 [INFO] main: STEP 1: Extracting stocks (Claude API)
+2026-06-14 08:51:44,447 [INFO] main: ============================================================
+2026-06-14 08:51:44,447 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12
+2026-06-14 08:51:44,586 [INFO] pipeline.stock_extractor: irbank.netから60行のデータを取得
+2026-06-14 08:51:44,587 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-14 08:51:46,560 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:51:46,575 [INFO] pipeline.stock_extractor: Parsed 10 in A, 5 in B, 5 in C.
+2026-06-14 08:51:46,575 [INFO] main: Raw stock extraction saved to output/2026-06-14/raw_stock_extraction.txt
+2026-06-14 08:51:46,575 [INFO] main: Stocks JSON saved to output/2026-06-14/stocks.json (20 stocks)
+2026-06-14 08:51:46,576 [INFO] main: ============================================================
+2026-06-14 08:51:46,576 [INFO] main: STEP 2: Downloading earnings PDFs from TDnet → Google Drive
+2026-06-14 08:51:46,576 [INFO] main: ============================================================
+2026-06-14 08:51:46,618 [INFO] googleapiclient.discovery_cache: file_cache is only supported with oauth2client<4.0.0
+2026-06-14 08:51:46,944 [WARNING] pipeline.tdnet_downloader: TDnet日付検索（2026-06-12）: 対象銘柄の決算PDFが見つかりませんでした。
+2026-06-14 08:51:46,944 [INFO] pipeline.tdnet_downloader: 代替: 銘柄コード別に個別検索を試みます...
+2026-06-14 08:51:52,625 [WARNING] pipeline.tdnet_downloader: TDnetからPDFが取得できませんでした。
+2026-06-14 08:51:52,626 [INFO] main: TDnet results saved to output/2026-06-14/tdnet_uploads.json
+2026-06-14 08:51:52,626 [INFO] main: ============================================================
+2026-06-14 08:51:52,626 [INFO] main: STEP 3: Generating X posts + image prompts (Claude API)
+2026-06-14 08:51:52,626 [INFO] main: ============================================================
+2026-06-14 08:51:53,648 [WARNING] affiliate_links: 楽天API取得エラー: 400 Client Error: 400 for url: https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=53ffe77a-e8a3-4b5c-bee7-ca3bd2744dca&affiliateId=5335e187.bd9b90cd.5335e188.d302f85f&keyword=%E6%B1%BA%E7%AE%97%E6%9B%B8&booksGenreId=001&hits=20&sort=sales&format=json。フォールバックURLを使用します。
+2026-06-14 08:51:53,649 [INFO] main: Affiliate link selected: https://books.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8
+2026-06-14 08:51:53,690 [INFO] googleapiclient.discovery_cache: file_cache is only supported with oauth2client<4.0.0
+2026-06-14 08:51:55,081 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: デジタルグリッド.pdf (10305文字)
+2026-06-14 08:51:57,088 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: タイミ―.pdf (18085文字)
+2026-06-14 08:51:58,623 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: シーイーシー.pdf (10600文字)
+2026-06-14 08:51:59,849 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: 光・彩.pdf (5539文字)
+2026-06-14 08:51:59,849 [INFO] pipeline.content_generator: 4件のPDFを処理します。
+2026-06-14 08:51:59,870 [INFO] pipeline.content_generator: コンテンツ生成中: デジタルグリッド.pdf
+2026-06-14 08:52:00,036 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-14 08:52:00,036 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 12.000000 seconds
+2026-06-14 08:52:14,269 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:52:14,270 [INFO] pipeline.content_generator: コンテンツ生成中: タイミ―.pdf
+2026-06-14 08:52:14,344 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-14 08:52:14,344 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 52.000000 seconds
+2026-06-14 08:53:08,296 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:53:08,297 [INFO] pipeline.content_generator: コンテンツ生成中: シーイーシー.pdf
+2026-06-14 08:53:08,360 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-14 08:53:08,360 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 37.000000 seconds
+2026-06-14 08:53:45,455 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-14 08:53:45,456 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 16.000000 seconds
+2026-06-14 08:54:03,613 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:54:03,614 [INFO] pipeline.content_generator: コンテンツ生成中: 光・彩.pdf
+2026-06-14 08:54:03,681 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-14 08:54:03,681 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 8.000000 seconds
+2026-06-14 08:54:11,773 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-14 08:54:11,774 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 16.000000 seconds
+2026-06-14 08:54:29,879 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:54:29,880 [INFO] pipeline.content_generator: 4社分のコンテンツを生成しました。
+2026-06-14 08:54:29,880 [INFO] main: X posts saved to output/2026-06-14/x_posts.txt
+2026-06-14 08:54:29,880 [INFO] main: Image prompts saved to output/2026-06-14/image_prompts.txt
+2026-06-14 08:54:29,881 [INFO] main: ============================================================
+2026-06-14 08:54:29,881 [INFO] main: Pipeline complete.
+2026-06-14 08:54:29,881 [INFO] main:   Trading date  : 2026-06-12
+2026-06-14 08:54:29,881 [INFO] main:   Stocks found  : 20
+2026-06-14 08:54:29,881 [INFO] main:   Posts created : 4
+2026-06-14 08:54:29,881 [INFO] main:   Output folder : /home/runner/work/affiriate/affiriate/output/2026-06-14
+2026-06-14 08:54:29,881 [INFO] main: ============================================================
