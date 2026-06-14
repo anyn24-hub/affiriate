@@ -1,7 +1,6 @@
 .env
 *.pyc
 __pycache__/
-output/
 *.log
 .DS_Store
 service_account.json
