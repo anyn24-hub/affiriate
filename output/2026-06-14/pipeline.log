@@ -1,0 +1,31 @@
+2026-06-14 08:11:37,935 [INFO] main: Output directory: output/2026-06-14
+2026-06-14 08:11:37,935 [INFO] main: ============================================================
+2026-06-14 08:11:37,935 [INFO] main: STEP 1: Extracting stocks (Claude API)
+2026-06-14 08:11:37,935 [INFO] main: ============================================================
+2026-06-14 08:11:37,936 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12
+2026-06-14 08:11:38,049 [INFO] pipeline.stock_extractor: irbank.netから60行のデータを取得
+2026-06-14 08:11:38,049 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-14 08:11:40,007 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:11:40,026 [INFO] pipeline.stock_extractor: Parsed 9 in A, 5 in B, 5 in C.
+2026-06-14 08:11:40,026 [INFO] main: Raw stock extraction saved to output/2026-06-14/raw_stock_extraction.txt
+2026-06-14 08:11:40,027 [INFO] main: Stocks JSON saved to output/2026-06-14/stocks.json (19 stocks)
+2026-06-14 08:11:40,027 [INFO] main: STEP 2: Skipping TDnet download (--skip-tdnet flag).
+2026-06-14 08:11:40,027 [INFO] main: ============================================================
+2026-06-14 08:11:40,027 [INFO] main: STEP 3: Generating X posts + image prompts (Claude API)
+2026-06-14 08:11:40,027 [INFO] main: ============================================================
+2026-06-14 08:11:41,244 [WARNING] affiliate_links: 楽天API取得エラー: 400 Client Error: 400 for url: https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=53ffe77a-e8a3-4b5c-bee7-ca3bd2744dca&affiliateId=5335e187.bd9b90cd.5335e188.d302f85f&keyword=%E8%B2%A1%E5%8B%99%E5%88%86%E6%9E%90&booksGenreId=001&hits=20&sort=sales&format=json。フォールバックURLを使用します。
+2026-06-14 08:11:41,245 [INFO] main: Affiliate link selected: https://books.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8
+2026-06-14 08:11:41,246 [INFO] pipeline.content_generator: Calling Groq API for content generation. Drive URL: 
+2026-06-14 08:11:41,318 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-14 08:11:41,319 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 13.000000 seconds
+2026-06-14 08:11:56,225 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-14 08:11:56,226 [INFO] pipeline.content_generator: Generated content for 2 companies.
+2026-06-14 08:11:56,227 [INFO] main: X posts saved to output/2026-06-14/x_posts.txt
+2026-06-14 08:11:56,227 [INFO] main: Image prompts saved to output/2026-06-14/image_prompts.txt
+2026-06-14 08:11:56,227 [INFO] main: ============================================================
+2026-06-14 08:11:56,227 [INFO] main: Pipeline complete.
+2026-06-14 08:11:56,227 [INFO] main:   Trading date  : 2026-06-12
+2026-06-14 08:11:56,227 [INFO] main:   Stocks found  : 19
+2026-06-14 08:11:56,227 [INFO] main:   Posts created : 2
+2026-06-14 08:11:56,227 [INFO] main:   Output folder : /home/runner/work/affiriate/affiriate/output/2026-06-14
+2026-06-14 08:11:56,227 [INFO] main: ============================================================
