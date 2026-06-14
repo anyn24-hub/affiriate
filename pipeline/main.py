@@ -136,6 +136,8 @@ def run(dry_run: bool = False, skip_tdnet: bool = False):
         drive_folder_url=config.DRIVE_FOLDER_URL,
         affiliate_link=affiliate_link,
         dry_run=dry_run,
+        service_account_json=config.GOOGLE_SERVICE_ACCOUNT_JSON,
+        folder_id=config.DRIVE_FOLDER_ID,
     )
 
     # Save raw content generation output
