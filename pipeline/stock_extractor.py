@@ -175,34 +175,16 @@ def _scrape_irbank(trading_date: str) -> str:
     soup = BeautifulSoup(resp.text, "lxml")
     lines = []
 
-    # テーブル行を抽出
-    # y=パラメータでは「発表済み」の行は発表目安列に（実時刻）が括弧内に入る
-    # 例: 15:30（15:00）→発表済み / 15:30のみ or 「予定」→未発表
-    header_done = False
     for row in soup.select("table tr"):
         cells = [td.get_text(strip=True) for td in row.select("td, th")]
         if not cells:
             continue
-        # ヘッダー行は含める
-        if not header_done:
-            lines.append(" | ".join(cells))
-            header_done = True
-            continue
         row_text = " | ".join(cells)
-        # 「予定」を含む行はスキップ
         if "予定" in row_text:
             continue
-        # 発表目安列（index 3）に括弧付き時刻があれば発表済み
-        # 例: 「15:30（15:00）」「16:00（15:30,16:00）」など
-        if len(cells) > 3:
-            timing = cells[3]
-            import re as _re
-            # 括弧内に時刻パターン（HH:MM）があれば発表済みとみなす
-            if timing and not _re.search(r'（\d{1,2}:\d{2}', timing):
-                continue
         lines.append(row_text)
 
-    return "\n".join(lines[:61])  # ヘッダー+最大60行
+    return "\n".join(lines[:60])
 
 
 def _scrape_top_gainers() -> str:
