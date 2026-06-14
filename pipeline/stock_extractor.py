@@ -124,10 +124,10 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     )
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
-        max_tokens=2000,
+        max_tokens=1500,
     )
     raw_text = response.choices[0].message.content
     logger.debug(f"Groq response length: {len(raw_text)} chars")
@@ -169,7 +169,7 @@ _SCRAPE_HEADERS = {
 
 def _scrape_irbank(trading_date: str) -> str:
     """irbank.netから決算データをスクレイピングしてテキスト形式で返す。"""
-    url = f"https://irbank.net/market/kessan?y={trading_date}"
+    url = f"https://irbank.net/market/kessan?d={trading_date}"
     try:
         resp = requests.get(url, timeout=15, headers=_SCRAPE_HEADERS)
         resp.raise_for_status()
