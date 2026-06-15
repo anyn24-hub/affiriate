@@ -43,3 +43,14 @@
 2026-06-15 13:51:25,285 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-15 13:51:25,300 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-15 13:51:25,301 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-15/stocks.json
+2026-06-15 14:02:53,848 [INFO] main: Output directory: output/2026-06-15
+2026-06-15 14:02:53,848 [INFO] main: ============================================================
+2026-06-15 14:02:53,848 [INFO] main: STEP 1: 銘柄抽出
+2026-06-15 14:02:53,848 [INFO] main: ============================================================
+2026-06-15 14:02:53,848 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15
+2026-06-15 14:02:54,281 [INFO] pipeline.stock_extractor: J-Quants: 14社の決算発表を取得
+2026-06-15 14:02:54,282 [INFO] pipeline.stock_extractor: J-Quants決算: 15行
+2026-06-15 14:02:54,282 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-15 14:02:54,869 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:02:54,885 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-15 14:02:54,885 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-15/stocks.json
