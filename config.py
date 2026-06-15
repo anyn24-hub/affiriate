@@ -10,6 +10,7 @@ DRIVE_FOLDER_URL = os.environ.get("DRIVE_FOLDER_URL", f"https://drive.google.com
 # RAKUTEN_AFFILIATE_ID: 楽天アフィリエイトの「アフィリエイトID」（数字.数字.数字 形式）
 RAKUTEN_APP_ID = os.environ.get("RAKUTEN_APP_ID", "")
 RAKUTEN_AFFILIATE_ID = os.environ.get("RAKUTEN_AFFILIATE_ID", "")
+# J-Quants V2ではダッシュボードで発行したAPIキーを使用（シークレット名は後方互換のためJQUANTS_REFRESH_TOKENのまま）
 JQUANTS_REFRESH_TOKEN = os.environ.get("JQUANTS_REFRESH_TOKEN", "")
 
 MODEL = "claude-sonnet-4-6"

@@ -137,53 +137,40 @@ def _get_latest_trading_date() -> str:
     return candidate.strftime("%Y-%m-%d")
 
 
-def _get_jquants_id_token(refresh_token: str) -> str:
-    """リフレッシュトークンからIDトークンを取得する。"""
-    resp = requests.post(
-        "https://api.jquants.com/v1/token/auth_refresh",
-        params={"refreshtoken": refresh_token},
-        timeout=15,
-    )
-    resp.raise_for_status()
-    return resp.json()["idToken"]
-
-
 def _fetch_jquants_earnings(trading_date: str, refresh_token: str) -> str:
-    """J-Quants APIから指定日に決算発表した企業一覧を取得する。"""
+    """J-Quants V2 APIから指定日に決算発表した企業一覧を取得する。"""
     if not refresh_token:
-        logger.warning("JQUANTS_REFRESH_TOKEN が未設定です。")
-        return ""
-
-    try:
-        id_token = _get_jquants_id_token(refresh_token)
-    except Exception as e:
-        logger.warning(f"J-Quants IDトークン取得失敗: {e}")
+        logger.warning("JQUANTS_REFRESH_TOKEN（V2ではAPIキー）が未設定です。")
         return ""
 
     try:
         resp = requests.get(
-            "https://api.jquants.com/v1/fins/announcement",
-            headers={"Authorization": f"Bearer {id_token}"},
+            "https://api.jquants.com/v2/equities/earnings-calendar",
+            headers={"x-api-key": refresh_token},
             params={"date": trading_date},
             timeout=15,
         )
+        if not resp.ok:
+            logger.warning(f"J-Quants V2 response: {resp.status_code} {resp.text[:300]}")
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
         logger.warning(f"J-Quants決算データ取得失敗: {e}")
         return ""
 
-    announcements = data.get("announcement", [])
+    # V2 returns data under "data" key; fall back to "announcement" for compatibility
+    announcements = data.get("data") or data.get("announcement", [])
     if not announcements:
         logger.info(f"J-Quants: {trading_date}の決算発表データなし")
         return ""
 
     lines = ["証券コード | 企業名 | 決算種別 | 発表日時"]
     for a in announcements:
-        code = a.get("Code", "")
-        company = a.get("CompanyName", "")
-        period = a.get("FiscalQuarter", "")
-        dt = a.get("AnnouncementDateTime", "")
+        # V2 field names may be shortened; try both forms
+        code = a.get("code") or a.get("Code", "")
+        company = a.get("companyName") or a.get("company_name") or a.get("CompanyName", "")
+        period = a.get("fiscalQuarter") or a.get("fiscal_quarter") or a.get("FiscalQuarter", "")
+        dt = a.get("announcementDatetime") or a.get("announcement_datetime") or a.get("AnnouncementDateTime", "")
         lines.append(f"{code} | {company} | {period} | {dt}")
 
     logger.info(f"J-Quants: {len(announcements)}社の決算発表を取得")
