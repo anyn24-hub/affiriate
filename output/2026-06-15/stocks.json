@@ -36,7 +36,7 @@
     "name": "城南進学研究社",
     "section": "A",
     "category": "本決算",
-    "content": "教育サービス",
+    "content": "学習塾",
     "notes": ""
   },
   {
@@ -68,7 +68,7 @@
     "name": "大同信号",
     "section": "A",
     "category": "本決算",
-    "content": "電気機器",
+    "content": "信号機器",
     "notes": ""
   },
   {
@@ -76,7 +76,7 @@
     "name": "フライトソリューションズ",
     "section": "A",
     "category": "本決算",
-    "content": "ITサービス",
+    "content": "航空ソリューション",
     "notes": ""
   }
 ]

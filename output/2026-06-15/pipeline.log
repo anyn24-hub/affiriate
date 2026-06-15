@@ -114,3 +114,19 @@
 2026-06-15 14:53:02,536 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-15 14:53:02,549 [INFO] pipeline.stock_extractor: Parsed 10 in A, 0 in B, 0 in C.
 2026-06-15 14:53:02,549 [INFO] main: 銘柄抽出完了: 10社 → output/2026-06-15/stocks.json
+2026-06-15 14:59:20,162 [INFO] main: Output directory: output/2026-06-15
+2026-06-15 14:59:20,162 [INFO] main: ============================================================
+2026-06-15 14:59:20,162 [INFO] main: STEP 1: 銘柄抽出
+2026-06-15 14:59:20,162 [INFO] main: ============================================================
+2026-06-15 14:59:20,162 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-15 23:59 weekday=0
+2026-06-15 14:59:20,162 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-15
+2026-06-15 14:59:20,162 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15
+2026-06-15 14:59:20,811 [INFO] pipeline.stock_extractor: J-Quants V2レスポンスキー: ['data']
+2026-06-15 14:59:20,811 [INFO] pipeline.stock_extractor: 先頭レコード全体: {'Date': '2026-05-20', 'Code': '26730', 'CoName': '夢みつけ隊', 'FY': '3月31日', 'SectorNm': '小売業', 'FQ': '本決算', 'Section': 'スタンダード'}
+2026-06-15 14:59:20,812 [INFO] pipeline.stock_extractor: 先頭5件のDateフィールド: ['2026-05-20', '2026-05-20', '2026-05-20', '2026-05-20', '2026-05-20']
+2026-06-15 14:59:20,812 [INFO] pipeline.stock_extractor: J-Quants: 14社の決算発表を取得
+2026-06-15 14:59:20,812 [INFO] pipeline.stock_extractor: J-Quants決算: 15行
+2026-06-15 14:59:20,813 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-15 14:59:24,594 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 14:59:24,609 [INFO] pipeline.stock_extractor: Parsed 10 in A, 0 in B, 0 in C.
+2026-06-15 14:59:24,610 [INFO] main: 銘柄抽出完了: 10社 → output/2026-06-15/stocks.json
