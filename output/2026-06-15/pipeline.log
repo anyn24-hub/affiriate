@@ -32,3 +32,14 @@
 2026-06-15 13:50:53,941 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-15 13:50:53,953 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-15 13:50:53,954 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-15/stocks.json
+2026-06-15 13:51:24,300 [INFO] main: Output directory: output/2026-06-15
+2026-06-15 13:51:24,300 [INFO] main: ============================================================
+2026-06-15 13:51:24,300 [INFO] main: STEP 1: 銘柄抽出
+2026-06-15 13:51:24,301 [INFO] main: ============================================================
+2026-06-15 13:51:24,301 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15
+2026-06-15 13:51:24,748 [WARNING] pipeline.stock_extractor: J-Quants IDトークン取得失敗: 410 Client Error: Gone for url: https://api.jquants.com/v1/token/auth_refresh?refreshtoken=uuHNd1rx0yzAq4INPkEOKeRE3mA_18kg2x1JJWCZmCQ
+2026-06-15 13:51:24,749 [INFO] pipeline.stock_extractor: J-Quants決算: 0行
+2026-06-15 13:51:24,750 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-15 13:51:25,285 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 13:51:25,300 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-15 13:51:25,301 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-15/stocks.json
