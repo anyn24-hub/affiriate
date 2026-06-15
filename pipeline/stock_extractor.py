@@ -122,10 +122,12 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
 
 def _get_latest_trading_date() -> str:
     """市場が閉まっている最新の取引日を返す（YYYY-MM-DD形式）。"""
-    now = datetime.now()
-    # 今日が平日16:00以降なら今日、それ以外は直前の営業日
+    from datetime import timezone
+    JST = timezone(timedelta(hours=9))
+    now = datetime.now(JST)
+    # 日本時間で平日15:30以降なら当日、それ以外は直前の営業日
     candidate = now.date()
-    if now.weekday() >= 5 or now.hour < 16:
+    if now.weekday() >= 5 or now.hour < 15 or (now.hour == 15 and now.minute < 30):
         candidate -= timedelta(days=1)
     # 土日・祝日を遡る
     for _ in range(14):
