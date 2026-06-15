@@ -34,10 +34,11 @@ FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエ�
 {earnings_data}
 
 出力ルール:
-- 上記リストから時価総額上位を最大10社を選ぶ
-- 時価総額が記載されていない場合は後回し
-- 事業内容は実際の事業を15文字以内で具体的に記載
+- 上記リストから最大10社を選ぶ（本決算を優先し、次に第4四半期、その次に第3四半期の順）
+- 同じ種別の場合は証券コードが小さい（＝大手）順に並べる
+- 事業内容は実際の事業を15文字以内で具体的に記載（一般的な業種知識から補完してよい）
 - データがない場合は「（該当なし）」と記載
+- 時価総額データはないので順位付けは不要。リストにある企業をそのまま選定すること
 
 出力形式:
 ▼ 対象取引日: {trading_date}
@@ -125,15 +126,23 @@ def extract_stocks(api_key: str, dry_run: bool = False, jquants_refresh_token: s
 def _get_latest_trading_date() -> str:
     """市場が閉まっている最新の取引日を返す（YYYY-MM-DD形式）。"""
     now = datetime.now(JST)
-    # 日本時間で平日15:30以降なら当日、それ以外は直前の営業日
+    logger.info(f"現在時刻(JST): {now.strftime('%Y-%m-%d %H:%M')} weekday={now.weekday()}")
     candidate = now.date()
-    if now.weekday() >= 5 or now.hour < 15 or (now.hour == 15 and now.minute < 30):
+    # 土日・祝日、または15:30前なら今日は取引日でない
+    market_closed_today = (
+        candidate.weekday() >= 5
+        or (candidate.month, candidate.day) in _JP_HOLIDAYS
+        or now.hour < 15
+        or (now.hour == 15 and now.minute < 30)
+    )
+    if market_closed_today:
         candidate -= timedelta(days=1)
     # 土日・祝日を遡る
     for _ in range(14):
         if candidate.weekday() < 5 and (candidate.month, candidate.day) not in _JP_HOLIDAYS:
             break
         candidate -= timedelta(days=1)
+    logger.info(f"算出された取引日: {candidate}")
     return candidate.strftime("%Y-%m-%d")
 
 
@@ -160,8 +169,11 @@ def _fetch_jquants_earnings(trading_date: str, refresh_token: str) -> str:
 
     # V2 returns data under "data" key; fall back to "announcement" for compatibility
     announcements = data.get("data") or data.get("announcement", [])
-    if not announcements:
-        logger.info(f"J-Quants: {trading_date}の決算発表データなし")
+    logger.info(f"J-Quants V2レスポンスキー: {list(data.keys())}")
+    if announcements:
+        logger.info(f"先頭レコードのフィールド: {list(announcements[0].keys())}")
+    else:
+        logger.info(f"J-Quants: {trading_date}の決算発表データなし (レスポンス: {str(data)[:200]})")
         return ""
 
     lines = ["証券コード | 企業名 | 決算種別 | 発表日時"]
