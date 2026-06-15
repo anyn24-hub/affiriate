@@ -1,0 +1,10 @@
+2026-06-15 13:23:09,870 [INFO] main: Output directory: output/2026-06-15
+2026-06-15 13:23:09,870 [INFO] main: ============================================================
+2026-06-15 13:23:09,870 [INFO] main: STEP 1: 銘柄抽出
+2026-06-15 13:23:09,870 [INFO] main: ============================================================
+2026-06-15 13:23:09,870 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12
+2026-06-15 13:23:13,128 [INFO] pipeline.stock_extractor: irbank決算: 60行
+2026-06-15 13:23:13,128 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-15 13:23:14,498 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 13:23:14,513 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-15 13:23:14,513 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-15/stocks.json
