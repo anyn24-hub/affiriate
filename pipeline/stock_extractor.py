@@ -176,23 +176,26 @@ def _fetch_jquants_earnings(trading_date: str, refresh_token: str) -> str:
         logger.info(f"J-Quants: {trading_date}の決算発表データなし (レスポンス: {str(data)[:200]})")
         return ""
 
-    lines = ["証券コード | 企業名 | 決算種別 | 発表日時"]
+    lines = ["証券コード | 企業名 | 決算種別 | セクター"]
     for a in announcements:
-        # V2 field names may be shortened; try both forms
-        code = a.get("code") or a.get("Code", "")
-        company = a.get("companyName") or a.get("company_name") or a.get("CompanyName", "")
-        period = a.get("fiscalQuarter") or a.get("fiscal_quarter") or a.get("FiscalQuarter", "")
-        dt = a.get("announcementDatetime") or a.get("announcement_datetime") or a.get("AnnouncementDateTime", "")
-        lines.append(f"{code} | {company} | {period} | {dt}")
+        # V2 actual field names: Code, CoName, FQ, SectorNm, FY, Section
+        code = a.get("Code") or a.get("code", "")
+        company = a.get("CoName") or a.get("companyName") or a.get("CompanyName", "")
+        period = a.get("FQ") or a.get("fiscalQuarter") or a.get("FiscalQuarter", "")
+        sector = a.get("SectorNm") or a.get("Section", "")
+        lines.append(f"{code} | {company} | {period} | {sector}")
 
     logger.info(f"J-Quants: {len(announcements)}社の決算発表を取得")
     return "\n".join(lines)
 
 
 def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
+    # Try section-based parsing first; fall back to flat ■ parsing
     stocks_a = _parse_section(text, "A")
     stocks_b = _parse_section(text, "B")
     stocks_c = _parse_section(text, "C")
+    if not stocks_a and not stocks_b and not stocks_c:
+        stocks_a = _parse_flat(text)
     return ExtractionResult(
         raw_text=text,
         trading_date=trading_date,
@@ -200,6 +203,29 @@ def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
         stocks_b=stocks_b,
         stocks_c=stocks_c,
     )
+
+
+def _parse_flat(text: str) -> list[Stock]:
+    """セクション分けなしの ■ エントリを直接パースする。"""
+    stocks = []
+    entry_pattern = r"■\s*\[?(\d{4,5}[A-Z]?)\]?\s+(.+?)(?=■|@kessan|\Z)"
+    for entry_match in re.finditer(entry_pattern, text, re.DOTALL):
+        code = entry_match.group(1).strip()
+        rest = entry_match.group(2).strip()
+        lines = [l.strip() for l in rest.splitlines() if l.strip()]
+        name = lines[0] if lines else ""
+        category = content = notes = ""
+        for line in lines[1:]:
+            if "カテゴリー" in line or "カテゴリ" in line:
+                category = re.sub(r"^[・\-\s]*カテゴリー?[：:]\s*", "", line).strip()
+            elif "事業内容" in line:
+                content = re.sub(r"^[・\-\s]*事業内容[：:]\s*", "", line).strip()
+            elif "注目材料" in line:
+                notes = re.sub(r"^[・\-\s]*注目材料[：:]\s*", "", line).strip()
+        if code and name:
+            stocks.append(Stock(code=code, name=name, category=category,
+                                content=content, notes=notes, section="A"))
+    return stocks
 
 
 def _parse_section(text: str, section_letter: str) -> list[Stock]:
