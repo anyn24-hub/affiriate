@@ -130,3 +130,25 @@
 2026-06-15 14:59:24,594 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-15 14:59:24,609 [INFO] pipeline.stock_extractor: Parsed 10 in A, 0 in B, 0 in C.
 2026-06-15 14:59:24,610 [INFO] main: 銘柄抽出完了: 10社 → output/2026-06-15/stocks.json
+2026-06-15 20:40:30,999 [INFO] main: Output directory: output/2026-06-15
+2026-06-15 20:40:30,999 [INFO] main: ============================================================
+2026-06-15 20:40:30,999 [INFO] main: STEP 1: 銘柄抽出
+2026-06-15 20:40:30,999 [INFO] main: ============================================================
+2026-06-15 20:40:30,999 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-16 05:40 weekday=1
+2026-06-15 20:40:30,999 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-15
+2026-06-15 20:40:30,999 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15
+2026-06-15 20:40:30,999 [WARNING] pipeline.stock_extractor: JQUANTS_REFRESH_TOKEN（V2ではAPIキー）が未設定です。
+2026-06-15 20:40:30,999 [INFO] pipeline.stock_extractor: J-Quants決算: 0行
+2026-06-15 20:40:30,999 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-15 20:40:31,528 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-15 20:40:31,541 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-15 20:40:31,541 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-15/stocks.json
+2026-06-15 20:40:31,542 [INFO] main: ============================================================
+2026-06-15 20:40:31,542 [INFO] main: STEP 3: 投稿文・画像指示書生成
+2026-06-15 20:40:31,542 [INFO] main: ============================================================
+2026-06-15 20:40:32,688 [WARNING] affiliate_links: 楽天API取得エラー: 400 Client Error: 400 for url: https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=53ffe77a-e8a3-4b5c-bee7-ca3bd2744dca&affiliateId=5335e187.bd9b90cd.5335e188.d302f85f&keyword=%E6%B1%BA%E7%AE%97%E6%9B%B8&booksGenreId=001&hits=20&sort=sales&format=json。フォールバックURLを使用します。
+2026-06-15 20:40:32,689 [INFO] main: アフィリエイトリンク: https://books.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8
+2026-06-15 20:40:32,737 [INFO] googleapiclient.discovery_cache: file_cache is only supported with oauth2client<4.0.0
+2026-06-15 20:40:33,146 [WARNING] pipeline.content_generator: DriveフォルダにPDFが見つかりません。
+2026-06-15 20:40:33,146 [WARNING] pipeline.content_generator: DriveにPDFが見つかりませんでした。ドライブのフォルダを確認してください。
+2026-06-15 20:40:33,147 [INFO] main: 投稿文生成完了: 0社
