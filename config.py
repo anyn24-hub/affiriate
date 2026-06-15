@@ -10,6 +10,7 @@ DRIVE_FOLDER_URL = os.environ.get("DRIVE_FOLDER_URL", f"https://drive.google.com
 # RAKUTEN_AFFILIATE_ID: 楽天アフィリエイトの「アフィリエイトID」（数字.数字.数字 形式）
 RAKUTEN_APP_ID = os.environ.get("RAKUTEN_APP_ID", "")
 RAKUTEN_AFFILIATE_ID = os.environ.get("RAKUTEN_AFFILIATE_ID", "")
+JQUANTS_REFRESH_TOKEN = os.environ.get("JQUANTS_REFRESH_TOKEN", "")
 
 MODEL = "claude-sonnet-4-6"
 TDNET_BASE_URL = "https://www.release.tdnet.info/inbs/I_main_00.html"

@@ -30,6 +30,7 @@ jobs:
           DRIVE_FOLDER_URL: ${{ secrets.DRIVE_FOLDER_URL }}
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+          JQUANTS_REFRESH_TOKEN: ${{ secrets.JQUANTS_REFRESH_TOKEN }}
         run: python pipeline/main.py --skip-tdnet --step extract
 
       - name: 結果をコミット

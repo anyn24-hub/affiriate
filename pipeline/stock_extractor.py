@@ -1,19 +1,21 @@
 """
 stock_extractor.py
-irbank.net をスクレイピングして決算銘柄を取得し、
+J-Quants API（日本取引所グループ公式・無料）で決算銘柄を取得し、
 Groq API（無料）で整形・分析する。
 """
 
 import logging
 import re
+import time
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
-from bs4 import BeautifulSoup
 from groq import Groq
 
 logger = logging.getLogger(__name__)
+
+JST = timezone(timedelta(hours=9))
 
 # 日本の祝日（固定分・主要なもの）
 _JP_HOLIDAYS = {
@@ -27,7 +29,7 @@ FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエ�
 
 対象取引日: {trading_date}
 
-【決算データ（irbank.net）】
+【決算データ（J-Quants API）】
 ※{trading_date}に決算発表した企業一覧
 {earnings_data}
 
@@ -74,7 +76,7 @@ class ExtractionResult:
         return self.stocks_a + self.stocks_b + self.stocks_c
 
 
-def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
+def extract_stocks(api_key: str, dry_run: bool = False, jquants_refresh_token: str = "") -> ExtractionResult:
     if dry_run:
         logger.info("[DRY RUN] Would call Groq API for stock extraction.")
         return ExtractionResult(
@@ -90,9 +92,9 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
     trading_date = _get_latest_trading_date()
     logger.info(f"対象取引日: {trading_date}")
 
-    # Step 2: 決算データをスクレイピング
-    earnings_data = _scrape_irbank(trading_date)
-    logger.info(f"irbank決算: {len(earnings_data.splitlines())}行")
+    # Step 2: J-Quants APIで決算データ取得
+    earnings_data = _fetch_jquants_earnings(trading_date, jquants_refresh_token)
+    logger.info(f"J-Quants決算: {len(earnings_data.splitlines())}行")
 
     # Step 3: Groq APIで整形
     logger.info("Groq APIで整形中...")
@@ -122,8 +124,6 @@ def extract_stocks(api_key: str, dry_run: bool = False) -> ExtractionResult:
 
 def _get_latest_trading_date() -> str:
     """市場が閉まっている最新の取引日を返す（YYYY-MM-DD形式）。"""
-    from datetime import timezone
-    JST = timezone(timedelta(hours=9))
     now = datetime.now(JST)
     # 日本時間で平日15:30以降なら当日、それ以外は直前の営業日
     candidate = now.date()
@@ -137,88 +137,56 @@ def _get_latest_trading_date() -> str:
     return candidate.strftime("%Y-%m-%d")
 
 
-import time
-
-_SCRAPE_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "ja,en-US;q=0.7,en;q=0.3",
-    "Referer": "https://irbank.net/",
-}
+def _get_jquants_id_token(refresh_token: str) -> str:
+    """リフレッシュトークンからIDトークンを取得する。"""
+    resp = requests.post(
+        "https://api.jquants.com/v1/token/auth_refresh",
+        params={"refreshtoken": refresh_token},
+        timeout=15,
+    )
+    resp.raise_for_status()
+    return resp.json()["idToken"]
 
 
-def _get_irbank_session() -> requests.Session:
-    """Cookie付きセッションを取得（Bot検知回避）。"""
-    s = requests.Session()
-    s.headers.update(_SCRAPE_HEADERS)
-    try:
-        s.get("https://irbank.net/", timeout=10)
-        time.sleep(1)
-    except Exception:
-        pass
-    return s
-
-
-def _scrape_irbank(trading_date: str) -> str:
-    """irbank.netから決算データをスクレイピングしてテキスト形式で返す。"""
-    url = f"https://irbank.net/market/kessan?y={trading_date}"
-    # 403対策: 最大3回リトライ、待機時間を増やしながら試みる
-    for attempt in range(3):
-        try:
-            session = _get_irbank_session()
-            time.sleep(2 + attempt * 3)  # 2秒→5秒→8秒
-            resp = session.get(url, timeout=15)
-            if resp.status_code == 403:
-                logger.warning(f"irbank.net 403 (attempt {attempt+1}/3)")
-                time.sleep(10 + attempt * 10)
-                continue
-            resp.raise_for_status()
-            break
-        except Exception as e:
-            logger.warning(f"irbank.net取得失敗 (attempt {attempt+1}/3): {e}")
-            if attempt == 2:
-                return ""
-            time.sleep(10)
-    else:
+def _fetch_jquants_earnings(trading_date: str, refresh_token: str) -> str:
+    """J-Quants APIから指定日に決算発表した企業一覧を取得する。"""
+    if not refresh_token:
+        logger.warning("JQUANTS_REFRESH_TOKEN が未設定です。")
         return ""
 
-    soup = BeautifulSoup(resp.text, "lxml")
-    lines = []
-
-    for row in soup.select("table tr"):
-        cells = [td.get_text(strip=True) for td in row.select("td, th")]
-        if not cells:
-            continue
-        row_text = " | ".join(cells)
-        if "予定" in row_text:
-            continue
-        lines.append(row_text)
-
-    return "\n".join(lines[:60])
-
-
-def _scrape_top_gainers() -> str:
-    """irbank.netから値上がり率ランキングをスクレイピングしてテキスト形式で返す。"""
-    import re as _re
-    url = "https://irbank.net/market/rise"
     try:
-        session = _get_irbank_session()
-        time.sleep(1)
-        resp = session.get(url, timeout=15)
-        resp.raise_for_status()
+        id_token = _get_jquants_id_token(refresh_token)
     except Exception as e:
-        logger.warning(f"irbank値上がり率取得失敗: {e}")
+        logger.warning(f"J-Quants IDトークン取得失敗: {e}")
         return ""
 
-    soup = BeautifulSoup(resp.text, "lxml")
-    text = soup.get_text()
-    pattern = r"(\d{4}[A-Z]?)\s+(.+?)\+(\d+\.\d+)%"
-    matches = _re.findall(pattern, text)
-    lines = [f"{code} {name.strip()} +{pct}%" for code, name, pct in matches[:40]]
+    try:
+        resp = requests.get(
+            "https://api.jquants.com/v1/fins/announcement",
+            headers={"Authorization": f"Bearer {id_token}"},
+            params={"date": trading_date},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as e:
+        logger.warning(f"J-Quants決算データ取得失敗: {e}")
+        return ""
+
+    announcements = data.get("announcement", [])
+    if not announcements:
+        logger.info(f"J-Quants: {trading_date}の決算発表データなし")
+        return ""
+
+    lines = ["証券コード | 企業名 | 決算種別 | 発表日時"]
+    for a in announcements:
+        code = a.get("Code", "")
+        company = a.get("CompanyName", "")
+        period = a.get("FiscalQuarter", "")
+        dt = a.get("AnnouncementDateTime", "")
+        lines.append(f"{code} | {company} | {period} | {dt}")
+
+    logger.info(f"J-Quants: {len(announcements)}社の決算発表を取得")
     return "\n".join(lines)
 
 

@@ -64,7 +64,11 @@ def run(dry_run: bool = False, skip_tdnet: bool = True, step: str = "all"):
         logger.info("STEP 1: 銘柄抽出")
         logger.info("=" * 60)
 
-        extraction = extract_stocks(api_key=config.GROQ_API_KEY, dry_run=dry_run)
+        extraction = extract_stocks(
+            api_key=config.GROQ_API_KEY,
+            dry_run=dry_run,
+            jquants_refresh_token=config.JQUANTS_REFRESH_TOKEN,
+        )
 
         raw_path = out_dir / "raw_stock_extraction.txt"
         raw_path.write_text(extraction.raw_text, encoding="utf-8")
