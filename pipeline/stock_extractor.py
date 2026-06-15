@@ -171,7 +171,8 @@ def _fetch_jquants_earnings(trading_date: str, refresh_token: str) -> str:
     announcements = data.get("data") or data.get("announcement", [])
     logger.info(f"J-Quants V2レスポンスキー: {list(data.keys())}")
     if announcements:
-        logger.info(f"先頭レコードのフィールド: {list(announcements[0].keys())}")
+        logger.info(f"先頭レコード全体: {announcements[0]}")
+        logger.info(f"先頭5件のDateフィールド: {[a.get('Date','?') for a in announcements[:5]]}")
     else:
         logger.info(f"J-Quants: {trading_date}の決算発表データなし (レスポンス: {str(data)[:200]})")
         return ""
