@@ -200,3 +200,29 @@
 2026-06-16 13:35:30,306 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-16 13:35:30,319 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-16 13:35:30,319 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-16/stocks.json
+2026-06-16 13:38:03,001 [INFO] main: Output directory: output/2026-06-16
+2026-06-16 13:38:03,001 [INFO] main: ============================================================
+2026-06-16 13:38:03,001 [INFO] main: STEP 1: 銘柄抽出
+2026-06-16 13:38:03,001 [INFO] main: ============================================================
+2026-06-16 13:38:03,001 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-16 13:38:03,416 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 13:38:03,416 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 13:38:03,417 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-16 13:38:03,692 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 13:38:03,692 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 13:38:03,693 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-16 13:38:03,980 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 13:38:03,980 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 13:38:03,981 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-16 13:38:04,277 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 13:38:04,277 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 13:38:04,278 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-10 を試行中...
+2026-06-16 13:38:04,528 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 13:38:04,528 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 13:38:04,529 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-16 22:38 weekday=1
+2026-06-16 13:38:04,529 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-16
+2026-06-16 13:38:04,529 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-16 を使用。
+2026-06-16 13:38:04,529 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-16 13:38:04,848 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:38:04,861 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-16 13:38:04,861 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-16/stocks.json
