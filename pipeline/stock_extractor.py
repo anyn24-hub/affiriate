@@ -146,71 +146,129 @@ def _get_latest_trading_date() -> str:
 
 
 def _fetch_jquants_earnings(trading_date: str, api_key: str) -> str:
-    """J-Quants V2 APIから指定日に決算発表した企業一覧を取得する。
-    dateパラメータは決算期末日フィルタのため使わず、全件取得後にDateフィールドで絞り込む。
+    """J-Quants V2 TDnet適時開示APIから指定日の決算発表企業を取得する。
+    /v2/td/list は実際の開示日でフィルタできる。
     """
     if not api_key:
         logger.warning("JQUANTS_REFRESH_TOKEN（J-Quants APIキー）が未設定です。")
         return ""
 
-    # YYYYMMDD形式も試す（V2はどちらか不明なため両方試す）
-    date_nodash = trading_date.replace("-", "")
-
-    all_records = []
-    pagination_key = None
+    date_nodash = trading_date.replace("-", "")  # YYYYMMDD形式
 
     try:
-        while True:
-            params = {}
-            if pagination_key:
-                params["pagination_key"] = pagination_key
-            resp = requests.get(
-                "https://api.jquants.com/v2/equities/earnings-calendar",
-                headers={"x-api-key": api_key},
-                params=params,
-                timeout=20,
-            )
-            if not resp.ok:
-                logger.warning(f"J-Quants V2 response: {resp.status_code} {resp.text[:300]}")
-            resp.raise_for_status()
-            data = resp.json()
-            records = data.get("data") or data.get("announcement", [])
-            all_records.extend(records)
-            logger.info(f"J-Quants: {len(records)}件取得（累計{len(all_records)}件）")
-            pagination_key = data.get("pagination_key")
-            if not pagination_key or not records:
-                break
+        resp = requests.get(
+            "https://api.jquants.com/v2/td/list",
+            headers={"x-api-key": api_key},
+            params={"date": date_nodash},
+            timeout=20,
+        )
+        if not resp.ok:
+            logger.warning(f"J-Quants TDnet response: {resp.status_code} {resp.text[:300]}")
+        resp.raise_for_status()
+        data = resp.json()
     except Exception as e:
-        logger.warning(f"J-Quants決算データ取得失敗: {e}")
+        logger.warning(f"J-Quants TDnet取得失敗: {e}")
         return ""
 
-    if not all_records:
-        logger.warning("J-Quants: データが1件も取得できませんでした")
+    records = data.get("data") or data.get("tdnet", [])
+    logger.info(f"J-Quants TDnet: {len(records)}件取得")
+    if records:
+        logger.info(f"先頭レコード例: {records[0]}")
+
+    if not records:
+        logger.warning(f"J-Quants TDnet: {trading_date}のデータなし（レスポンス: {str(data)[:200]}）")
         return ""
 
-    # Dateフィールドで発表日を絞り込む（YYYY-MM-DDまたはYYYYMMDD両方に対応）
-    logger.info(f"先頭レコード例: {all_records[0]}")
-    matched = [
-        a for a in all_records
-        if a.get("Date", "") in (trading_date, date_nodash)
+    # 決算関連の開示のみ絞り込む（タイトルに「決算」「業績」を含むもの）
+    earnings_keywords = ("決算", "業績", "四半期", "通期")
+    filtered = [
+        r for r in records
+        if any(kw in (r.get("Title") or r.get("title") or "") for kw in earnings_keywords)
     ]
-    logger.info(f"J-Quants: 全{len(all_records)}件中、{trading_date}の発表は{len(matched)}社")
+    logger.info(f"J-Quants TDnet: 決算関連 {len(filtered)}件に絞り込み")
 
-    if not matched:
-        logger.warning(f"J-Quants: {trading_date}に一致するDateレコードなし（先頭5件のDate: {[a.get('Date','?') for a in all_records[:5]]}）")
-        return ""
+    if not filtered:
+        # キーワードなしでも全件渡す
+        filtered = records
 
-    lines = ["証券コード | 企業名 | 決算種別 | セクター"]
-    for a in matched:
-        code = (a.get("Code") or a.get("code", "")).rstrip("0")  # 末尾の0を除去（87250→8725）
-        if len(code) > 4:
-            code = code[:4]  # 4桁に正規化
-        company = a.get("CoName") or a.get("companyName") or a.get("CompanyName", "")
-        period = a.get("FQ") or a.get("fiscalQuarter") or a.get("FiscalQuarter", "")
-        sector = a.get("SectorNm") or a.get("Section", "")
-        lines.append(f"{code} | {company} | {period} | {sector}")
+    seen_codes = set()
+    lines = ["証券コード | 企業名 | タイトル"]
+    for r in filtered:
+        code = r.get("Code") or r.get("code", "")
+        if code.endswith("0") and len(code) == 5:
+            code = code[:4]
+        company = r.get("CompanyName") or r.get("company_name") or r.get("CoName", "")
+        title = r.get("Title") or r.get("title", "")
+        if code and code not in seen_codes:
+            seen_codes.add(code)
+            lines.append(f"{code} | {company} | {title}")
 
+    logger.info(f"J-Quants TDnet: {len(seen_codes)}社を抽出")
     return "\n".join(lines)
+
+
+def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
+    stocks_a = _parse_section(text, "A")
+    stocks_b = _parse_section(text, "B")
+    stocks_c = _parse_section(text, "C")
+    if not stocks_a and not stocks_b and not stocks_c:
+        stocks_a = _parse_flat(text)
+    return ExtractionResult(
+        raw_text=text,
+        trading_date=trading_date,
+        stocks_a=stocks_a,
+        stocks_b=stocks_b,
+        stocks_c=stocks_c,
+    )
+
+
+def _parse_flat(text: str) -> list[Stock]:
+    stocks = []
+    entry_pattern = r"■\s*\[?(\d{4,5}[A-Z]?)\]?\s+(.+?)(?=■|@kessan|\Z)"
+    for entry_match in re.finditer(entry_pattern, text, re.DOTALL):
+        code = entry_match.group(1).strip()
+        rest = entry_match.group(2).strip()
+        lines = [l.strip() for l in rest.splitlines() if l.strip()]
+        name = lines[0] if lines else ""
+        category = content = notes = ""
+        for line in lines[1:]:
+            if "カテゴリー" in line or "カテゴリ" in line:
+                category = re.sub(r"^[・\-\s]*カテゴリー?[：:]\s*", "", line).strip()
+            elif "事業内容" in line:
+                content = re.sub(r"^[・\-\s]*事業内容[：:]\s*", "", line).strip()
+            elif "注目材料" in line:
+                notes = re.sub(r"^[・\-\s]*注目材料[：:]\s*", "", line).strip()
+        if code and name:
+            stocks.append(Stock(code=code, name=name, category=category,
+                                content=content, notes=notes, section="A"))
+    return stocks
+
+
+def _parse_section(text: str, section_letter: str) -> list[Stock]:
+    stocks = []
+    section_pattern = rf"━━【{section_letter}】[^━]*━━(.*?)(?=━━【[A-Z]】|$)"
+    match = re.search(section_pattern, text, re.DOTALL)
+    if not match:
+        return stocks
+    section_text = match.group(1)
+    entry_pattern = r"■\s*\[?(\d{4,5}[A-Z]?)\]?\s+(.+?)(?=■|\Z)"
+    for entry_match in re.finditer(entry_pattern, section_text, re.DOTALL):
+        code = entry_match.group(1).strip()
+        rest = entry_match.group(2).strip()
+        lines = [l.strip() for l in rest.splitlines() if l.strip()]
+        name = lines[0] if lines else ""
+        category = content = notes = ""
+        for line in lines[1:]:
+            if "カテゴリー" in line or "カテゴリ" in line:
+                category = re.sub(r"^[・\-\s]*カテゴリー?[：:]\s*", "", line).strip()
+            elif "事業内容" in line:
+                content = re.sub(r"^[・\-\s]*事業内容[：:]\s*", "", line).strip()
+            elif "注目材料" in line:
+                notes = re.sub(r"^[・\-\s]*注目材料[：:]\s*", "", line).strip()
+        if code and name:
+            stocks.append(Stock(code=code, name=name, category=category,
+                                content=content, notes=notes, section=section_letter))
+    return stocks
 
 
 
