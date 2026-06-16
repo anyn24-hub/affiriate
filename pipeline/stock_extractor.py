@@ -1,7 +1,8 @@
 """
 stock_extractor.py
-J-Quants API（日本取引所グループ公式・無料）で決算銘柄を取得し、
+irbank.net（決算カレンダー）で発表日の決算銘柄を取得し、
 Groq API（無料）で整形・分析する。
+J-Quants APIはフォールバック用（発表日フィルタが使えないため非推奨）。
 """
 
 import logging
@@ -24,12 +25,23 @@ _JP_HOLIDAYS = {
     (9, 15), (9, 23), (10, 13), (11, 3), (11, 23), (12, 23),
 }
 
+# irbank.net用 User-Agent（ブラウザを偽装してブロック回避）
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
+        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "ja-JP,ja;q=0.9",
+    "Referer": "https://irbank.net/",
+}
+
 FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエージェント」です。
 以下のデータをもとに、指定フォーマットで出力してください。
 
 対象取引日: {trading_date}
 
-【決算データ（J-Quants API）】
+【決算データ（irbank.net）】
 ※{trading_date}に決算発表した企業一覧
 {earnings_data}
 
@@ -93,9 +105,9 @@ def extract_stocks(api_key: str, dry_run: bool = False, jquants_refresh_token: s
     trading_date = _get_latest_trading_date()
     logger.info(f"対象取引日: {trading_date}")
 
-    # Step 2: J-Quants APIで決算データ取得
-    earnings_data = _fetch_jquants_earnings(trading_date, jquants_refresh_token)
-    logger.info(f"J-Quants決算: {len(earnings_data.splitlines())}行")
+    # Step 2: irbank.netで決算データ取得（メイン）
+    earnings_data = _fetch_irbank_earnings(trading_date)
+    logger.info(f"irbank決算: {len(earnings_data.splitlines())}行")
 
     # Step 3: Groq APIで整形
     logger.info("Groq APIで整形中...")
@@ -146,87 +158,58 @@ def _get_latest_trading_date() -> str:
     return candidate.strftime("%Y-%m-%d")
 
 
-def _fetch_jquants_earnings(trading_date: str, refresh_token: str) -> str:
-    """J-Quants V2 APIから指定日に決算発表した企業一覧を取得する。"""
-    if not refresh_token:
-        logger.warning("JQUANTS_REFRESH_TOKEN（V2ではAPIキー）が未設定です。")
+def _fetch_irbank_earnings(trading_date: str) -> str:
+    """irbank.netから指定日に決算発表した企業一覧を取得する。リトライ付き。"""
+    url = f"https://irbank.net/market/kessan?y={trading_date}"
+    delays = [3, 6, 12]  # リトライ間隔（秒）
+
+    for attempt in range(4):
+        try:
+            resp = requests.get(url, headers=_HEADERS, timeout=20)
+            logger.info(f"irbank HTTP {resp.status_code} (attempt {attempt+1})")
+            if resp.status_code == 403:
+                if attempt < len(delays):
+                    logger.warning(f"irbank 403 Forbidden。{delays[attempt]}秒後リトライ...")
+                    time.sleep(delays[attempt])
+                    continue
+                logger.warning("irbank 403: リトライ上限に達しました。")
+                return ""
+            resp.raise_for_status()
+            return _parse_irbank_html(resp.text, trading_date)
+        except requests.RequestException as e:
+            if attempt < len(delays):
+                logger.warning(f"irbank取得エラー: {e}。リトライ...")
+                time.sleep(delays[attempt])
+            else:
+                logger.warning(f"irbank取得失敗: {e}")
+                return ""
+    return ""
+
+
+def _parse_irbank_html(html: str, trading_date: str) -> str:
+    """irbank.netのHTMLから企業リストを抽出する。"""
+    # <a href="/XXXX">企業名</a> のパターンを抽出
+    pattern = r'href="/(\d{4,5}[A-Z]?)">([^<]+)</a>'
+    matches = re.findall(pattern, html)
+
+    # 決算種別パターン（本決算・第X四半期）
+    category_pattern = r'(本決算|第[１-４1-4]四半期|第[１-４1-4]Q)'
+
+    if not matches:
+        logger.warning(f"irbank HTML解析: 銘柄が見つかりません（HTMLサイズ: {len(html)}文字）")
         return ""
 
-    try:
-        resp = requests.get(
-            "https://api.jquants.com/v2/equities/earnings-calendar",
-            headers={"x-api-key": refresh_token},
-            params={"date": trading_date},
-            timeout=15,
-        )
-        if not resp.ok:
-            logger.warning(f"J-Quants V2 response: {resp.status_code} {resp.text[:300]}")
-        resp.raise_for_status()
-        data = resp.json()
-    except Exception as e:
-        logger.warning(f"J-Quants決算データ取得失敗: {e}")
-        return ""
+    seen = set()
+    lines = ["証券コード | 企業名"]
+    for code, name in matches:
+        name = name.strip()
+        if code not in seen and len(name) > 1 and not name.startswith("http"):
+            seen.add(code)
+            lines.append(f"{code} | {name}")
 
-    # V2 returns data under "data" key; fall back to "announcement" for compatibility
-    announcements = data.get("data") or data.get("announcement", [])
-    logger.info(f"J-Quants V2レスポンスキー: {list(data.keys())}")
-    if announcements:
-        logger.info(f"先頭レコード全体: {announcements[0]}")
-        logger.info(f"先頭5件のDateフィールド: {[a.get('Date','?') for a in announcements[:5]]}")
-    else:
-        logger.info(f"J-Quants: {trading_date}の決算発表データなし (レスポンス: {str(data)[:200]})")
-        return ""
-
-    lines = ["証券コード | 企業名 | 決算種別 | セクター"]
-    for a in announcements:
-        # V2 actual field names: Code, CoName, FQ, SectorNm, FY, Section
-        code = a.get("Code") or a.get("code", "")
-        company = a.get("CoName") or a.get("companyName") or a.get("CompanyName", "")
-        period = a.get("FQ") or a.get("fiscalQuarter") or a.get("FiscalQuarter", "")
-        sector = a.get("SectorNm") or a.get("Section", "")
-        lines.append(f"{code} | {company} | {period} | {sector}")
-
-    logger.info(f"J-Quants: {len(announcements)}社の決算発表を取得")
+    logger.info(f"irbank解析: {len(seen)}社を抽出")
     return "\n".join(lines)
 
-
-def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
-    # Try section-based parsing first; fall back to flat ■ parsing
-    stocks_a = _parse_section(text, "A")
-    stocks_b = _parse_section(text, "B")
-    stocks_c = _parse_section(text, "C")
-    if not stocks_a and not stocks_b and not stocks_c:
-        stocks_a = _parse_flat(text)
-    return ExtractionResult(
-        raw_text=text,
-        trading_date=trading_date,
-        stocks_a=stocks_a,
-        stocks_b=stocks_b,
-        stocks_c=stocks_c,
-    )
-
-
-def _parse_flat(text: str) -> list[Stock]:
-    """セクション分けなしの ■ エントリを直接パースする。"""
-    stocks = []
-    entry_pattern = r"■\s*\[?(\d{4,5}[A-Z]?)\]?\s+(.+?)(?=■|@kessan|\Z)"
-    for entry_match in re.finditer(entry_pattern, text, re.DOTALL):
-        code = entry_match.group(1).strip()
-        rest = entry_match.group(2).strip()
-        lines = [l.strip() for l in rest.splitlines() if l.strip()]
-        name = lines[0] if lines else ""
-        category = content = notes = ""
-        for line in lines[1:]:
-            if "カテゴリー" in line or "カテゴリ" in line:
-                category = re.sub(r"^[・\-\s]*カテゴリー?[：:]\s*", "", line).strip()
-            elif "事業内容" in line:
-                content = re.sub(r"^[・\-\s]*事業内容[：:]\s*", "", line).strip()
-            elif "注目材料" in line:
-                notes = re.sub(r"^[・\-\s]*注目材料[：:]\s*", "", line).strip()
-        if code and name:
-            stocks.append(Stock(code=code, name=name, category=category,
-                                content=content, notes=notes, section="A"))
-    return stocks
 
 
 def _parse_section(text: str, section_letter: str) -> list[Stock]:
