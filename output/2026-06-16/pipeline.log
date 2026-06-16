@@ -53,3 +53,124 @@
 2026-06-16 13:21:43,809 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-16 13:21:43,823 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-16 13:21:43,824 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-16/stocks.json
+2026-06-16 13:28:22,940 [INFO] main: Output directory: output/2026-06-16
+2026-06-16 13:28:22,940 [INFO] main: ============================================================
+2026-06-16 13:28:22,940 [INFO] main: STEP 1: 銘柄抽出
+2026-06-16 13:28:22,940 [INFO] main: ============================================================
+2026-06-16 13:28:22,940 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-16 13:28:23,477 [INFO] pipeline.stock_extractor: TDnet HTTP 200 for 2026-06-16
+2026-06-16 13:28:23,481 [INFO] pipeline.stock_extractor: TDnet HTMLサイズ: 6813文字
+2026-06-16 13:28:23,482 [INFO] pipeline.stock_extractor: TDnet解析: 0社を抽出
+2026-06-16 13:28:23,482 [INFO] pipeline.stock_extractor: TDnet HTML先頭800文字: <!DOCTYPE html>
+<html style="height:100%; overflow:hidden;">
+<head>
+<title>適時開示情報閲覧サービス - 開示情報一覧</title>
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex,nofollow">
+<meta content="text/html" charset="UTF-8" http-equiv="content-type">
+<script type="text/javascript" charset="UTF-8" src="./runtime/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/I_JAVASCRIPT.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/TDJEModal.js"></script>
+<script type="text/javascript">
+<!--
+  $(document).ready(function(){
+    $("#searchB-mask").mousedown(function(){
+      $("#searchB-mask > DIV").attr("id","searchB-button_active");
+
+2026-06-16 13:28:23,483 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-16 13:28:23,768 [INFO] pipeline.stock_extractor: TDnet HTTP 200 for 2026-06-15
+2026-06-16 13:28:23,771 [INFO] pipeline.stock_extractor: TDnet HTMLサイズ: 6813文字
+2026-06-16 13:28:23,772 [INFO] pipeline.stock_extractor: TDnet解析: 0社を抽出
+2026-06-16 13:28:23,772 [INFO] pipeline.stock_extractor: TDnet HTML先頭800文字: <!DOCTYPE html>
+<html style="height:100%; overflow:hidden;">
+<head>
+<title>適時開示情報閲覧サービス - 開示情報一覧</title>
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex,nofollow">
+<meta content="text/html" charset="UTF-8" http-equiv="content-type">
+<script type="text/javascript" charset="UTF-8" src="./runtime/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/I_JAVASCRIPT.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/TDJEModal.js"></script>
+<script type="text/javascript">
+<!--
+  $(document).ready(function(){
+    $("#searchB-mask").mousedown(function(){
+      $("#searchB-mask > DIV").attr("id","searchB-button_active");
+
+2026-06-16 13:28:23,774 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-16 13:28:24,089 [INFO] pipeline.stock_extractor: TDnet HTTP 200 for 2026-06-12
+2026-06-16 13:28:24,092 [INFO] pipeline.stock_extractor: TDnet HTMLサイズ: 6813文字
+2026-06-16 13:28:24,093 [INFO] pipeline.stock_extractor: TDnet解析: 0社を抽出
+2026-06-16 13:28:24,093 [INFO] pipeline.stock_extractor: TDnet HTML先頭800文字: <!DOCTYPE html>
+<html style="height:100%; overflow:hidden;">
+<head>
+<title>適時開示情報閲覧サービス - 開示情報一覧</title>
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex,nofollow">
+<meta content="text/html" charset="UTF-8" http-equiv="content-type">
+<script type="text/javascript" charset="UTF-8" src="./runtime/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/I_JAVASCRIPT.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/TDJEModal.js"></script>
+<script type="text/javascript">
+<!--
+  $(document).ready(function(){
+    $("#searchB-mask").mousedown(function(){
+      $("#searchB-mask > DIV").attr("id","searchB-button_active");
+
+2026-06-16 13:28:24,094 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-16 13:28:24,352 [INFO] pipeline.stock_extractor: TDnet HTTP 200 for 2026-06-11
+2026-06-16 13:28:24,355 [INFO] pipeline.stock_extractor: TDnet HTMLサイズ: 6813文字
+2026-06-16 13:28:24,356 [INFO] pipeline.stock_extractor: TDnet解析: 0社を抽出
+2026-06-16 13:28:24,356 [INFO] pipeline.stock_extractor: TDnet HTML先頭800文字: <!DOCTYPE html>
+<html style="height:100%; overflow:hidden;">
+<head>
+<title>適時開示情報閲覧サービス - 開示情報一覧</title>
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex,nofollow">
+<meta content="text/html" charset="UTF-8" http-equiv="content-type">
+<script type="text/javascript" charset="UTF-8" src="./runtime/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/I_JAVASCRIPT.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/TDJEModal.js"></script>
+<script type="text/javascript">
+<!--
+  $(document).ready(function(){
+    $("#searchB-mask").mousedown(function(){
+      $("#searchB-mask > DIV").attr("id","searchB-button_active");
+
+2026-06-16 13:28:24,357 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-10 を試行中...
+2026-06-16 13:28:24,625 [INFO] pipeline.stock_extractor: TDnet HTTP 200 for 2026-06-10
+2026-06-16 13:28:24,628 [INFO] pipeline.stock_extractor: TDnet HTMLサイズ: 6813文字
+2026-06-16 13:28:24,629 [INFO] pipeline.stock_extractor: TDnet解析: 0社を抽出
+2026-06-16 13:28:24,629 [INFO] pipeline.stock_extractor: TDnet HTML先頭800文字: <!DOCTYPE html>
+<html style="height:100%; overflow:hidden;">
+<head>
+<title>適時開示情報閲覧サービス - 開示情報一覧</title>
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="robots" content="noindex,nofollow">
+<meta content="text/html" charset="UTF-8" http-equiv="content-type">
+<script type="text/javascript" charset="UTF-8" src="./runtime/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/I_JAVASCRIPT.js"></script>
+<script type="text/javascript" charset="UTF-8" src="./js/TDJEModal.js"></script>
+<script type="text/javascript">
+<!--
+  $(document).ready(function(){
+    $("#searchB-mask").mousedown(function(){
+      $("#searchB-mask > DIV").attr("id","searchB-button_active");
+
+2026-06-16 13:28:24,630 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-16 22:28 weekday=1
+2026-06-16 13:28:24,630 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-16
+2026-06-16 13:28:24,630 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-16 を使用。
+2026-06-16 13:28:24,631 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-16 13:28:25,122 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:28:25,136 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-16 13:28:25,136 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-16/stocks.json
