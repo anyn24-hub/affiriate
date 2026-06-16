@@ -1,11 +1,12 @@
 """
 stock_extractor.py
-J-Quants API V2で決算銘柄を取得し、Groq API（無料）で整形・分析する。
-J-Quantsのdateパラメータは決算期末日フィルタのため、全件取得後にDateフィールドで発表日絞り込み。
+irbank.net（決算カレンダー）で発表日の決算銘柄を取得し、
+Groq API（無料）で整形・分析する。
 """
 
 import logging
 import re
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -23,17 +24,27 @@ _JP_HOLIDAYS = {
     (9, 15), (9, 23), (10, 13), (11, 3), (11, 23), (12, 23),
 }
 
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "ja-JP,ja;q=0.9,en;q=0.8",
+    "Referer": "https://irbank.net/",
+}
+
 FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエージェント」です。
 以下のデータをもとに、指定フォーマットで出力してください。
 
 対象取引日: {trading_date}
 
-【決算データ（J-Quants API）】
+【決算データ（irbank.net）】
 ※{trading_date}に決算発表した企業一覧
 {earnings_data}
 
 出力ルール:
-- 上記リストから最大10社を選ぶ（本決算を優先し、次に第4四半期、その次に第3四半期の順）
+- 上記リストから最大12社を選ぶ（本決算を優先し、次に第4四半期、その次に第3四半期の順）
 - 同じ種別の場合は証券コードが小さい（＝大手）順に並べる
 - 事業内容は実際の事業を15文字以内で具体的に記載（一般的な業種知識から補完してよい）
 - データがない場合は「（該当なし）」と記載
@@ -42,7 +53,7 @@ FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエ�
 出力形式:
 ▼ 対象取引日: {trading_date}
 
-━━ 本日決算の大手企業（時価総額上位・最大10社）━━
+━━ 本日決算の大手企業（最大12社）━━
 ■ [証券コード] 企業名
 ・カテゴリー：本決算 or 第X四半期
 ・事業内容：（15文字程度）
@@ -88,15 +99,10 @@ def extract_stocks(api_key: str, dry_run: bool = False, jquants_refresh_token: s
             ],
         )
 
-    # Step 1: 対象取引日を特定
-    trading_date = _get_latest_trading_date()
-    logger.info(f"対象取引日: {trading_date}")
+    # Step 1: 対象取引日を特定（データがあるまで最大7営業日遡る）
+    trading_date, earnings_data = _get_trading_date_with_data()
 
-    # Step 2: J-Quants APIで決算データ取得
-    earnings_data = _fetch_jquants_earnings(trading_date, jquants_refresh_token)
-    logger.info(f"J-Quants決算: {len(earnings_data.splitlines())}行")
-
-    # Step 3: Groq APIで整形
+    # Step 2: Groq APIで整形
     logger.info("Groq APIで整形中...")
     client = Groq(api_key=api_key)
     prompt = FORMAT_PROMPT_TEMPLATE.format(
@@ -122,88 +128,117 @@ def extract_stocks(api_key: str, dry_run: bool = False, jquants_refresh_token: s
     return result
 
 
+def _is_trading_day(d) -> bool:
+    return d.weekday() < 5 and (d.month, d.day) not in _JP_HOLIDAYS
+
+
 def _get_latest_trading_date() -> str:
     """市場が閉まっている最新の取引日を返す（YYYY-MM-DD形式）。"""
     now = datetime.now(JST)
     logger.info(f"現在時刻(JST): {now.strftime('%Y-%m-%d %H:%M')} weekday={now.weekday()}")
     candidate = now.date()
-    # 土日・祝日、または15:30前なら今日は取引日でない
     market_closed_today = (
-        candidate.weekday() >= 5
-        or (candidate.month, candidate.day) in _JP_HOLIDAYS
+        not _is_trading_day(candidate)
         or now.hour < 15
         or (now.hour == 15 and now.minute < 30)
     )
     if market_closed_today:
         candidate -= timedelta(days=1)
-    # 土日・祝日を遡る
     for _ in range(14):
-        if candidate.weekday() < 5 and (candidate.month, candidate.day) not in _JP_HOLIDAYS:
+        if _is_trading_day(candidate):
             break
         candidate -= timedelta(days=1)
     logger.info(f"算出された取引日: {candidate}")
     return candidate.strftime("%Y-%m-%d")
 
 
-def _fetch_jquants_earnings(trading_date: str, api_key: str) -> str:
-    """J-Quants V2 TDnet適時開示APIから指定日の決算発表企業を取得する。
-    /v2/td/list は実際の開示日でフィルタできる。
-    """
-    if not api_key:
-        logger.warning("JQUANTS_REFRESH_TOKEN（J-Quants APIキー）が未設定です。")
-        return ""
+def _get_trading_date_with_data() -> tuple[str, str]:
+    """データが取得できる最新の取引日とデータを返す。最大5営業日遡る。"""
+    now = datetime.now(JST)
+    candidate = now.date()
+    market_closed_today = (
+        not _is_trading_day(candidate)
+        or now.hour < 15
+        or (now.hour == 15 and now.minute < 30)
+    )
+    if market_closed_today:
+        candidate -= timedelta(days=1)
+    for _ in range(14):
+        if _is_trading_day(candidate):
+            break
+        candidate -= timedelta(days=1)
 
-    date_nodash = trading_date.replace("-", "")  # YYYYMMDD形式
+    # 最大5営業日遡ってデータを探す
+    for _ in range(5):
+        date_str = candidate.strftime("%Y-%m-%d")
+        logger.info(f"対象取引日: {date_str} を試行中...")
+        data = _fetch_irbank_earnings(date_str)
+        if data:
+            logger.info(f"対象取引日確定: {date_str}（{len(data.splitlines())}行取得）")
+            return date_str, data
+        candidate -= timedelta(days=1)
+        for _ in range(7):
+            if _is_trading_day(candidate):
+                break
+            candidate -= timedelta(days=1)
 
+    latest = _get_latest_trading_date()
+    logger.warning(f"データが見つからず。最新取引日 {latest} を使用。")
+    return latest, ""
+
+
+def _fetch_irbank_earnings(trading_date: str) -> str:
+    """irbank.netから指定日に決算発表した企業一覧を取得する。"""
+    url = f"https://irbank.net/market/kessan?y={trading_date}"
+    time.sleep(2)  # サーバー負荷軽減のため少し待つ
     try:
-        resp = requests.get(
-            "https://api.jquants.com/v2/td/list",
-            headers={"x-api-key": api_key},
-            params={"date": date_nodash},
-            timeout=20,
-        )
-        if not resp.ok:
-            logger.warning(f"J-Quants TDnet response: {resp.status_code} {resp.text[:300]}")
+        resp = requests.get(url, headers=_HEADERS, timeout=20)
+        logger.info(f"irbank HTTP {resp.status_code} for {trading_date}")
+        if resp.status_code == 403:
+            logger.warning("irbank 403 Forbidden。")
+            return ""
         resp.raise_for_status()
-        data = resp.json()
-    except Exception as e:
-        logger.warning(f"J-Quants TDnet取得失敗: {e}")
+        return _parse_irbank_html(resp.text)
+    except requests.RequestException as e:
+        logger.warning(f"irbank取得エラー: {e}")
         return ""
 
-    records = data.get("data") or data.get("tdnet", [])
-    logger.info(f"J-Quants TDnet: {len(records)}件取得")
-    if records:
-        logger.info(f"先頭レコード例: {records[0]}")
 
-    if not records:
-        logger.warning(f"J-Quants TDnet: {trading_date}のデータなし（レスポンス: {str(data)[:200]}）")
+def _parse_irbank_html(html: str) -> str:
+    """irbank.netのHTMLから企業リストを抽出する。"""
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, "lxml")
+
+    seen = set()
+    lines = ["証券コード | 企業名 | 決算種別"]
+
+    # テーブル行を探す
+    for row in soup.select("table tr"):
+        cells = row.find_all("td")
+        if len(cells) < 2:
+            continue
+        # 証券コードのリンクを探す
+        link = row.find("a", href=re.compile(r"^/\d{4}"))
+        if not link:
+            continue
+        code = link["href"].strip("/")
+        name = link.get_text(strip=True)
+        # 決算種別（本決算・第X四半期）
+        category = ""
+        for cell in cells:
+            text = cell.get_text(strip=True)
+            if re.search(r"本決算|第[１-４1-4]四半期|第[１-４1-4]Q", text):
+                category = text
+                break
+        if code and name and code not in seen:
+            seen.add(code)
+            lines.append(f"{code} | {name} | {category}")
+
+    if len(seen) == 0:
+        logger.warning(f"irbank HTML解析: 銘柄が見つかりません（HTMLサイズ: {len(html)}文字）")
         return ""
 
-    # 決算関連の開示のみ絞り込む（タイトルに「決算」「業績」を含むもの）
-    earnings_keywords = ("決算", "業績", "四半期", "通期")
-    filtered = [
-        r for r in records
-        if any(kw in (r.get("Title") or r.get("title") or "") for kw in earnings_keywords)
-    ]
-    logger.info(f"J-Quants TDnet: 決算関連 {len(filtered)}件に絞り込み")
-
-    if not filtered:
-        # キーワードなしでも全件渡す
-        filtered = records
-
-    seen_codes = set()
-    lines = ["証券コード | 企業名 | タイトル"]
-    for r in filtered:
-        code = r.get("Code") or r.get("code", "")
-        if code.endswith("0") and len(code) == 5:
-            code = code[:4]
-        company = r.get("CompanyName") or r.get("company_name") or r.get("CoName", "")
-        title = r.get("Title") or r.get("title", "")
-        if code and code not in seen_codes:
-            seen_codes.add(code)
-            lines.append(f"{code} | {company} | {title}")
-
-    logger.info(f"J-Quants TDnet: {len(seen_codes)}社を抽出")
+    logger.info(f"irbank解析: {len(seen)}社を抽出")
     return "\n".join(lines)
 
 
@@ -250,35 +285,6 @@ def _parse_section(text: str, section_letter: str) -> list[Stock]:
     match = re.search(section_pattern, text, re.DOTALL)
     if not match:
         return stocks
-    section_text = match.group(1)
-    entry_pattern = r"■\s*\[?(\d{4,5}[A-Z]?)\]?\s+(.+?)(?=■|\Z)"
-    for entry_match in re.finditer(entry_pattern, section_text, re.DOTALL):
-        code = entry_match.group(1).strip()
-        rest = entry_match.group(2).strip()
-        lines = [l.strip() for l in rest.splitlines() if l.strip()]
-        name = lines[0] if lines else ""
-        category = content = notes = ""
-        for line in lines[1:]:
-            if "カテゴリー" in line or "カテゴリ" in line:
-                category = re.sub(r"^[・\-\s]*カテゴリー?[：:]\s*", "", line).strip()
-            elif "事業内容" in line:
-                content = re.sub(r"^[・\-\s]*事業内容[：:]\s*", "", line).strip()
-            elif "注目材料" in line:
-                notes = re.sub(r"^[・\-\s]*注目材料[：:]\s*", "", line).strip()
-        if code and name:
-            stocks.append(Stock(code=code, name=name, category=category,
-                                content=content, notes=notes, section=section_letter))
-    return stocks
-
-
-
-def _parse_section(text: str, section_letter: str) -> list[Stock]:
-    stocks = []
-    section_pattern = rf"━━【{section_letter}】[^━]*━━(.*?)(?=━━【[A-Z]】|$)"
-    match = re.search(section_pattern, text, re.DOTALL)
-    if not match:
-        return stocks
-
     section_text = match.group(1)
     entry_pattern = r"■\s*\[?(\d{4,5}[A-Z]?)\]?\s+(.+?)(?=■|\Z)"
     for entry_match in re.finditer(entry_pattern, section_text, re.DOTALL):
