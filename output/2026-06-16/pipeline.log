@@ -27,3 +27,29 @@
 2026-06-16 13:17:24,721 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-16 13:17:24,734 [INFO] pipeline.stock_extractor: Parsed 12 in A, 0 in B, 0 in C.
 2026-06-16 13:17:24,735 [INFO] main: 銘柄抽出完了: 12社 → output/2026-06-16/stocks.json
+2026-06-16 13:21:32,758 [INFO] main: Output directory: output/2026-06-16
+2026-06-16 13:21:32,758 [INFO] main: ============================================================
+2026-06-16 13:21:32,758 [INFO] main: STEP 1: 銘柄抽出
+2026-06-16 13:21:32,758 [INFO] main: ============================================================
+2026-06-16 13:21:32,758 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-16 13:21:34,912 [INFO] pipeline.stock_extractor: irbank HTTP 403 for 2026-06-16
+2026-06-16 13:21:34,912 [WARNING] pipeline.stock_extractor: irbank 403 Forbidden。
+2026-06-16 13:21:34,913 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-16 13:21:37,008 [INFO] pipeline.stock_extractor: irbank HTTP 403 for 2026-06-15
+2026-06-16 13:21:37,008 [WARNING] pipeline.stock_extractor: irbank 403 Forbidden。
+2026-06-16 13:21:37,009 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-16 13:21:39,170 [INFO] pipeline.stock_extractor: irbank HTTP 403 for 2026-06-12
+2026-06-16 13:21:39,170 [WARNING] pipeline.stock_extractor: irbank 403 Forbidden。
+2026-06-16 13:21:39,171 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-16 13:21:41,249 [INFO] pipeline.stock_extractor: irbank HTTP 403 for 2026-06-11
+2026-06-16 13:21:41,249 [WARNING] pipeline.stock_extractor: irbank 403 Forbidden。
+2026-06-16 13:21:41,250 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-10 を試行中...
+2026-06-16 13:21:43,388 [INFO] pipeline.stock_extractor: irbank HTTP 403 for 2026-06-10
+2026-06-16 13:21:43,389 [WARNING] pipeline.stock_extractor: irbank 403 Forbidden。
+2026-06-16 13:21:43,390 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-16 22:21 weekday=1
+2026-06-16 13:21:43,390 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-16
+2026-06-16 13:21:43,390 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-16 を使用。
+2026-06-16 13:21:43,390 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-16 13:21:43,809 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:21:43,823 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-16 13:21:43,824 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-16/stocks.json
