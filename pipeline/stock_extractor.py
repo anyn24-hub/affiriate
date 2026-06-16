@@ -186,75 +186,79 @@ def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
     return latest, ""
 
 
+_EARNINGS_KEYWORDS = ["決算短信", "四半期報告", "決算説明", "業績予想"]
+
+
 def _fetch_tdnet_earnings(trading_date: str) -> str:
-    """TDnetから指定日に決算発表した企業一覧を取得する。"""
-    date_nodash = trading_date.replace("-", "")  # YYYYMMDD
-    # stpr=B は決算短信カテゴリ
-    url = f"{TDNET_BASE}/inbs/I_main_00.html"
-    params = {"dv": "", "stpr": "B", "dm": date_nodash}
-
-    try:
-        resp = requests.get(url, params=params, headers=_HEADERS, timeout=20)
-        logger.info(f"TDnet HTTP {resp.status_code} for {trading_date}")
-        if not resp.ok:
-            logger.warning(f"TDnet response: {resp.status_code} {resp.text[:200]}")
-            return ""
-        resp.encoding = "utf-8"
-        return _parse_tdnet_html(resp.text, trading_date)
-    except requests.RequestException as e:
-        logger.warning(f"TDnet取得エラー: {e}")
-        return ""
-
-
-def _parse_tdnet_html(html: str, trading_date: str) -> str:
-    """TDnetのHTMLから決算発表企業リストを抽出する。"""
+    """TDnetの静的リストファイルから指定日の決算発表企業一覧を取得する。"""
     from bs4 import BeautifulSoup
-    soup = BeautifulSoup(html, "lxml")
-
-    logger.info(f"TDnet HTMLサイズ: {len(html)}文字")
-
-    seen = set()
+    date_nodash = trading_date.replace("-", "")  # YYYYMMDD
+    seen: set[str] = set()
     lines = ["証券コード | 企業名 | タイトル"]
 
-    # TDnetのテーブル行を解析
-    for row in soup.select("tr"):
-        cells = row.find_all("td")
-        if len(cells) < 3:
-            continue
-        row_text = row.get_text(" ", strip=True)
+    for page in range(1, 30):
+        url = f"{TDNET_BASE}/inbs/I_list_00_{date_nodash}_{page}.html"
+        try:
+            resp = requests.get(url, headers=_HEADERS, timeout=20)
+            logger.info(f"TDnet static page {page}: HTTP {resp.status_code}")
+            if resp.status_code == 404:
+                break
+            if not resp.ok:
+                break
+            resp.encoding = "utf-8"
+        except requests.RequestException as e:
+            logger.warning(f"TDnet取得エラー (page {page}): {e}")
+            break
 
-        # 証券コード（4桁数字）を探す
-        code_match = re.search(r"\b(\d{4})\b", row_text)
-        if not code_match:
-            continue
-        code = code_match.group(1)
+        soup = BeautifulSoup(resp.text, "lxml")
+        rows = soup.select("tr")
+        found_on_page = 0
 
-        # 企業名（タイトルリンクの前後にある）
-        name = ""
-        for cell in cells:
-            text = cell.get_text(strip=True)
-            # 4桁数字だけでなく企業名らしい文字列
-            if text and not text.isdigit() and len(text) >= 2 and not re.match(r"^[\d:/.%\-\s]+$", text):
-                # 決算関連タイトルは除外
-                if not any(kw in text for kw in ["決算短信", "四半期", "報告書", "説明資料"]):
+        for row in rows:
+            cells = row.find_all("td")
+            if len(cells) < 4:
+                continue
+            row_text = row.get_text(" ", strip=True)
+
+            if not any(kw in row_text for kw in _EARNINGS_KEYWORDS):
+                continue
+
+            code_match = re.search(r"\b(\d{4,5})\b", row_text)
+            if not code_match:
+                continue
+            code = code_match.group(1)
+            if code in seen:
+                continue
+
+            # 企業名: 最初の「名前らしい」セル
+            name = ""
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if (text and len(text) >= 2
+                        and not text.isdigit()
+                        and not re.match(r"^[\d:/.%\-\s]+$", text)
+                        and not any(kw in text for kw in _EARNINGS_KEYWORDS)):
                     name = text
                     break
 
-        # タイトル（決算短信など）
-        title = ""
-        for link in row.find_all("a"):
-            t = link.get_text(strip=True)
-            if any(kw in t for kw in ["決算短信", "四半期", "決算説明", "業績"]):
-                title = t
-                break
+            # タイトル
+            title = ""
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if any(kw in text for kw in _EARNINGS_KEYWORDS):
+                    title = text
+                    break
 
-        if code and code not in seen and title:
             seen.add(code)
             lines.append(f"{code} | {name} | {title}")
+            found_on_page += 1
 
-    logger.info(f"TDnet解析: {len(seen)}社を抽出")
-    if len(seen) == 0:
-        logger.info(f"TDnet HTML先頭800文字: {html[:800]}")
+        logger.info(f"Page {page}: {found_on_page}社追加、累計{len(seen)}社")
+        if found_on_page == 0 and page > 1:
+            break
+        time.sleep(0.5)
+
+    logger.info(f"TDnet静的ファイル解析完了: {len(seen)}社")
     return "\n".join(lines) if len(seen) > 0 else ""
 
 
