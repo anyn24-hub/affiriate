@@ -197,7 +197,7 @@ def _fetch_tdnet_earnings(trading_date: str) -> str:
     lines = ["証券コード | 企業名 | タイトル"]
 
     for page in range(1, 30):
-        url = f"{TDNET_BASE}/inbs/I_list_00_{date_nodash}_{page}.html"
+        url = f"{TDNET_BASE}/inbs/I_list_00_{date_nodash}_{page:03d}.html"
         try:
             resp = requests.get(url, headers=_HEADERS, timeout=20)
             logger.info(f"TDnet static page {page}: HTTP {resp.status_code}")
