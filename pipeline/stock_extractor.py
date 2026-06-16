@@ -44,24 +44,20 @@ FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエ�
 {earnings_data}
 
 出力ルール:
-- 上記リストから最大12社を選ぶ（本決算を優先し、次に第4四半期、その次に第3四半期の順）
-- 同じ種別の場合は証券コードが小さい（＝大手）順に並べる
+- 上記リストにある企業を最大12社そのまま出力する（絞り込み不要・全種別対象）
 - 事業内容は実際の事業を15文字以内で具体的に記載（一般的な業種知識から補完してよい）
+- 企業名が空欄の場合は証券コードで検索して正式名称を補完すること
 - データがない場合は「（該当なし）」と記載
-- 時価総額データはないので順位付けは不要。リストにある企業をそのまま選定すること
 
-出力形式:
+出力形式（余計な説明文は一切不要）:
 ▼ 対象取引日: {trading_date}
 
-━━ 本日決算の大手企業（最大12社）━━
+━━ 本日決算（最大12社）━━
 ■ [証券コード] 企業名
 ・カテゴリー：本決算 or 第X四半期
 ・事業内容：（15文字程度）
 
 @kessan_class #決算
-
-【検証ログ】
-・選定した銘柄数と根拠
 """
 
 
@@ -206,6 +202,9 @@ def _fetch_irbank_earnings(trading_date: str) -> str:
 
 def _parse_irbank_html(html: str) -> str:
     """irbank.netのHTMLから企業リストを抽出する。"""
+    # デバッグ用：HTML構造をログに出力
+    logger.info(f"HTML先頭500文字: {html[:500]}")
+
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, "lxml")
 
@@ -217,29 +216,54 @@ def _parse_irbank_html(html: str) -> str:
         cells = row.find_all("td")
         if len(cells) < 2:
             continue
-        # 証券コードのリンクを探す
-        link = row.find("a", href=re.compile(r"^/\d{4}"))
-        if not link:
+
+        # 証券コードのリンクを探す（href="/XXXX" 形式）
+        code_link = row.find("a", href=re.compile(r"^/\d{4,5}[A-Z]?$"))
+        if not code_link:
             continue
-        code = link["href"].strip("/")
-        name = link.get_text(strip=True)
-        # 決算種別（本決算・第X四半期）
+        code = code_link["href"].strip("/")
+
+        # 企業名：コードではないテキストを持つリンクを探す
+        name = ""
+        for link in row.find_all("a"):
+            text = link.get_text(strip=True)
+            if text and not text.isdigit() and len(text) >= 2:
+                name = text
+                break
+
+        # 企業名が見つからなければtdのテキストから探す
+        if not name:
+            for cell in cells:
+                text = cell.get_text(strip=True)
+                if text and not text.isdigit() and not re.match(r"^[\d/.\-:%]+$", text) and len(text) >= 2:
+                    name = text
+                    break
+
+        # 決算種別
         category = ""
         for cell in cells:
             text = cell.get_text(strip=True)
             if re.search(r"本決算|第[１-４1-4]四半期|第[１-４1-4]Q", text):
                 category = text
                 break
-        if code and name and code not in seen:
+
+        if code and code not in seen:
             seen.add(code)
             lines.append(f"{code} | {name} | {category}")
 
     if len(seen) == 0:
         logger.warning(f"irbank HTML解析: 銘柄が見つかりません（HTMLサイズ: {len(html)}文字）")
-        return ""
+        # フォールバック：正規表現で直接抽出
+        pattern = r'href="/(\d{4,5}[A-Z]?)">([^<]{2,30})</a>'
+        for code, name in re.findall(pattern, html):
+            if code not in seen and not name.strip().isdigit():
+                seen.add(code)
+                lines.append(f"{code} | {name.strip()} | ")
+        if len(seen) > 0:
+            logger.info(f"フォールバック正規表現で{len(seen)}社を抽出")
 
     logger.info(f"irbank解析: {len(seen)}社を抽出")
-    return "\n".join(lines)
+    return "\n".join(lines) if len(seen) > 0 else ""
 
 
 def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
