@@ -12,3 +12,18 @@
 2026-06-16 13:07:09,269 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-16 13:07:09,282 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-16 13:07:09,282 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-16/stocks.json
+2026-06-16 13:17:18,891 [INFO] main: Output directory: output/2026-06-16
+2026-06-16 13:17:18,891 [INFO] main: ============================================================
+2026-06-16 13:17:18,891 [INFO] main: STEP 1: 銘柄抽出
+2026-06-16 13:17:18,891 [INFO] main: ============================================================
+2026-06-16 13:17:18,891 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-16 13:17:21,445 [INFO] pipeline.stock_extractor: irbank HTTP 200 for 2026-06-16
+2026-06-16 13:17:21,455 [WARNING] pipeline.stock_extractor: irbank HTML解析: 銘柄が見つかりません（HTMLサイズ: 32986文字）
+2026-06-16 13:17:21,456 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-16 13:17:23,629 [INFO] pipeline.stock_extractor: irbank HTTP 200 for 2026-06-15
+2026-06-16 13:17:23,650 [INFO] pipeline.stock_extractor: irbank解析: 29社を抽出
+2026-06-16 13:17:23,651 [INFO] pipeline.stock_extractor: 対象取引日確定: 2026-06-15（30行取得）
+2026-06-16 13:17:23,651 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-16 13:17:24,721 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 13:17:24,734 [INFO] pipeline.stock_extractor: Parsed 12 in A, 0 in B, 0 in C.
+2026-06-16 13:17:24,735 [INFO] main: 銘柄抽出完了: 12社 → output/2026-06-16/stocks.json
