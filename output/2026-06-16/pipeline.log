@@ -226,3 +226,38 @@
 2026-06-16 13:38:04,848 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-16 13:38:04,861 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-16 13:38:04,861 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-16/stocks.json
+2026-06-16 20:28:12,599 [INFO] main: Output directory: output/2026-06-16
+2026-06-16 20:28:12,599 [INFO] main: ============================================================
+2026-06-16 20:28:12,599 [INFO] main: STEP 1: 銘柄抽出
+2026-06-16 20:28:12,599 [INFO] main: ============================================================
+2026-06-16 20:28:12,599 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-16 20:28:12,947 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 20:28:12,947 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 20:28:12,948 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-16 20:28:13,150 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 20:28:13,150 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 20:28:13,151 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-16 20:28:13,361 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 20:28:13,362 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 20:28:13,363 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-16 20:28:13,615 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 20:28:13,615 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 20:28:13,616 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-10 を試行中...
+2026-06-16 20:28:13,818 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-16 20:28:13,818 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-16 20:28:13,819 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-17 05:28 weekday=2
+2026-06-16 20:28:13,819 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-16
+2026-06-16 20:28:13,819 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-16 を使用。
+2026-06-16 20:28:13,820 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-16 20:28:14,190 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-16 20:28:14,203 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-16 20:28:14,204 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-16/stocks.json
+2026-06-16 20:28:14,204 [INFO] main: ============================================================
+2026-06-16 20:28:14,204 [INFO] main: STEP 3: 投稿文・画像指示書生成
+2026-06-16 20:28:14,204 [INFO] main: ============================================================
+2026-06-16 20:28:15,375 [WARNING] affiliate_links: 楽天API取得エラー: 400 Client Error: 400 for url: https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=53ffe77a-e8a3-4b5c-bee7-ca3bd2744dca&affiliateId=5335e187.bd9b90cd.5335e188.d302f85f&keyword=%E8%B2%A1%E5%8B%99%E5%88%86%E6%9E%90&booksGenreId=001&hits=20&sort=sales&format=json。フォールバックURLを使用します。
+2026-06-16 20:28:15,376 [INFO] main: アフィリエイトリンク: https://books.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8
+2026-06-16 20:28:15,424 [INFO] googleapiclient.discovery_cache: file_cache is only supported with oauth2client<4.0.0
+2026-06-16 20:28:15,873 [WARNING] pipeline.content_generator: DriveフォルダにPDFが見つかりません。
+2026-06-16 20:28:15,873 [WARNING] pipeline.content_generator: DriveにPDFが見つかりませんでした。ドライブのフォルダを確認してください。
+2026-06-16 20:28:15,873 [INFO] main: 投稿文生成完了: 0社
