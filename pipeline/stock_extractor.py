@@ -1,13 +1,11 @@
 """
 stock_extractor.py
-irbank.net（決算カレンダー）で発表日の決算銘柄を取得し、
-Groq API（無料）で整形・分析する。
-J-Quants APIはフォールバック用（発表日フィルタが使えないため非推奨）。
+J-Quants API V2で決算銘柄を取得し、Groq API（無料）で整形・分析する。
+J-Quantsのdateパラメータは決算期末日フィルタのため、全件取得後にDateフィールドで発表日絞り込み。
 """
 
 import logging
 import re
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -25,23 +23,12 @@ _JP_HOLIDAYS = {
     (9, 15), (9, 23), (10, 13), (11, 3), (11, 23), (12, 23),
 }
 
-# irbank.net用 User-Agent（ブラウザを偽装してブロック回避）
-_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
-        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "ja-JP,ja;q=0.9",
-    "Referer": "https://irbank.net/",
-}
-
 FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエージェント」です。
 以下のデータをもとに、指定フォーマットで出力してください。
 
 対象取引日: {trading_date}
 
-【決算データ（irbank.net）】
+【決算データ（J-Quants API）】
 ※{trading_date}に決算発表した企業一覧
 {earnings_data}
 
@@ -105,9 +92,9 @@ def extract_stocks(api_key: str, dry_run: bool = False, jquants_refresh_token: s
     trading_date = _get_latest_trading_date()
     logger.info(f"対象取引日: {trading_date}")
 
-    # Step 2: irbank.netで決算データ取得（メイン）
-    earnings_data = _fetch_irbank_earnings(trading_date)
-    logger.info(f"irbank決算: {len(earnings_data.splitlines())}行")
+    # Step 2: J-Quants APIで決算データ取得
+    earnings_data = _fetch_jquants_earnings(trading_date, jquants_refresh_token)
+    logger.info(f"J-Quants決算: {len(earnings_data.splitlines())}行")
 
     # Step 3: Groq APIで整形
     logger.info("Groq APIで整形中...")
@@ -158,56 +145,71 @@ def _get_latest_trading_date() -> str:
     return candidate.strftime("%Y-%m-%d")
 
 
-def _fetch_irbank_earnings(trading_date: str) -> str:
-    """irbank.netから指定日に決算発表した企業一覧を取得する。リトライ付き。"""
-    url = f"https://irbank.net/market/kessan?y={trading_date}"
-    delays = [3, 6, 12]  # リトライ間隔（秒）
-
-    for attempt in range(4):
-        try:
-            resp = requests.get(url, headers=_HEADERS, timeout=20)
-            logger.info(f"irbank HTTP {resp.status_code} (attempt {attempt+1})")
-            if resp.status_code == 403:
-                if attempt < len(delays):
-                    logger.warning(f"irbank 403 Forbidden。{delays[attempt]}秒後リトライ...")
-                    time.sleep(delays[attempt])
-                    continue
-                logger.warning("irbank 403: リトライ上限に達しました。")
-                return ""
-            resp.raise_for_status()
-            return _parse_irbank_html(resp.text, trading_date)
-        except requests.RequestException as e:
-            if attempt < len(delays):
-                logger.warning(f"irbank取得エラー: {e}。リトライ...")
-                time.sleep(delays[attempt])
-            else:
-                logger.warning(f"irbank取得失敗: {e}")
-                return ""
-    return ""
-
-
-def _parse_irbank_html(html: str, trading_date: str) -> str:
-    """irbank.netのHTMLから企業リストを抽出する。"""
-    # <a href="/XXXX">企業名</a> のパターンを抽出
-    pattern = r'href="/(\d{4,5}[A-Z]?)">([^<]+)</a>'
-    matches = re.findall(pattern, html)
-
-    # 決算種別パターン（本決算・第X四半期）
-    category_pattern = r'(本決算|第[１-４1-4]四半期|第[１-４1-4]Q)'
-
-    if not matches:
-        logger.warning(f"irbank HTML解析: 銘柄が見つかりません（HTMLサイズ: {len(html)}文字）")
+def _fetch_jquants_earnings(trading_date: str, api_key: str) -> str:
+    """J-Quants V2 APIから指定日に決算発表した企業一覧を取得する。
+    dateパラメータは決算期末日フィルタのため使わず、全件取得後にDateフィールドで絞り込む。
+    """
+    if not api_key:
+        logger.warning("JQUANTS_REFRESH_TOKEN（J-Quants APIキー）が未設定です。")
         return ""
 
-    seen = set()
-    lines = ["証券コード | 企業名"]
-    for code, name in matches:
-        name = name.strip()
-        if code not in seen and len(name) > 1 and not name.startswith("http"):
-            seen.add(code)
-            lines.append(f"{code} | {name}")
+    # YYYYMMDD形式も試す（V2はどちらか不明なため両方試す）
+    date_nodash = trading_date.replace("-", "")
 
-    logger.info(f"irbank解析: {len(seen)}社を抽出")
+    all_records = []
+    pagination_key = None
+
+    try:
+        while True:
+            params = {}
+            if pagination_key:
+                params["pagination_key"] = pagination_key
+            resp = requests.get(
+                "https://api.jquants.com/v2/equities/earnings-calendar",
+                headers={"x-api-key": api_key},
+                params=params,
+                timeout=20,
+            )
+            if not resp.ok:
+                logger.warning(f"J-Quants V2 response: {resp.status_code} {resp.text[:300]}")
+            resp.raise_for_status()
+            data = resp.json()
+            records = data.get("data") or data.get("announcement", [])
+            all_records.extend(records)
+            logger.info(f"J-Quants: {len(records)}件取得（累計{len(all_records)}件）")
+            pagination_key = data.get("pagination_key")
+            if not pagination_key or not records:
+                break
+    except Exception as e:
+        logger.warning(f"J-Quants決算データ取得失敗: {e}")
+        return ""
+
+    if not all_records:
+        logger.warning("J-Quants: データが1件も取得できませんでした")
+        return ""
+
+    # Dateフィールドで発表日を絞り込む（YYYY-MM-DDまたはYYYYMMDD両方に対応）
+    logger.info(f"先頭レコード例: {all_records[0]}")
+    matched = [
+        a for a in all_records
+        if a.get("Date", "") in (trading_date, date_nodash)
+    ]
+    logger.info(f"J-Quants: 全{len(all_records)}件中、{trading_date}の発表は{len(matched)}社")
+
+    if not matched:
+        logger.warning(f"J-Quants: {trading_date}に一致するDateレコードなし（先頭5件のDate: {[a.get('Date','?') for a in all_records[:5]]}）")
+        return ""
+
+    lines = ["証券コード | 企業名 | 決算種別 | セクター"]
+    for a in matched:
+        code = (a.get("Code") or a.get("code", "")).rstrip("0")  # 末尾の0を除去（87250→8725）
+        if len(code) > 4:
+            code = code[:4]  # 4桁に正規化
+        company = a.get("CoName") or a.get("companyName") or a.get("CompanyName", "")
+        period = a.get("FQ") or a.get("fiscalQuarter") or a.get("FiscalQuarter", "")
+        sector = a.get("SectorNm") or a.get("Section", "")
+        lines.append(f"{code} | {company} | {period} | {sector}")
+
     return "\n".join(lines)
 
 
