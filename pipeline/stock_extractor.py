@@ -24,14 +24,16 @@ _JP_HOLIDAYS = {
     (9, 15), (9, 23), (10, 13), (11, 3), (11, 23), (12, 23),
 }
 
+TDNET_BASE = "https://www.release.tdnet.info"
+
 _HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "ja-JP,ja;q=0.9,en;q=0.8",
-    "Referer": "https://irbank.net/",
+    "Accept-Language": "ja,en;q=0.9",
+    "Referer": "https://www.release.tdnet.info/",
 }
 
 FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエージェント」です。
@@ -39,7 +41,7 @@ FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエ�
 
 対象取引日: {trading_date}
 
-【決算データ（irbank.net）】
+【決算データ（TDnet）】
 ※{trading_date}に決算発表した企業一覧
 {earnings_data}
 
@@ -96,7 +98,7 @@ def extract_stocks(api_key: str, dry_run: bool = False, jquants_refresh_token: s
         )
 
     # Step 1: 対象取引日を特定（データがあるまで最大7営業日遡る）
-    trading_date, earnings_data = _get_trading_date_with_data()
+    trading_date, earnings_data = _get_trading_date_with_data(jquants_refresh_token)
 
     # Step 2: Groq APIで整形
     logger.info("Groq APIで整形中...")
@@ -148,7 +150,7 @@ def _get_latest_trading_date() -> str:
     return candidate.strftime("%Y-%m-%d")
 
 
-def _get_trading_date_with_data() -> tuple[str, str]:
+def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
     """データが取得できる最新の取引日とデータを返す。最大5営業日遡る。"""
     now = datetime.now(JST)
     candidate = now.date()
@@ -165,13 +167,14 @@ def _get_trading_date_with_data() -> tuple[str, str]:
         candidate -= timedelta(days=1)
 
     # 最大5営業日遡ってデータを探す
-    for _ in range(5):
+    for attempt in range(5):
         date_str = candidate.strftime("%Y-%m-%d")
         logger.info(f"対象取引日: {date_str} を試行中...")
-        data = _fetch_irbank_earnings(date_str)
+        data = _fetch_tdnet_earnings(date_str)
         if data:
             logger.info(f"対象取引日確定: {date_str}（{len(data.splitlines())}行取得）")
             return date_str, data
+        # 前の営業日へ
         candidate -= timedelta(days=1)
         for _ in range(7):
             if _is_trading_day(candidate):
@@ -183,86 +186,75 @@ def _get_trading_date_with_data() -> tuple[str, str]:
     return latest, ""
 
 
-def _fetch_irbank_earnings(trading_date: str) -> str:
-    """irbank.netから指定日に決算発表した企業一覧を取得する。"""
-    url = f"https://irbank.net/market/kessan?y={trading_date}"
-    time.sleep(2)  # サーバー負荷軽減のため少し待つ
+def _fetch_tdnet_earnings(trading_date: str) -> str:
+    """TDnetから指定日に決算発表した企業一覧を取得する。"""
+    date_nodash = trading_date.replace("-", "")  # YYYYMMDD
+    # stpr=B は決算短信カテゴリ
+    url = f"{TDNET_BASE}/inbs/I_main_00.html"
+    params = {"dv": "", "stpr": "B", "dm": date_nodash}
+
     try:
-        resp = requests.get(url, headers=_HEADERS, timeout=20)
-        logger.info(f"irbank HTTP {resp.status_code} for {trading_date}")
-        if resp.status_code == 403:
-            logger.warning("irbank 403 Forbidden。")
+        resp = requests.get(url, params=params, headers=_HEADERS, timeout=20)
+        logger.info(f"TDnet HTTP {resp.status_code} for {trading_date}")
+        if not resp.ok:
+            logger.warning(f"TDnet response: {resp.status_code} {resp.text[:200]}")
             return ""
-        resp.raise_for_status()
-        return _parse_irbank_html(resp.text)
+        resp.encoding = "utf-8"
+        return _parse_tdnet_html(resp.text, trading_date)
     except requests.RequestException as e:
-        logger.warning(f"irbank取得エラー: {e}")
+        logger.warning(f"TDnet取得エラー: {e}")
         return ""
 
 
-def _parse_irbank_html(html: str) -> str:
-    """irbank.netのHTMLから企業リストを抽出する。"""
-    # デバッグ用：HTML構造をログに出力
-    logger.info(f"HTML先頭500文字: {html[:500]}")
-
+def _parse_tdnet_html(html: str, trading_date: str) -> str:
+    """TDnetのHTMLから決算発表企業リストを抽出する。"""
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, "lxml")
 
+    logger.info(f"TDnet HTMLサイズ: {len(html)}文字")
+
     seen = set()
-    lines = ["証券コード | 企業名 | 決算種別"]
+    lines = ["証券コード | 企業名 | タイトル"]
 
-    # テーブル行を探す
-    for row in soup.select("table tr"):
+    # TDnetのテーブル行を解析
+    for row in soup.select("tr"):
         cells = row.find_all("td")
-        if len(cells) < 2:
+        if len(cells) < 3:
             continue
+        row_text = row.get_text(" ", strip=True)
 
-        # 証券コードのリンクを探す（href="/XXXX" 形式）
-        code_link = row.find("a", href=re.compile(r"^/\d{4,5}[A-Z]?$"))
-        if not code_link:
+        # 証券コード（4桁数字）を探す
+        code_match = re.search(r"\b(\d{4})\b", row_text)
+        if not code_match:
             continue
-        code = code_link["href"].strip("/")
+        code = code_match.group(1)
 
-        # 企業名：コードではないテキストを持つリンクを探す
+        # 企業名（タイトルリンクの前後にある）
         name = ""
-        for link in row.find_all("a"):
-            text = link.get_text(strip=True)
-            if text and not text.isdigit() and len(text) >= 2:
-                name = text
-                break
-
-        # 企業名が見つからなければtdのテキストから探す
-        if not name:
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if text and not text.isdigit() and not re.match(r"^[\d/.\-:%]+$", text) and len(text) >= 2:
+        for cell in cells:
+            text = cell.get_text(strip=True)
+            # 4桁数字だけでなく企業名らしい文字列
+            if text and not text.isdigit() and len(text) >= 2 and not re.match(r"^[\d:/.%\-\s]+$", text):
+                # 決算関連タイトルは除外
+                if not any(kw in text for kw in ["決算短信", "四半期", "報告書", "説明資料"]):
                     name = text
                     break
 
-        # 決算種別
-        category = ""
-        for cell in cells:
-            text = cell.get_text(strip=True)
-            if re.search(r"本決算|第[１-４1-4]四半期|第[１-４1-4]Q", text):
-                category = text
+        # タイトル（決算短信など）
+        title = ""
+        for link in row.find_all("a"):
+            t = link.get_text(strip=True)
+            if any(kw in t for kw in ["決算短信", "四半期", "決算説明", "業績"]):
+                title = t
                 break
 
-        if code and code not in seen:
+        if code and code not in seen and title:
             seen.add(code)
-            lines.append(f"{code} | {name} | {category}")
+            lines.append(f"{code} | {name} | {title}")
 
+    logger.info(f"TDnet解析: {len(seen)}社を抽出")
     if len(seen) == 0:
-        logger.warning(f"irbank HTML解析: 銘柄が見つかりません（HTMLサイズ: {len(html)}文字）")
-        # フォールバック：正規表現で直接抽出
-        pattern = r'href="/(\d{4,5}[A-Z]?)">([^<]{2,30})</a>'
-        for code, name in re.findall(pattern, html):
-            if code not in seen and not name.strip().isdigit():
-                seen.add(code)
-                lines.append(f"{code} | {name.strip()} | ")
-        if len(seen) > 0:
-            logger.info(f"フォールバック正規表現で{len(seen)}社を抽出")
-
-    logger.info(f"irbank解析: {len(seen)}社を抽出")
+        logger.info(f"TDnet HTML先頭800文字: {html[:800]}")
     return "\n".join(lines) if len(seen) > 0 else ""
 
 
