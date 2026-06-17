@@ -186,26 +186,13 @@ def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
     return latest, ""
 
 
-_JQUANTS_BASE = "https://api.jquants.com/v1"
-
-
-def _get_jquants_id_token(api_key: str) -> str:
-    """J-Quants APIキー（リフレッシュトークン）からIDトークンを取得する。"""
-    resp = requests.post(
-        f"{_JQUANTS_BASE}/token/auth_refresh",
-        json={"refreshtoken": api_key},
-        timeout=15,
-    )
-    if not resp.ok:
-        raise RuntimeError(f"J-Quants auth_refresh failed: {resp.status_code} {resp.text[:200]}")
-    return resp.json()["idToken"]
+_JQUANTS_BASE = "https://api.jquants.com/v2"
 
 
 def _fetch_jquants_announcements(trading_date: str, api_key: str) -> str:
-    """J-Quants fins/announcement エンドポイントで決算発表企業一覧を取得する。"""
+    """J-Quants V2 fins/announcement エンドポイントで決算発表企業一覧を取得する。"""
     try:
-        id_token = _get_jquants_id_token(api_key)
-        headers = {"Authorization": f"Bearer {id_token}"}
+        headers = {"Authorization": f"Bearer {api_key}"}
         resp = requests.get(
             f"{_JQUANTS_BASE}/fins/announcement",
             params={"date": trading_date},
