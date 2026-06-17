@@ -307,3 +307,29 @@
 2026-06-17 12:29:38,057 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-17 12:29:38,072 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-17 12:29:38,072 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
+2026-06-17 12:34:05,444 [INFO] main: Output directory: output/2026-06-17
+2026-06-17 12:34:05,444 [INFO] main: ============================================================
+2026-06-17 12:34:05,444 [INFO] main: STEP 1: 銘柄抽出
+2026-06-17 12:34:05,444 [INFO] main: ============================================================
+2026-06-17 12:34:05,444 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-17 を試行中...
+2026-06-17 12:34:05,976 [INFO] pipeline.stock_extractor: J-Quants V2 auth_refresh HTTP 403
+2026-06-17 12:34:05,976 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants V2 auth_refresh failed: 403 {"message": "The requested endpoint does not exist. Please check the URL, HTTP method, and API version:https://jpx-jquants.com/spec/"}
+2026-06-17 12:34:05,977 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-17 12:34:06,541 [INFO] pipeline.stock_extractor: J-Quants V2 auth_refresh HTTP 403
+2026-06-17 12:34:06,541 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants V2 auth_refresh failed: 403 {"message": "The requested endpoint does not exist. Please check the URL, HTTP method, and API version:https://jpx-jquants.com/spec/"}
+2026-06-17 12:34:06,542 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-17 12:34:07,060 [INFO] pipeline.stock_extractor: J-Quants V2 auth_refresh HTTP 403
+2026-06-17 12:34:07,060 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants V2 auth_refresh failed: 403 {"message": "The requested endpoint does not exist. Please check the URL, HTTP method, and API version:https://jpx-jquants.com/spec/"}
+2026-06-17 12:34:07,061 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-17 12:34:07,557 [INFO] pipeline.stock_extractor: J-Quants V2 auth_refresh HTTP 403
+2026-06-17 12:34:07,557 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants V2 auth_refresh failed: 403 {"message": "The requested endpoint does not exist. Please check the URL, HTTP method, and API version:https://jpx-jquants.com/spec/"}
+2026-06-17 12:34:07,558 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-17 12:34:08,113 [INFO] pipeline.stock_extractor: J-Quants V2 auth_refresh HTTP 403
+2026-06-17 12:34:08,113 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants V2 auth_refresh failed: 403 {"message": "The requested endpoint does not exist. Please check the URL, HTTP method, and API version:https://jpx-jquants.com/spec/"}
+2026-06-17 12:34:08,114 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-17 21:34 weekday=2
+2026-06-17 12:34:08,114 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-17
+2026-06-17 12:34:08,114 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-17 を使用。
+2026-06-17 12:34:08,114 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-17 12:34:08,621 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-17 12:34:08,634 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-17 12:34:08,634 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
