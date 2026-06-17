@@ -260,3 +260,24 @@
 2026-06-17 12:02:44,261 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-17 12:02:44,270 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-17 12:02:44,272 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
+2026-06-17 12:25:42,528 [INFO] main: Output directory: output/2026-06-17
+2026-06-17 12:25:42,528 [INFO] main: ============================================================
+2026-06-17 12:25:42,528 [INFO] main: STEP 1: 銘柄抽出
+2026-06-17 12:25:42,528 [INFO] main: ============================================================
+2026-06-17 12:25:42,528 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-17 を試行中...
+2026-06-17 12:25:42,987 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants auth_refresh failed: 410 {"message": "J-QuantsはV2に移行しました。", "migration_url": "https://jpx-jquants.com/ja/spec/migration-v1-v2"}
+2026-06-17 12:25:42,988 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-17 12:25:43,477 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants auth_refresh failed: 410 {"message": "J-QuantsはV2に移行しました。", "migration_url": "https://jpx-jquants.com/ja/spec/migration-v1-v2"}
+2026-06-17 12:25:43,478 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-17 12:25:43,992 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants auth_refresh failed: 410 {"message": "J-QuantsはV2に移行しました。", "migration_url": "https://jpx-jquants.com/ja/spec/migration-v1-v2"}
+2026-06-17 12:25:43,994 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-17 12:25:44,425 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants auth_refresh failed: 410 {"message": "J-QuantsはV2に移行しました。", "migration_url": "https://jpx-jquants.com/ja/spec/migration-v1-v2"}
+2026-06-17 12:25:44,426 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-17 12:25:44,907 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement 例外: J-Quants auth_refresh failed: 410 {"message": "J-QuantsはV2に移行しました。", "migration_url": "https://jpx-jquants.com/ja/spec/migration-v1-v2"}
+2026-06-17 12:25:44,908 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-17 21:25 weekday=2
+2026-06-17 12:25:44,909 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-17
+2026-06-17 12:25:44,909 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-17 を使用。
+2026-06-17 12:25:44,909 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-17 12:25:45,231 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-17 12:25:45,244 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-17 12:25:45,244 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
