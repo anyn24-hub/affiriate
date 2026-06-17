@@ -186,115 +186,107 @@ def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
     return latest, ""
 
 
-_EARNINGS_KEYWORDS = ["決算短信", "四半期報告", "決算説明", "業績予想"]
+_EARNINGS_KEYWORDS = ["決算短信", "四半期", "本決算", "第1", "第2", "第3"]
+
+_KABUTAN_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
+        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "ja,en;q=0.9",
+    "Referer": "https://kabutan.jp/",
+}
 
 
-def _probe_tdnet_js():
-    """I_JAVASCRIPT.jsからURL/AJAXパターンをログ出力（デバッグ用）。"""
-    js_url = f"{TDNET_BASE}/inbs/js/I_JAVASCRIPT.js"
-    try:
-        resp = requests.get(js_url, headers=_HEADERS, timeout=15)
-        logger.info(f"I_JAVASCRIPT.js: HTTP {resp.status_code}, {len(resp.text)}文字")
-        if resp.ok:
-            snippet = resp.text[:6000]
-            html_refs = re.findall(r'["\']([^"\']*I_[^"\']+\.html[^"\']*)["\']', snippet)
-            ajax_refs = re.findall(r'(?:url|href)\s*[:=]\s*["\']([^"\']{4,80})["\']', snippet)
-            logger.info(f"I_JAVASCRIPT HTML refs: {html_refs[:15]}")
-            logger.info(f"I_JAVASCRIPT AJAX refs: {ajax_refs[:15]}")
-            logger.info(f"I_JAVASCRIPT先頭1000文字: {resp.text[:1000]}")
-    except Exception as e:
-        logger.warning(f"I_JAVASCRIPT.js取得失敗: {e}")
-
-
-def _fetch_tdnet_earnings(trading_date: str) -> str:
-    """TDnetから指定日の決算発表企業一覧を取得する。"""
+def _fetch_kabutan_earnings(trading_date: str) -> str:
+    """kabutan.jpから指定日の決算発表銘柄を取得する。"""
     from bs4 import BeautifulSoup
-    date_nodash = trading_date.replace("-", "")  # YYYYMMDD
-
-    # JSファイルを解析してURLパターンを特定（初回のみ有効）
-    _probe_tdnet_js()
-
-    # 既知の複数フォーマットを試す
-    candidate_urls = [
-        f"{TDNET_BASE}/inbs/I_list_00_{date_nodash}_001.html",
-        f"{TDNET_BASE}/inbs/I_list_B_{date_nodash}_001.html",
-        f"{TDNET_BASE}/inbs/I_list_B_{date_nodash}_1.html",
-        f"{TDNET_BASE}/inbs/I_GetKaiji_00.html?stpr=B&dm={date_nodash}",
-    ]
-    for test_url in candidate_urls:
-        try:
-            r = requests.get(test_url, headers=_HEADERS, timeout=10)
-            logger.info(f"URL probe: {test_url.split('/inbs/')[-1]} → HTTP {r.status_code}, {len(r.text)}文字")
-        except Exception as e:
-            logger.warning(f"URL probe失敗: {test_url}: {e}")
-
+    # kabutan uses YYYYMMDD or YYYY-MM-DD format
+    date_nodash = trading_date.replace("-", "")
     seen: set[str] = set()
     lines = ["証券コード | 企業名 | タイトル"]
 
-    for page in range(1, 30):
-        url = f"{TDNET_BASE}/inbs/I_list_00_{date_nodash}_{page:03d}.html"
+    urls_to_try = [
+        f"https://kabutan.jp/news/marketnews/?category=5&date={date_nodash}",
+        f"https://kabutan.jp/news/marketnews/?category=kimettsu&date={date_nodash}",
+        f"https://kabutan.jp/news/marketnews/?category=5&date={trading_date}",
+    ]
+
+    for url in urls_to_try:
         try:
-            resp = requests.get(url, headers=_HEADERS, timeout=20)
-            logger.info(f"TDnet static page {page}: HTTP {resp.status_code}")
-            if resp.status_code == 404:
-                break
+            resp = requests.get(url, headers=_KABUTAN_HEADERS, timeout=20)
+            logger.info(f"kabutan HTTP {resp.status_code} ({len(resp.text)}文字) for {url}")
             if not resp.ok:
-                break
+                continue
             resp.encoding = "utf-8"
-        except requests.RequestException as e:
-            logger.warning(f"TDnet取得エラー (page {page}): {e}")
-            break
+            soup = BeautifulSoup(resp.text, "lxml")
 
-        soup = BeautifulSoup(resp.text, "lxml")
-        rows = soup.select("tr")
-        found_on_page = 0
+            # kabutan news: each article has stock code link /stock/?code=XXXX
+            articles = soup.select("article, .news_item, tr.stock_table_bodyrow, .news_list li, div.news_area")
+            if not articles:
+                # fallback: find all stock code links
+                articles = soup.find_all("a", href=re.compile(r"/stock/\?code=\d{4}"))
 
-        for row in rows:
-            cells = row.find_all("td")
-            if len(cells) < 4:
-                continue
-            row_text = row.get_text(" ", strip=True)
-
-            if not any(kw in row_text for kw in _EARNINGS_KEYWORDS):
+            logger.info(f"kabutan: {len(articles)}件のアイテム発見")
+            if len(articles) == 0:
+                logger.info(f"kabutan HTML先頭500文字: {resp.text[:500]}")
                 continue
 
-            code_match = re.search(r"\b(\d{4,5})\b", row_text)
-            if not code_match:
-                continue
-            code = code_match.group(1)
-            if code in seen:
-                continue
+            for item in articles:
+                item_text = item.get_text(" ", strip=True) if hasattr(item, "get_text") else str(item)
 
-            # 企業名: 最初の「名前らしい」セル
-            name = ""
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if (text and len(text) >= 2
-                        and not text.isdigit()
-                        and not re.match(r"^[\d:/.%\-\s]+$", text)
-                        and not any(kw in text for kw in _EARNINGS_KEYWORDS)):
-                    name = text
-                    break
+                # Extract stock code from href
+                code = ""
+                if hasattr(item, "find"):
+                    link = item.find("a", href=re.compile(r"/stock/\?code=(\d{4})"))
+                    if link:
+                        m = re.search(r"/stock/\?code=(\d{4})", link.get("href", ""))
+                        if m:
+                            code = m.group(1)
+                    # Also try direct code match
+                    if not code:
+                        m = re.search(r"\b(\d{4})\b", item_text)
+                        if m:
+                            code = m.group(1)
+                else:
+                    m = re.search(r"/stock/\?code=(\d{4})", str(item))
+                    if m:
+                        code = m.group(1)
 
-            # タイトル
-            title = ""
-            for cell in cells:
-                text = cell.get_text(strip=True)
-                if any(kw in text for kw in _EARNINGS_KEYWORDS):
-                    title = text
-                    break
+                if not code or code in seen:
+                    continue
 
-            seen.add(code)
-            lines.append(f"{code} | {name} | {title}")
-            found_on_page += 1
+                # Company name
+                name = ""
+                if hasattr(item, "find"):
+                    name_el = item.find(class_=re.compile(r"name|company|corp", re.I))
+                    if name_el:
+                        name = name_el.get_text(strip=True)
+                if not name:
+                    # First non-code text chunk
+                    for chunk in item_text.split():
+                        if not chunk.isdigit() and len(chunk) >= 2 and not re.match(r"^[\d:/.%\-]+$", chunk):
+                            name = chunk
+                            break
 
-        logger.info(f"Page {page}: {found_on_page}社追加、累計{len(seen)}社")
-        if found_on_page == 0 and page > 1:
-            break
-        time.sleep(0.5)
+                seen.add(code)
+                lines.append(f"{code} | {name} | 決算発表")
 
-    logger.info(f"TDnet静的ファイル解析完了: {len(seen)}社")
-    return "\n".join(lines) if len(seen) > 0 else ""
+            if len(seen) > 0:
+                logger.info(f"kabutan: {len(seen)}社を抽出")
+                return "\n".join(lines)
+
+        except Exception as e:
+            logger.warning(f"kabutan取得エラー: {e}")
+
+    logger.info("kabutan: データなし")
+    return ""
+
+
+def _fetch_tdnet_earnings(trading_date: str) -> str:
+    """kabutan.jpから決算発表企業一覧を取得する（TDnetはJS SPAのため直接アクセス不可）。"""
+    return _fetch_kabutan_earnings(trading_date)
 
 
 def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
