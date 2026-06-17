@@ -224,3 +224,39 @@
 2026-06-17 11:55:16,869 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-17 11:55:16,881 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-17 11:55:16,882 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
+2026-06-17 12:02:36,223 [INFO] main: Output directory: output/2026-06-17
+2026-06-17 12:02:36,223 [INFO] main: ============================================================
+2026-06-17 12:02:36,223 [INFO] main: STEP 1: 銘柄抽出
+2026-06-17 12:02:36,223 [INFO] main: ============================================================
+2026-06-17 12:02:36,223 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-17 を試行中...
+2026-06-17 12:02:36,830 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=20260617
+2026-06-17 12:02:37,331 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=kimettsu&date=20260617
+2026-06-17 12:02:37,872 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=2026-06-17
+2026-06-17 12:02:37,872 [INFO] pipeline.stock_extractor: kabutan: データなし
+2026-06-17 12:02:37,873 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-17 12:02:38,388 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=20260616
+2026-06-17 12:02:38,846 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=kimettsu&date=20260616
+2026-06-17 12:02:39,304 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=2026-06-16
+2026-06-17 12:02:39,304 [INFO] pipeline.stock_extractor: kabutan: データなし
+2026-06-17 12:02:39,305 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-17 12:02:39,761 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=20260615
+2026-06-17 12:02:40,402 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=kimettsu&date=20260615
+2026-06-17 12:02:41,009 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=2026-06-15
+2026-06-17 12:02:41,009 [INFO] pipeline.stock_extractor: kabutan: データなし
+2026-06-17 12:02:41,010 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-17 12:02:41,477 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=20260612
+2026-06-17 12:02:41,943 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=kimettsu&date=20260612
+2026-06-17 12:02:42,402 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=2026-06-12
+2026-06-17 12:02:42,402 [INFO] pipeline.stock_extractor: kabutan: データなし
+2026-06-17 12:02:42,403 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-17 12:02:43,035 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=20260611
+2026-06-17 12:02:43,513 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=kimettsu&date=20260611
+2026-06-17 12:02:43,971 [INFO] pipeline.stock_extractor: kabutan HTTP 405 (2541文字) for https://kabutan.jp/news/marketnews/?category=5&date=2026-06-11
+2026-06-17 12:02:43,971 [INFO] pipeline.stock_extractor: kabutan: データなし
+2026-06-17 12:02:43,971 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-17 21:02 weekday=2
+2026-06-17 12:02:43,972 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-17
+2026-06-17 12:02:43,972 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-17 を使用。
+2026-06-17 12:02:43,972 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-17 12:02:44,261 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-17 12:02:44,270 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-17 12:02:44,272 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
