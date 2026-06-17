@@ -1,0 +1,226 @@
+2026-06-17 11:55:11,749 [INFO] main: Output directory: output/2026-06-17
+2026-06-17 11:55:11,749 [INFO] main: ============================================================
+2026-06-17 11:55:11,749 [INFO] main: STEP 1: 銘柄抽出
+2026-06-17 11:55:11,749 [INFO] main: ============================================================
+2026-06-17 11:55:11,749 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-17 を試行中...
+2026-06-17 11:55:12,020 [INFO] pipeline.stock_extractor: I_JAVASCRIPT.js: HTTP 200, 4420文字
+2026-06-17 11:55:12,021 [INFO] pipeline.stock_extractor: I_JAVASCRIPT HTML refs: []
+2026-06-17 11:55:12,021 [INFO] pipeline.stock_extractor: I_JAVASCRIPT AJAX refs: []
+2026-06-17 11:55:12,021 [INFO] pipeline.stock_extractor: I_JAVASCRIPT先頭1000文字: // ＩＥにおけるキー抑止関数
+	function NkeyCheck(){
+		if( event.keyCode==8 ){ // BackSpaceキー
+			if( event.srcElement.tagName=='INPUT' ){ // <INPUT> のとき
+				if( event.srcElement.type=='text' || event.srcElement.type=='password' || event.srcElement.type=='file'){
+					// type="text" か "password" か "file" だったら有効とする
+					return true;
+				}else{
+					// 上記以外は無効
+					return false;
+				}
+			}else if( event.srcElement.tagName=='TEXTAREA' ){
+				// <TEXTAREA> の場合は有効
+				return true;
+			}else{
+				// 上記以外は無効
+				return false;
+			}
+		}else if( event.keyCode==122 ){ // F11
+			event.keyCode = 0;
+			return false;
+		}else if( event.altKey && (event.keyCode==37 || event.keyCode==39)){ // Alt + ← →
+			return false;
+		}else if( event.shiftKey && event.keyCode == 121 ){ // Shift + F10
+			return false;
+		}else if( event.keyCode==116 ){ // F5
+			event.keyCode = 0;
+			return false;
+		}else if( event.ctrlKey && (event.keyCode == 82)){ // Ctrl + R
+			return false;
+		}else if( event.keyCode==27 ){ // Esc
+			return false;
+	
+2026-06-17 11:55:12,321 [INFO] pipeline.stock_extractor: URL probe: I_list_00_20260617_001.html → HTTP 404, 230文字
+2026-06-17 11:55:12,521 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260617_001.html → HTTP 404, 229文字
+2026-06-17 11:55:12,710 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260617_1.html → HTTP 404, 227文字
+2026-06-17 11:55:12,912 [INFO] pipeline.stock_extractor: URL probe: I_GetKaiji_00.html?stpr=B&dm=20260617 → HTTP 404, 221文字
+2026-06-17 11:55:12,963 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-17 11:55:12,963 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-17 11:55:12,965 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-17 11:55:13,010 [INFO] pipeline.stock_extractor: I_JAVASCRIPT.js: HTTP 200, 4420文字
+2026-06-17 11:55:13,011 [INFO] pipeline.stock_extractor: I_JAVASCRIPT HTML refs: []
+2026-06-17 11:55:13,011 [INFO] pipeline.stock_extractor: I_JAVASCRIPT AJAX refs: []
+2026-06-17 11:55:13,011 [INFO] pipeline.stock_extractor: I_JAVASCRIPT先頭1000文字: // ＩＥにおけるキー抑止関数
+	function NkeyCheck(){
+		if( event.keyCode==8 ){ // BackSpaceキー
+			if( event.srcElement.tagName=='INPUT' ){ // <INPUT> のとき
+				if( event.srcElement.type=='text' || event.srcElement.type=='password' || event.srcElement.type=='file'){
+					// type="text" か "password" か "file" だったら有効とする
+					return true;
+				}else{
+					// 上記以外は無効
+					return false;
+				}
+			}else if( event.srcElement.tagName=='TEXTAREA' ){
+				// <TEXTAREA> の場合は有効
+				return true;
+			}else{
+				// 上記以外は無効
+				return false;
+			}
+		}else if( event.keyCode==122 ){ // F11
+			event.keyCode = 0;
+			return false;
+		}else if( event.altKey && (event.keyCode==37 || event.keyCode==39)){ // Alt + ← →
+			return false;
+		}else if( event.shiftKey && event.keyCode == 121 ){ // Shift + F10
+			return false;
+		}else if( event.keyCode==116 ){ // F5
+			event.keyCode = 0;
+			return false;
+		}else if( event.ctrlKey && (event.keyCode == 82)){ // Ctrl + R
+			return false;
+		}else if( event.keyCode==27 ){ // Esc
+			return false;
+	
+2026-06-17 11:55:13,203 [INFO] pipeline.stock_extractor: URL probe: I_list_00_20260616_001.html → HTTP 404, 230文字
+2026-06-17 11:55:13,407 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260616_001.html → HTTP 404, 229文字
+2026-06-17 11:55:13,604 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260616_1.html → HTTP 404, 227文字
+2026-06-17 11:55:13,796 [INFO] pipeline.stock_extractor: URL probe: I_GetKaiji_00.html?stpr=B&dm=20260616 → HTTP 404, 221文字
+2026-06-17 11:55:13,832 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-17 11:55:13,833 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-17 11:55:13,834 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-17 11:55:13,873 [INFO] pipeline.stock_extractor: I_JAVASCRIPT.js: HTTP 200, 4420文字
+2026-06-17 11:55:13,873 [INFO] pipeline.stock_extractor: I_JAVASCRIPT HTML refs: []
+2026-06-17 11:55:13,874 [INFO] pipeline.stock_extractor: I_JAVASCRIPT AJAX refs: []
+2026-06-17 11:55:13,874 [INFO] pipeline.stock_extractor: I_JAVASCRIPT先頭1000文字: // ＩＥにおけるキー抑止関数
+	function NkeyCheck(){
+		if( event.keyCode==8 ){ // BackSpaceキー
+			if( event.srcElement.tagName=='INPUT' ){ // <INPUT> のとき
+				if( event.srcElement.type=='text' || event.srcElement.type=='password' || event.srcElement.type=='file'){
+					// type="text" か "password" か "file" だったら有効とする
+					return true;
+				}else{
+					// 上記以外は無効
+					return false;
+				}
+			}else if( event.srcElement.tagName=='TEXTAREA' ){
+				// <TEXTAREA> の場合は有効
+				return true;
+			}else{
+				// 上記以外は無効
+				return false;
+			}
+		}else if( event.keyCode==122 ){ // F11
+			event.keyCode = 0;
+			return false;
+		}else if( event.altKey && (event.keyCode==37 || event.keyCode==39)){ // Alt + ← →
+			return false;
+		}else if( event.shiftKey && event.keyCode == 121 ){ // Shift + F10
+			return false;
+		}else if( event.keyCode==116 ){ // F5
+			event.keyCode = 0;
+			return false;
+		}else if( event.ctrlKey && (event.keyCode == 82)){ // Ctrl + R
+			return false;
+		}else if( event.keyCode==27 ){ // Esc
+			return false;
+	
+2026-06-17 11:55:14,074 [INFO] pipeline.stock_extractor: URL probe: I_list_00_20260615_001.html → HTTP 404, 230文字
+2026-06-17 11:55:14,361 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260615_001.html → HTTP 404, 229文字
+2026-06-17 11:55:14,552 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260615_1.html → HTTP 404, 227文字
+2026-06-17 11:55:14,837 [INFO] pipeline.stock_extractor: URL probe: I_GetKaiji_00.html?stpr=B&dm=20260615 → HTTP 404, 221文字
+2026-06-17 11:55:14,880 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-17 11:55:14,881 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-17 11:55:14,882 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-17 11:55:14,918 [INFO] pipeline.stock_extractor: I_JAVASCRIPT.js: HTTP 200, 4420文字
+2026-06-17 11:55:14,918 [INFO] pipeline.stock_extractor: I_JAVASCRIPT HTML refs: []
+2026-06-17 11:55:14,918 [INFO] pipeline.stock_extractor: I_JAVASCRIPT AJAX refs: []
+2026-06-17 11:55:14,919 [INFO] pipeline.stock_extractor: I_JAVASCRIPT先頭1000文字: // ＩＥにおけるキー抑止関数
+	function NkeyCheck(){
+		if( event.keyCode==8 ){ // BackSpaceキー
+			if( event.srcElement.tagName=='INPUT' ){ // <INPUT> のとき
+				if( event.srcElement.type=='text' || event.srcElement.type=='password' || event.srcElement.type=='file'){
+					// type="text" か "password" か "file" だったら有効とする
+					return true;
+				}else{
+					// 上記以外は無効
+					return false;
+				}
+			}else if( event.srcElement.tagName=='TEXTAREA' ){
+				// <TEXTAREA> の場合は有効
+				return true;
+			}else{
+				// 上記以外は無効
+				return false;
+			}
+		}else if( event.keyCode==122 ){ // F11
+			event.keyCode = 0;
+			return false;
+		}else if( event.altKey && (event.keyCode==37 || event.keyCode==39)){ // Alt + ← →
+			return false;
+		}else if( event.shiftKey && event.keyCode == 121 ){ // Shift + F10
+			return false;
+		}else if( event.keyCode==116 ){ // F5
+			event.keyCode = 0;
+			return false;
+		}else if( event.ctrlKey && (event.keyCode == 82)){ // Ctrl + R
+			return false;
+		}else if( event.keyCode==27 ){ // Esc
+			return false;
+	
+2026-06-17 11:55:15,130 [INFO] pipeline.stock_extractor: URL probe: I_list_00_20260612_001.html → HTTP 404, 230文字
+2026-06-17 11:55:15,334 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260612_001.html → HTTP 404, 229文字
+2026-06-17 11:55:15,524 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260612_1.html → HTTP 404, 227文字
+2026-06-17 11:55:15,719 [INFO] pipeline.stock_extractor: URL probe: I_GetKaiji_00.html?stpr=B&dm=20260612 → HTTP 404, 221文字
+2026-06-17 11:55:15,756 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-17 11:55:15,756 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-17 11:55:15,758 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-17 11:55:15,797 [INFO] pipeline.stock_extractor: I_JAVASCRIPT.js: HTTP 200, 4420文字
+2026-06-17 11:55:15,797 [INFO] pipeline.stock_extractor: I_JAVASCRIPT HTML refs: []
+2026-06-17 11:55:15,798 [INFO] pipeline.stock_extractor: I_JAVASCRIPT AJAX refs: []
+2026-06-17 11:55:15,798 [INFO] pipeline.stock_extractor: I_JAVASCRIPT先頭1000文字: // ＩＥにおけるキー抑止関数
+	function NkeyCheck(){
+		if( event.keyCode==8 ){ // BackSpaceキー
+			if( event.srcElement.tagName=='INPUT' ){ // <INPUT> のとき
+				if( event.srcElement.type=='text' || event.srcElement.type=='password' || event.srcElement.type=='file'){
+					// type="text" か "password" か "file" だったら有効とする
+					return true;
+				}else{
+					// 上記以外は無効
+					return false;
+				}
+			}else if( event.srcElement.tagName=='TEXTAREA' ){
+				// <TEXTAREA> の場合は有効
+				return true;
+			}else{
+				// 上記以外は無効
+				return false;
+			}
+		}else if( event.keyCode==122 ){ // F11
+			event.keyCode = 0;
+			return false;
+		}else if( event.altKey && (event.keyCode==37 || event.keyCode==39)){ // Alt + ← →
+			return false;
+		}else if( event.shiftKey && event.keyCode == 121 ){ // Shift + F10
+			return false;
+		}else if( event.keyCode==116 ){ // F5
+			event.keyCode = 0;
+			return false;
+		}else if( event.ctrlKey && (event.keyCode == 82)){ // Ctrl + R
+			return false;
+		}else if( event.keyCode==27 ){ // Esc
+			return false;
+	
+2026-06-17 11:55:15,992 [INFO] pipeline.stock_extractor: URL probe: I_list_00_20260611_001.html → HTTP 404, 230文字
+2026-06-17 11:55:16,180 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260611_001.html → HTTP 404, 229文字
+2026-06-17 11:55:16,371 [INFO] pipeline.stock_extractor: URL probe: I_list_B_20260611_1.html → HTTP 404, 227文字
+2026-06-17 11:55:16,574 [INFO] pipeline.stock_extractor: URL probe: I_GetKaiji_00.html?stpr=B&dm=20260611 → HTTP 404, 221文字
+2026-06-17 11:55:16,613 [INFO] pipeline.stock_extractor: TDnet static page 1: HTTP 404
+2026-06-17 11:55:16,613 [INFO] pipeline.stock_extractor: TDnet静的ファイル解析完了: 0社
+2026-06-17 11:55:16,615 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-17 20:55 weekday=2
+2026-06-17 11:55:16,615 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-17
+2026-06-17 11:55:16,615 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-17 を使用。
+2026-06-17 11:55:16,615 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-17 11:55:16,869 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-17 11:55:16,881 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-17 11:55:16,882 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
