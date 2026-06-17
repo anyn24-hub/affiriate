@@ -281,3 +281,29 @@
 2026-06-17 12:25:45,231 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-17 12:25:45,244 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-17 12:25:45,244 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
+2026-06-17 12:29:34,670 [INFO] main: Output directory: output/2026-06-17
+2026-06-17 12:29:34,670 [INFO] main: ============================================================
+2026-06-17 12:29:34,670 [INFO] main: STEP 1: 銘柄抽出
+2026-06-17 12:29:34,670 [INFO] main: ============================================================
+2026-06-17 12:29:34,670 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-17 を試行中...
+2026-06-17 12:29:35,302 [INFO] pipeline.stock_extractor: J-Quants fins/announcement HTTP 403 for 2026-06-17
+2026-06-17 12:29:35,302 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement エラー: 403 {"message":"Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256 and encoded with Base64): 'kOcve+TRSv2aTIbhIrGKwgr2+L31klAh5WaucY2Y3Ng='."}
+2026-06-17 12:29:35,303 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-17 12:29:35,821 [INFO] pipeline.stock_extractor: J-Quants fins/announcement HTTP 403 for 2026-06-16
+2026-06-17 12:29:35,821 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement エラー: 403 {"message":"Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256 and encoded with Base64): 'kOcve+TRSv2aTIbhIrGKwgr2+L31klAh5WaucY2Y3Ng='."}
+2026-06-17 12:29:35,822 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-17 12:29:36,407 [INFO] pipeline.stock_extractor: J-Quants fins/announcement HTTP 403 for 2026-06-15
+2026-06-17 12:29:36,407 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement エラー: 403 {"message":"Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256 and encoded with Base64): 'kOcve+TRSv2aTIbhIrGKwgr2+L31klAh5WaucY2Y3Ng='."}
+2026-06-17 12:29:36,408 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-17 12:29:36,951 [INFO] pipeline.stock_extractor: J-Quants fins/announcement HTTP 403 for 2026-06-12
+2026-06-17 12:29:36,951 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement エラー: 403 {"message":"Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256 and encoded with Base64): 'kOcve+TRSv2aTIbhIrGKwgr2+L31klAh5WaucY2Y3Ng='."}
+2026-06-17 12:29:36,952 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-17 12:29:37,464 [INFO] pipeline.stock_extractor: J-Quants fins/announcement HTTP 403 for 2026-06-11
+2026-06-17 12:29:37,464 [WARNING] pipeline.stock_extractor: J-Quants fins/announcement エラー: 403 {"message":"Invalid key=value pair (missing equal-sign) in Authorization header (hashed with SHA-256 and encoded with Base64): 'kOcve+TRSv2aTIbhIrGKwgr2+L31klAh5WaucY2Y3Ng='."}
+2026-06-17 12:29:37,466 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-17 21:29 weekday=2
+2026-06-17 12:29:37,466 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-17
+2026-06-17 12:29:37,466 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-17 を使用。
+2026-06-17 12:29:37,466 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-17 12:29:38,057 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-17 12:29:38,072 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-17 12:29:38,072 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
