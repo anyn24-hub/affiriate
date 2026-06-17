@@ -385,3 +385,24 @@
 2026-06-17 13:48:35,903 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-17 13:48:35,916 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-17 13:48:35,917 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
+2026-06-17 14:06:56,587 [INFO] main: Output directory: output/2026-06-17
+2026-06-17 14:06:56,588 [INFO] main: ============================================================
+2026-06-17 14:06:56,588 [INFO] main: STEP 1: 銘柄抽出
+2026-06-17 14:06:56,588 [INFO] main: ============================================================
+2026-06-17 14:06:56,588 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-17 を試行中...
+2026-06-17 14:06:57,313 [WARNING] pipeline.stock_extractor: jquants-api-client fin_summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260617 body: Your subscription covers the following dates: 2024-03-25 ~ 2026-03-25. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-17 14:06:57,314 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-16 を試行中...
+2026-06-17 14:06:57,765 [WARNING] pipeline.stock_extractor: jquants-api-client fin_summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260616 body: Your subscription covers the following dates: 2024-03-25 ~ 2026-03-25. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-17 14:06:57,766 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-15 を試行中...
+2026-06-17 14:06:58,203 [WARNING] pipeline.stock_extractor: jquants-api-client fin_summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260615 body: Your subscription covers the following dates: 2024-03-25 ~ 2026-03-25. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-17 14:06:58,204 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-12 を試行中...
+2026-06-17 14:06:58,661 [WARNING] pipeline.stock_extractor: jquants-api-client fin_summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260612 body: Your subscription covers the following dates: 2024-03-25 ~ 2026-03-25. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-17 14:06:58,662 [INFO] pipeline.stock_extractor: 対象取引日: 2026-06-11 を試行中...
+2026-06-17 14:06:59,036 [WARNING] pipeline.stock_extractor: jquants-api-client fin_summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260611 body: Your subscription covers the following dates: 2024-03-25 ~ 2026-03-25. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-17 14:06:59,037 [INFO] pipeline.stock_extractor: 現在時刻(JST): 2026-06-17 23:06 weekday=2
+2026-06-17 14:06:59,037 [INFO] pipeline.stock_extractor: 算出された取引日: 2026-06-17
+2026-06-17 14:06:59,037 [WARNING] pipeline.stock_extractor: データが見つからず。最新取引日 2026-06-17 を使用。
+2026-06-17 14:06:59,037 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-17 14:06:59,313 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-17 14:06:59,326 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-17 14:06:59,327 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-17/stocks.json
