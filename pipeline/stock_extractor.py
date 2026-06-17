@@ -186,62 +186,27 @@ def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
     return latest, ""
 
 
-_JQUANTS_BASE = "https://api.jquants.com/v2"
-
-_jquants_id_token_cache: dict = {}
-
-
-def _get_jquants_id_token_v2(refresh_token: str) -> str:
-    """J-Quants V2リフレッシュトークンからIDトークンを取得する（キャッシュあり）。"""
-    import time
-    cached = _jquants_id_token_cache.get("token")
-    if cached and _jquants_id_token_cache.get("expires", 0) > time.time():
-        return cached
-    resp = requests.post(
-        f"{_JQUANTS_BASE}/token/auth_refresh",
-        json={"refreshtoken": refresh_token},
-        timeout=15,
-    )
-    logger.info(f"J-Quants V2 auth_refresh HTTP {resp.status_code}")
-    if not resp.ok:
-        raise RuntimeError(f"J-Quants V2 auth_refresh failed: {resp.status_code} {resp.text[:300]}")
-    id_token = resp.json()["idToken"]
-    _jquants_id_token_cache["token"] = id_token
-    _jquants_id_token_cache["expires"] = time.time() + 3600
-    return id_token
-
-
 def _fetch_jquants_announcements(trading_date: str, api_key: str) -> str:
-    """J-Quants V2 fins/announcement エンドポイントで決算発表企業一覧を取得する。"""
+    """jquantsapi ライブラリを使って決算発表企業一覧を取得する。"""
     try:
-        # V2: x-api-key ヘッダーで認証
-        headers = {"x-api-key": api_key}
-        resp = requests.get(
-            f"{_JQUANTS_BASE}/fins/announcement",
-            params={"date": trading_date},
-            headers=headers,
-            timeout=20,
-        )
-        logger.info(f"J-Quants fins/announcement HTTP {resp.status_code} for {trading_date}")
-        if not resp.ok:
-            logger.warning(f"J-Quants fins/announcement エラー: {resp.status_code} {resp.text[:300]}")
-            return ""
-        data = resp.json()
-        items = data.get("announcement", data.get("Announcement", []))
-        if not items:
-            logger.info(f"J-Quants fins/announcement: {trading_date} データなし")
+        import jquantsapi
+        cli = jquantsapi.Client(refresh_token=api_key)
+        date_nodash = trading_date.replace("-", "")
+        df = cli.get_fins_announcement(date_yyyymmdd=date_nodash)
+        if df is None or df.empty:
+            logger.info(f"jquantsapi fins/announcement: {trading_date} データなし")
             return ""
         lines = ["証券コード | 企業名 | 決算種別"]
-        for item in items:
-            code = item.get("Code", item.get("code", ""))
-            name = item.get("CompanyName", item.get("company_name", item.get("name", "")))
-            category = item.get("FiscalYear", item.get("fiscal_year", ""))
+        for _, row in df.iterrows():
+            code = str(row.get("Code", row.get("code", ""))).strip()
+            name = str(row.get("CompanyName", row.get("company_name", ""))).strip()
+            category = str(row.get("FiscalYear", row.get("fiscal_year", ""))).strip()
             if code:
                 lines.append(f"{code} | {name} | {category}")
-        logger.info(f"J-Quants fins/announcement: {len(items)}社取得")
+        logger.info(f"jquantsapi fins/announcement: {len(df)}社取得")
         return "\n".join(lines)
     except Exception as e:
-        logger.warning(f"J-Quants fins/announcement 例外: {e}")
+        logger.warning(f"jquantsapi fins/announcement 例外: {e}")
         return ""
 
 
