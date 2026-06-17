@@ -214,8 +214,8 @@ def _get_jquants_id_token_v2(refresh_token: str) -> str:
 def _fetch_jquants_announcements(trading_date: str, api_key: str) -> str:
     """J-Quants V2 fins/announcement エンドポイントで決算発表企業一覧を取得する。"""
     try:
-        id_token = _get_jquants_id_token_v2(api_key)
-        headers = {"Authorization": f"Bearer {id_token}"}
+        # V2: x-api-key ヘッダーで認証
+        headers = {"x-api-key": api_key}
         resp = requests.get(
             f"{_JQUANTS_BASE}/fins/announcement",
             params={"date": trading_date},
