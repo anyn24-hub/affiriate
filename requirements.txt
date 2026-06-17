@@ -7,4 +7,4 @@ google-auth-httplib2>=0.2.0
 lxml>=4.9.0
 python-dotenv>=1.0.0
 pypdf>=4.0.0
-jquantsapi>=0.7.0
+jquants-api-client>=2.0.0
