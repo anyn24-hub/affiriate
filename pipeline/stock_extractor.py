@@ -189,10 +189,45 @@ def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
 _EARNINGS_KEYWORDS = ["決算短信", "四半期報告", "決算説明", "業績予想"]
 
 
+def _probe_tdnet_js():
+    """I_JAVASCRIPT.jsからURL/AJAXパターンをログ出力（デバッグ用）。"""
+    js_url = f"{TDNET_BASE}/inbs/js/I_JAVASCRIPT.js"
+    try:
+        resp = requests.get(js_url, headers=_HEADERS, timeout=15)
+        logger.info(f"I_JAVASCRIPT.js: HTTP {resp.status_code}, {len(resp.text)}文字")
+        if resp.ok:
+            snippet = resp.text[:6000]
+            html_refs = re.findall(r'["\']([^"\']*I_[^"\']+\.html[^"\']*)["\']', snippet)
+            ajax_refs = re.findall(r'(?:url|href)\s*[:=]\s*["\']([^"\']{4,80})["\']', snippet)
+            logger.info(f"I_JAVASCRIPT HTML refs: {html_refs[:15]}")
+            logger.info(f"I_JAVASCRIPT AJAX refs: {ajax_refs[:15]}")
+            logger.info(f"I_JAVASCRIPT先頭1000文字: {resp.text[:1000]}")
+    except Exception as e:
+        logger.warning(f"I_JAVASCRIPT.js取得失敗: {e}")
+
+
 def _fetch_tdnet_earnings(trading_date: str) -> str:
-    """TDnetの静的リストファイルから指定日の決算発表企業一覧を取得する。"""
+    """TDnetから指定日の決算発表企業一覧を取得する。"""
     from bs4 import BeautifulSoup
     date_nodash = trading_date.replace("-", "")  # YYYYMMDD
+
+    # JSファイルを解析してURLパターンを特定（初回のみ有効）
+    _probe_tdnet_js()
+
+    # 既知の複数フォーマットを試す
+    candidate_urls = [
+        f"{TDNET_BASE}/inbs/I_list_00_{date_nodash}_001.html",
+        f"{TDNET_BASE}/inbs/I_list_B_{date_nodash}_001.html",
+        f"{TDNET_BASE}/inbs/I_list_B_{date_nodash}_1.html",
+        f"{TDNET_BASE}/inbs/I_GetKaiji_00.html?stpr=B&dm={date_nodash}",
+    ]
+    for test_url in candidate_urls:
+        try:
+            r = requests.get(test_url, headers=_HEADERS, timeout=10)
+            logger.info(f"URL probe: {test_url.split('/inbs/')[-1]} → HTTP {r.status_code}, {len(r.text)}文字")
+        except Exception as e:
+            logger.warning(f"URL probe失敗: {test_url}: {e}")
+
     seen: set[str] = set()
     lines = ["証券コード | 企業名 | タイトル"]
 
