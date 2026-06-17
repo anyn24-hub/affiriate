@@ -170,7 +170,7 @@ def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
     for attempt in range(5):
         date_str = candidate.strftime("%Y-%m-%d")
         logger.info(f"対象取引日: {date_str} を試行中...")
-        data = _fetch_tdnet_earnings(date_str)
+        data = _fetch_tdnet_earnings(date_str, api_key)
         if data:
             logger.info(f"対象取引日確定: {date_str}（{len(data.splitlines())}行取得）")
             return date_str, data
@@ -186,107 +186,61 @@ def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
     return latest, ""
 
 
-_EARNINGS_KEYWORDS = ["決算短信", "四半期", "本決算", "第1", "第2", "第3"]
-
-_KABUTAN_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
-        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "ja,en;q=0.9",
-    "Referer": "https://kabutan.jp/",
-}
+_JQUANTS_BASE = "https://api.jquants.com/v1"
 
 
-def _fetch_kabutan_earnings(trading_date: str) -> str:
-    """kabutan.jpから指定日の決算発表銘柄を取得する。"""
-    from bs4 import BeautifulSoup
-    # kabutan uses YYYYMMDD or YYYY-MM-DD format
-    date_nodash = trading_date.replace("-", "")
-    seen: set[str] = set()
-    lines = ["証券コード | 企業名 | タイトル"]
-
-    urls_to_try = [
-        f"https://kabutan.jp/news/marketnews/?category=5&date={date_nodash}",
-        f"https://kabutan.jp/news/marketnews/?category=kimettsu&date={date_nodash}",
-        f"https://kabutan.jp/news/marketnews/?category=5&date={trading_date}",
-    ]
-
-    for url in urls_to_try:
-        try:
-            resp = requests.get(url, headers=_KABUTAN_HEADERS, timeout=20)
-            logger.info(f"kabutan HTTP {resp.status_code} ({len(resp.text)}文字) for {url}")
-            if not resp.ok:
-                continue
-            resp.encoding = "utf-8"
-            soup = BeautifulSoup(resp.text, "lxml")
-
-            # kabutan news: each article has stock code link /stock/?code=XXXX
-            articles = soup.select("article, .news_item, tr.stock_table_bodyrow, .news_list li, div.news_area")
-            if not articles:
-                # fallback: find all stock code links
-                articles = soup.find_all("a", href=re.compile(r"/stock/\?code=\d{4}"))
-
-            logger.info(f"kabutan: {len(articles)}件のアイテム発見")
-            if len(articles) == 0:
-                logger.info(f"kabutan HTML先頭500文字: {resp.text[:500]}")
-                continue
-
-            for item in articles:
-                item_text = item.get_text(" ", strip=True) if hasattr(item, "get_text") else str(item)
-
-                # Extract stock code from href
-                code = ""
-                if hasattr(item, "find"):
-                    link = item.find("a", href=re.compile(r"/stock/\?code=(\d{4})"))
-                    if link:
-                        m = re.search(r"/stock/\?code=(\d{4})", link.get("href", ""))
-                        if m:
-                            code = m.group(1)
-                    # Also try direct code match
-                    if not code:
-                        m = re.search(r"\b(\d{4})\b", item_text)
-                        if m:
-                            code = m.group(1)
-                else:
-                    m = re.search(r"/stock/\?code=(\d{4})", str(item))
-                    if m:
-                        code = m.group(1)
-
-                if not code or code in seen:
-                    continue
-
-                # Company name
-                name = ""
-                if hasattr(item, "find"):
-                    name_el = item.find(class_=re.compile(r"name|company|corp", re.I))
-                    if name_el:
-                        name = name_el.get_text(strip=True)
-                if not name:
-                    # First non-code text chunk
-                    for chunk in item_text.split():
-                        if not chunk.isdigit() and len(chunk) >= 2 and not re.match(r"^[\d:/.%\-]+$", chunk):
-                            name = chunk
-                            break
-
-                seen.add(code)
-                lines.append(f"{code} | {name} | 決算発表")
-
-            if len(seen) > 0:
-                logger.info(f"kabutan: {len(seen)}社を抽出")
-                return "\n".join(lines)
-
-        except Exception as e:
-            logger.warning(f"kabutan取得エラー: {e}")
-
-    logger.info("kabutan: データなし")
-    return ""
+def _get_jquants_id_token(api_key: str) -> str:
+    """J-Quants APIキー（リフレッシュトークン）からIDトークンを取得する。"""
+    resp = requests.post(
+        f"{_JQUANTS_BASE}/token/auth_refresh",
+        json={"refreshtoken": api_key},
+        timeout=15,
+    )
+    if not resp.ok:
+        raise RuntimeError(f"J-Quants auth_refresh failed: {resp.status_code} {resp.text[:200]}")
+    return resp.json()["idToken"]
 
 
-def _fetch_tdnet_earnings(trading_date: str) -> str:
-    """kabutan.jpから決算発表企業一覧を取得する（TDnetはJS SPAのため直接アクセス不可）。"""
-    return _fetch_kabutan_earnings(trading_date)
+def _fetch_jquants_announcements(trading_date: str, api_key: str) -> str:
+    """J-Quants fins/announcement エンドポイントで決算発表企業一覧を取得する。"""
+    try:
+        id_token = _get_jquants_id_token(api_key)
+        headers = {"Authorization": f"Bearer {id_token}"}
+        resp = requests.get(
+            f"{_JQUANTS_BASE}/fins/announcement",
+            params={"date": trading_date},
+            headers=headers,
+            timeout=20,
+        )
+        logger.info(f"J-Quants fins/announcement HTTP {resp.status_code} for {trading_date}")
+        if not resp.ok:
+            logger.warning(f"J-Quants fins/announcement エラー: {resp.status_code} {resp.text[:300]}")
+            return ""
+        data = resp.json()
+        items = data.get("announcement", data.get("Announcement", []))
+        if not items:
+            logger.info(f"J-Quants fins/announcement: {trading_date} データなし")
+            return ""
+        lines = ["証券コード | 企業名 | 決算種別"]
+        for item in items:
+            code = item.get("Code", item.get("code", ""))
+            name = item.get("CompanyName", item.get("company_name", item.get("name", "")))
+            category = item.get("FiscalYear", item.get("fiscal_year", ""))
+            if code:
+                lines.append(f"{code} | {name} | {category}")
+        logger.info(f"J-Quants fins/announcement: {len(items)}社取得")
+        return "\n".join(lines)
+    except Exception as e:
+        logger.warning(f"J-Quants fins/announcement 例外: {e}")
+        return ""
+
+
+def _fetch_tdnet_earnings(trading_date: str, api_key: str = "") -> str:
+    """J-Quants fins/announcement で決算発表企業一覧を取得する。"""
+    if not api_key:
+        logger.warning("J-Quants APIキーが未設定のためスキップ")
+        return ""
+    return _fetch_jquants_announcements(trading_date, api_key)
 
 
 def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
