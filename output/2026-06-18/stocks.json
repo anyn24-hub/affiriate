@@ -1,1 +1,82 @@
-[]
+[
+  {
+    "code": "14430",
+    "name": "技研ホールディングス",
+    "section": "A",
+    "category": "本決算",
+    "content": "技術開発",
+    "notes": ""
+  },
+  {
+    "code": "23400",
+    "name": "極楽湯ホールディングス",
+    "section": "A",
+    "category": "本決算",
+    "content": "温泉施設",
+    "notes": ""
+  },
+  {
+    "code": "26730",
+    "name": "夢みつけ隊",
+    "section": "A",
+    "category": "本決算",
+    "content": "教育サービス",
+    "notes": ""
+  },
+  {
+    "code": "37530",
+    "name": "フライトソリューションズ",
+    "section": "A",
+    "category": "本決算",
+    "content": "航空関連",
+    "notes": ""
+  },
+  {
+    "code": "38580",
+    "name": "ユビキタスＡＩ",
+    "section": "A",
+    "category": "本決算",
+    "content": "AI開発",
+    "notes": ""
+  },
+  {
+    "code": "47200",
+    "name": "城南進学研究社",
+    "section": "A",
+    "category": "本決算",
+    "content": "教育研究",
+    "notes": ""
+  },
+  {
+    "code": "58520",
+    "name": "アーレスティ",
+    "section": "A",
+    "category": "本決算",
+    "content": "医療関連",
+    "notes": ""
+  },
+  {
+    "code": "63430",
+    "name": "フリージア・マクロス",
+    "section": "A",
+    "category": "本決算",
+    "content": "（該当なし）",
+    "notes": ""
+  },
+  {
+    "code": "67430",
+    "name": "大同信号",
+    "section": "A",
+    "category": "本決算",
+    "content": "信号機器",
+    "notes": ""
+  },
+  {
+    "code": "71110",
+    "name": "ＩＮＥＳＴ",
+    "section": "A",
+    "category": "本決算",
+    "content": "不動産関連",
+    "notes": ""
+  }
+]

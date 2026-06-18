@@ -110,3 +110,15 @@
 2026-06-18 13:31:31,443 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-18 13:31:31,457 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-18 13:31:31,457 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-18/stocks.json
+2026-06-18 13:36:08,679 [INFO] main: Output directory: output/2026-06-18
+2026-06-18 13:36:08,679 [INFO] main: ============================================================
+2026-06-18 13:36:08,680 [INFO] main: STEP 1: 銘柄抽出
+2026-06-18 13:36:08,680 [INFO] main: ============================================================
+2026-06-18 13:36:09,655 [INFO] pipeline.stock_extractor: earnings-calendar: 全14件, 日付一覧=['2026-05-20']
+2026-06-18 13:36:09,656 [INFO] pipeline.stock_extractor: earnings-calendar 使用日付: 2026-05-20 (14社)
+2026-06-18 13:36:09,657 [WARNING] pipeline.stock_extractor: 株価データ取得エラー: 'ClientV2' object has no attribute 'get_prices_daily_quotes'
+2026-06-18 13:36:09,658 [INFO] pipeline.stock_extractor: 上位10社を出力
+2026-06-18 13:36:09,659 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-18 13:36:10,684 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-18 13:36:10,698 [INFO] pipeline.stock_extractor: Parsed 10 in A, 0 in B, 0 in C.
+2026-06-18 13:36:10,699 [INFO] main: 銘柄抽出完了: 10社 → output/2026-06-18/stocks.json
