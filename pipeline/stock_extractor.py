@@ -199,34 +199,32 @@ def _fetch_jquants_top10(trading_date: str, api_key: str) -> str:
         # ── 決算発表データ取得 ──────────────────────────────
         ann_df = None
 
-        # 方法1: fins/announcement をHTTP直接呼び出し（スケジュールデータ、12週制限なし期待）
+        # 方法1: 決算発表予定カレンダー（12週制限なし）
         try:
-            id_token = _extract_jquants_token(cli)
-            if id_token:
-                resp = __import__("requests").get(
-                    "https://api.jquants.com/v2/fins/announcement",
-                    params={"date": date_nodash},
-                    headers={"Authorization": f"Bearer {id_token}"},
-                    timeout=20,
-                )
-                logger.info(f"fins/announcement HTTP直接: {resp.status_code} {resp.text[:200]}")
-                if resp.ok:
-                    import pandas as pd
-                    items = resp.json().get("announcement", resp.json().get("Announcement", []))
-                    if items:
-                        ann_df = pd.DataFrame(items)
-                        logger.info(f"fins/announcement: {len(ann_df)}社取得")
+            cal_df = cli.get_eq_earnings_cal()
+            if cal_df is not None and not cal_df.empty:
+                logger.info(f"earnings-calendar: 全{len(cal_df)}件取得, columns={list(cal_df.columns)}")
+                # 日付カラムを特定してフィルタ
+                date_col = None
+                for col in ["Date", "DisclosureDate", "AnnouncementDate", "date", "disclosure_date"]:
+                    if col in cal_df.columns:
+                        date_col = col
+                        break
+                if date_col is None:
+                    # 最初のカラムを試す
+                    date_col = cal_df.columns[0]
+                    logger.info(f"日付カラム自動選択: {date_col}")
+                cal_df[date_col] = cal_df[date_col].astype(str).str[:10]
+                ann_df = cal_df[cal_df[date_col] == trading_date].copy()
+                if "Code" not in ann_df.columns:
+                    # コードカラムを特定
+                    for col in ["code", "stock_code", "StockCode"]:
+                        if col in ann_df.columns:
+                            ann_df = ann_df.rename(columns={col: "Code"})
+                            break
+                logger.info(f"earnings-calendar {trading_date}: {len(ann_df)}社")
         except Exception as e:
-            logger.warning(f"fins/announcement直接呼出し 例外: {e}")
-
-        # 方法2: ライブラリメソッド fins/summary（有料プランまたは12週以上前なら動作）
-        if ann_df is None or ann_df.empty:
-            try:
-                ann_df = cli.get_fin_summary(date_yyyymmdd=date_nodash)
-                if ann_df is not None and not ann_df.empty:
-                    logger.info(f"fins/summary: {len(ann_df)}社取得")
-            except Exception as e:
-                logger.warning(f"fins/summary 例外: {e}")
+            logger.warning(f"earnings-calendar 例外: {e}")
 
         if ann_df is None or ann_df.empty:
             return ""
