@@ -149,65 +149,72 @@ def _get_earnings_with_fallback(api_key: str) -> tuple[str, str]:
 
 def _fetch_yahoo_earnings(trading_date: str) -> str:
     """
-    Yahoo Finance Japan の決算カレンダーから指定日の決算発表銘柄を取得する。
-    https://finance.yahoo.co.jp/calendar/earnings?date=YYYYMMDD
+    みんかぶ の決算発表カレンダーから指定日の銘柄を取得する。
+    https://minkabu.jp/financial_item_news/earning_schedule?selected_date=YYYY-MM-DD
     """
     try:
         from bs4 import BeautifulSoup
 
-        date_nodash = trading_date.replace("-", "")
-        url = f"https://finance.yahoo.co.jp/calendar/earnings?date={date_nodash}"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
             "Accept-Language": "ja,en;q=0.9",
         }
+
+        url = f"https://minkabu.jp/financial_item_news/earning_schedule?selected_date={trading_date}"
         resp = requests.get(url, headers=headers, timeout=20)
-        logger.info(f"Yahoo Finance earnings: {resp.status_code} ({url})")
+        logger.info(f"Minkabu earnings: {resp.status_code} ({url})")
         if not resp.ok:
             return ""
 
         soup = BeautifulSoup(resp.text, "lxml")
-        rows = soup.select("table tbody tr")
-        if not rows:
-            rows = soup.select("tr")
-
         lines = ["証券コード | 企業名 | 決算種別 | 発表日"]
         seen = set()
-        for row in rows:
-            cols = row.find_all("td")
+
+        # みんかぶの決算スケジュール表をパース
+        for row in soup.select("tr, .ly_row"):
+            cols = row.find_all(["td", "th"])
             if len(cols) < 2:
                 continue
-            # コード取得（リンクから）
+            # コードをリンクから抽出
             code = ""
-            link = row.find("a", href=True)
-            if link:
-                import re as _re
-                m = _re.search(r"/stocks/(\d{4,5})", link["href"])
+            for a in row.find_all("a", href=True):
+                m = re.search(r"/stocks/(\d{4,5})", a["href"])
                 if m:
                     code = m.group(1)
+                    break
             if not code:
-                text = cols[0].get_text(strip=True)
-                m = __import__("re").search(r"\d{4,5}", text)
+                m = re.search(r"\b(\d{4,5})\b", cols[0].get_text())
                 if m:
-                    code = m.group()
+                    code = m.group(1)
             if not code or code in seen:
                 continue
             seen.add(code)
 
-            name = cols[1].get_text(strip=True) if len(cols) > 1 else ""
-            category = cols[2].get_text(strip=True) if len(cols) > 2 else "決算発表"
-            category = _normalize_category(category)
+            name = ""
+            for col in cols[1:3]:
+                t = col.get_text(strip=True)
+                if t and not re.match(r"^\d", t):
+                    name = t
+                    break
+
+            category_text = ""
+            for col in cols:
+                t = col.get_text(strip=True)
+                if any(k in t for k in ["決算", "四半期", "Q", "FY"]):
+                    category_text = t
+                    break
+            category = _normalize_category(category_text) if category_text else "決算発表"
             lines.append(f"{code} | {name} | {category} | {trading_date}")
 
         if len(lines) <= 1:
-            logger.info(f"Yahoo Finance: {trading_date} はデータなし")
+            logger.info(f"Minkabu: {trading_date} はデータなし")
             return ""
 
-        logger.info(f"Yahoo Finance: {len(lines)-1}社取得")
+        logger.info(f"Minkabu: {len(lines)-1}社取得")
         return "\n".join(lines)
 
     except Exception as e:
-        logger.warning(f"Yahoo Finance 例外: {e}")
+        logger.warning(f"Minkabu 例外: {e}")
         return ""
 
 
