@@ -221,3 +221,16 @@
 2026-06-18 14:35:09,816 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-18 14:35:09,830 [INFO] pipeline.stock_extractor: Parsed 2 in A, 0 in B, 0 in C.
 2026-06-18 14:35:09,830 [INFO] main: 銘柄抽出完了: 2社 → output/2026-06-18/stocks.json
+2026-06-18 14:40:08,301 [INFO] main: Output directory: output/2026-06-18
+2026-06-18 14:40:08,301 [INFO] main: ============================================================
+2026-06-18 14:40:08,301 [INFO] main: STEP 1: 銘柄抽出
+2026-06-18 14:40:08,301 [INFO] main: ============================================================
+2026-06-18 14:40:08,301 [INFO] pipeline.stock_extractor: [1/10] 2026-06-18 を試行中...
+2026-06-18 14:40:09,251 [INFO] pipeline.stock_extractor: kabutan: 200 (https://s.kabutan.jp/warnings/news_schedule/?market=all&date=20260618)
+2026-06-18 14:40:09,272 [INFO] pipeline.stock_extractor: kabutan HTML先頭: <!DOCTYPE html> <html lang="ja"> <head>   <meta charset="utf-8"> <meta http-equiv="content-language" content="ja"> <meta name="google" content="notranslate" /> <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=6, minimum-scale=1"> <meta name='description' content="直近の決算発表予定一覧から、株価・前日比やPER・PBRで並べ替えて有望株を洗い出そう！"> <meta property='og:url' content="https://s.kabutan.jp/warnings/news_schedule/"> <meta property='og:type' content='article'> <meta property='og:title' content="直近の決算発表予定"> <meta property='og:description' content="直近の決算発表予定一覧から、株価・前日比やPER・PBRで並べ替えて有望株を洗い出そう！"> <meta property='og:image' content="https://s.kabutan.jp/assets/kabutan_logo/ogp-4a37e725.png"> <meta name='twitter:card' content='summary_large_image'> <meta name="csrf-param" content="authenticity
+2026-06-18 14:40:09,276 [INFO] pipeline.stock_extractor: kabutan: 2社取得
+2026-06-18 14:40:09,277 [INFO] pipeline.stock_extractor: みんかぶで取引日確定: 2026-06-18
+2026-06-18 14:40:09,277 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-18 14:40:11,722 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-18 14:40:11,736 [INFO] pipeline.stock_extractor: Parsed 2 in A, 0 in B, 0 in C.
+2026-06-18 14:40:11,737 [INFO] main: 銘柄抽出完了: 2社 → output/2026-06-18/stocks.json
