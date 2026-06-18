@@ -234,3 +234,21 @@
 2026-06-18 14:40:11,722 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-18 14:40:11,736 [INFO] pipeline.stock_extractor: Parsed 2 in A, 0 in B, 0 in C.
 2026-06-18 14:40:11,737 [INFO] main: 銘柄抽出完了: 2社 → output/2026-06-18/stocks.json
+2026-06-18 14:57:31,603 [INFO] main: Output directory: output/2026-06-18
+2026-06-18 14:57:31,604 [INFO] main: ============================================================
+2026-06-18 14:57:31,604 [INFO] main: STEP 1: 銘柄抽出
+2026-06-18 14:57:31,604 [INFO] main: ============================================================
+2026-06-18 14:57:31,604 [INFO] pipeline.stock_extractor: [1/10] 2026-06-18 を試行中...
+2026-06-18 14:57:32,235 [INFO] pipeline.stock_extractor: kabutan: 200 (https://s.kabutan.jp/warnings/news_schedule/?market=all&date=20260618)
+2026-06-18 14:57:32,258 [INFO] pipeline.stock_extractor: kabutan row[0]: 銘柄 株価 決算期 今期 予想 時価総額 (億円) PER PBR 利回り 流動性 表記
+2026-06-18 14:57:32,258 [INFO] pipeline.stock_extractor: kabutan row[1]: サツドラＨＤ 3544 東S 837 4Q 28.8 倍 1.14 倍 1.43 %
+2026-06-18 14:57:32,258 [INFO] pipeline.stock_extractor: kabutan row[2]: コーセル 6905 東P 1,544 4Q 2,115 倍 1.16 倍 3.56 %
+2026-06-18 14:57:32,258 [INFO] pipeline.stock_extractor: kabutan row[3]: 略称 市場
+2026-06-18 14:57:32,258 [INFO] pipeline.stock_extractor: kabutan row[4]: 東P 東証プライム
+2026-06-18 14:57:32,258 [INFO] pipeline.stock_extractor: kabutan 全tr行数: 23
+2026-06-18 14:57:32,260 [INFO] pipeline.stock_extractor: kabutan: 2社取得
+2026-06-18 14:57:32,261 [INFO] pipeline.stock_extractor: みんかぶで取引日確定: 2026-06-18
+2026-06-18 14:57:32,261 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-18 14:57:32,790 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-18 14:57:32,803 [INFO] pipeline.stock_extractor: Parsed 2 in A, 0 in B, 0 in C.
+2026-06-18 14:57:32,803 [INFO] main: 銘柄抽出完了: 2社 → output/2026-06-18/stocks.json
