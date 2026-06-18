@@ -1,7 +1,7 @@
 """
 stock_extractor.py
-irbank.net（決算カレンダー）で発表日の決算銘柄を取得し、
-Groq API（無料）で整形・分析する。
+J-Quants API V2 で実行日から最新の決算発表銘柄を取得し、
+時価総額上位10社に絞り込んで Groq API で整形する。
 """
 
 import logging
@@ -24,29 +24,17 @@ _JP_HOLIDAYS = {
     (9, 15), (9, 23), (10, 13), (11, 3), (11, 23), (12, 23),
 }
 
-TDNET_BASE = "https://www.release.tdnet.info"
-
-_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "ja,en;q=0.9",
-    "Referer": "https://www.release.tdnet.info/",
-}
-
 FORMAT_PROMPT_TEMPLATE = """あなたは「日本市場リサーチ専門のエージェント」です。
 以下のデータをもとに、指定フォーマットで出力してください。
 
 対象取引日: {trading_date}
 
-【決算データ（TDnet）】
-※{trading_date}に決算発表した企業一覧
+【決算データ（J-Quants）】
+※{trading_date}に決算発表した企業（時価総額上位）
 {earnings_data}
 
 出力ルール:
-- 上記リストにある企業を最大12社そのまま出力する（絞り込み不要・全種別対象）
+- 上記リストにある企業をそのまま出力する（絞り込み不要・全種別対象）
 - 事業内容は実際の事業を15文字以内で具体的に記載（一般的な業種知識から補完してよい）
 - 企業名が空欄の場合は証券コードで検索して正式名称を補完すること
 - データがない場合は「（該当なし）」と記載
@@ -97,10 +85,8 @@ def extract_stocks(api_key: str, dry_run: bool = False, jquants_refresh_token: s
             ],
         )
 
-    # Step 1: 対象取引日を特定（データがあるまで最大7営業日遡る）
-    trading_date, earnings_data = _get_trading_date_with_data(jquants_refresh_token)
+    trading_date, earnings_data = _get_earnings_with_fallback(jquants_refresh_token)
 
-    # Step 2: Groq APIで整形
     logger.info("Groq APIで整形中...")
     client = Groq(api_key=api_key)
     prompt = FORMAT_PROMPT_TEMPLATE.format(
@@ -130,103 +116,146 @@ def _is_trading_day(d) -> bool:
     return d.weekday() < 5 and (d.month, d.day) not in _JP_HOLIDAYS
 
 
-def _get_latest_trading_date() -> str:
-    """市場が閉まっている最新の取引日を返す（YYYY-MM-DD形式）。"""
-    now = datetime.now(JST)
-    logger.info(f"現在時刻(JST): {now.strftime('%Y-%m-%d %H:%M')} weekday={now.weekday()}")
-    candidate = now.date()
-    market_closed_today = (
-        not _is_trading_day(candidate)
-        or now.hour < 15
-        or (now.hour == 15 and now.minute < 30)
-    )
-    if market_closed_today:
-        candidate -= timedelta(days=1)
-    for _ in range(14):
-        if _is_trading_day(candidate):
-            break
-        candidate -= timedelta(days=1)
-    logger.info(f"算出された取引日: {candidate}")
-    return candidate.strftime("%Y-%m-%d")
+def _get_earnings_with_fallback(api_key: str) -> tuple[str, str]:
+    """
+    今日から最大10日さかのぼって決算発表データを取得する。
+    データが見つかった日付とデータ文字列を返す。
+    """
+    if not api_key:
+        logger.warning("J-Quants APIキーが未設定")
+        today = datetime.now(JST).date()
+        return today.strftime("%Y-%m-%d"), ""
 
-
-def _get_trading_date_with_data(api_key: str = "") -> tuple[str, str]:
-    """データが取得できる最新の取引日とデータを返す。最大5営業日遡る。"""
     now = datetime.now(JST)
     candidate = now.date()
-    market_closed_today = (
-        not _is_trading_day(candidate)
-        or now.hour < 15
-        or (now.hour == 15 and now.minute < 30)
-    )
-    if market_closed_today:
-        candidate -= timedelta(days=1)
-    for _ in range(14):
-        if _is_trading_day(candidate):
-            break
+
+    # 15:30以前は前日を起点にする
+    if now.hour < 15 or (now.hour == 15 and now.minute < 30):
         candidate -= timedelta(days=1)
 
-    # 最大5営業日遡ってデータを探す
-    for attempt in range(5):
-        date_str = candidate.strftime("%Y-%m-%d")
-        logger.info(f"対象取引日: {date_str} を試行中...")
-        data = _fetch_tdnet_earnings(date_str, api_key)
-        if data:
-            logger.info(f"対象取引日確定: {date_str}（{len(data.splitlines())}行取得）")
-            return date_str, data
-        # 前の営業日へ
-        candidate -= timedelta(days=1)
-        for _ in range(7):
-            if _is_trading_day(candidate):
-                break
+    # 最大10日間さかのぼる
+    for attempt in range(10):
+        # 土日祝をスキップ
+        while not _is_trading_day(candidate):
             candidate -= timedelta(days=1)
 
-    latest = _get_latest_trading_date()
-    logger.warning(f"データが見つからず。最新取引日 {latest} を使用。")
-    return latest, ""
+        date_str = candidate.strftime("%Y-%m-%d")
+        logger.info(f"[{attempt+1}/10] {date_str} を試行中...")
+
+        if attempt > 0:
+            time.sleep(2)  # APIレート制限対策
+
+        data = _fetch_jquants_top10(date_str, api_key)
+        if data:
+            logger.info(f"取引日確定: {date_str}")
+            return date_str, data
+
+        candidate -= timedelta(days=1)
+
+    # 全て空だった場合
+    today_str = datetime.now(JST).date().strftime("%Y-%m-%d")
+    logger.warning("10日間遡ってもデータなし")
+    return today_str, ""
 
 
-def _fetch_jquants_announcements(trading_date: str, api_key: str) -> str:
-    """jquants-api-client V2ライブラリを使って決算発表企業一覧を取得する。"""
+def _fetch_jquants_top10(trading_date: str, api_key: str) -> str:
+    """
+    J-Quants V2 で指定日の決算発表銘柄を取得し、
+    時価総額（TurnoverValue代用）上位10社を返す。
+    """
     try:
         import jquantsapi
+        import pandas as pd
+
         cli = jquantsapi.ClientV2(api_key=api_key)
         date_nodash = trading_date.replace("-", "")
-        # fins/announcement エンドポイント（決算発表スケジュール）を試す
+
+        # ── 決算発表データ取得 ──────────────────────────────
+        ann_df = None
         try:
-            df = cli.get_fins_announcement(date_yyyymmdd=date_nodash)
-        except Exception as e1:
-            logger.warning(f"fins/announcement 例外: {e1}")
-            # フォールバック: fins/summary (決算サマリー)
+            ann_df = cli.get_fin_summary(date_yyyymmdd=date_nodash)
+            if ann_df is not None and not ann_df.empty:
+                logger.info(f"fins/summary: {len(ann_df)}社取得")
+        except Exception as e:
+            logger.warning(f"fins/summary 例外: {e}")
+
+        if ann_df is None or ann_df.empty:
             try:
-                df = cli.get_fin_summary(date_yyyymmdd=date_nodash)
-            except Exception as e2:
-                logger.warning(f"fins/summary 例外: {e2}")
-                return ""
-        if df is None or df.empty:
-            logger.info(f"jquants: {trading_date} データなし")
+                ann_df = cli.get_fins_announcement(date_yyyymmdd=date_nodash)
+                if ann_df is not None and not ann_df.empty:
+                    logger.info(f"fins/announcement: {len(ann_df)}社取得")
+            except Exception as e:
+                logger.warning(f"fins/announcement 例外: {e}")
+
+        if ann_df is None or ann_df.empty:
             return ""
-        lines = ["証券コード | 企業名 | 決算種別"]
-        for _, row in df.iterrows():
-            code = str(row.get("Code", row.get("code", ""))).strip()
+
+        # Codeカラムを文字列に統一（先頭ゼロ保持）
+        if "Code" in ann_df.columns:
+            ann_df["Code"] = ann_df["Code"].astype(str).str.zfill(4)
+
+        # ── 株価データ取得（時価総額代用: TurnoverValue） ─────
+        try:
+            prices_df = cli.get_prices_daily_quotes(date_yyyymmdd=date_nodash)
+            if prices_df is not None and not prices_df.empty:
+                prices_df["Code"] = prices_df["Code"].astype(str).str.zfill(4)
+                # MarketCapitalization があれば使う、なければ TurnoverValue
+                cap_col = "MarketCapitalization" if "MarketCapitalization" in prices_df.columns else "TurnoverValue"
+                prices_sub = prices_df[["Code", cap_col]].copy()
+                prices_sub = prices_sub.rename(columns={cap_col: "_sort_value"})
+                ann_df = ann_df.merge(prices_sub, on="Code", how="left")
+                ann_df["_sort_value"] = pd.to_numeric(ann_df["_sort_value"], errors="coerce").fillna(0)
+                ann_df = ann_df.sort_values("_sort_value", ascending=False)
+                logger.info(f"株価データ結合完了（ソート基準: {cap_col}）")
+        except Exception as e:
+            logger.warning(f"株価データ取得エラー: {e}")
+
+        # ── 上位10社 ─────────────────────────────────────────
+        top10 = ann_df.head(10)
+
+        lines = [f"証券コード | 企業名 | 決算種別 | 発表日"]
+        for _, row in top10.iterrows():
+            code = str(row.get("Code", "")).strip().lstrip("0") or str(row.get("Code", "")).strip()
             name = str(row.get("CompanyName", row.get("company_name", ""))).strip()
-            category = str(row.get("TypeOfDocument", row.get("FiscalYear", ""))).strip()
+            # 決算種別
+            cat_raw = str(row.get("TypeOfDocument", row.get("FiscalYear", ""))).strip()
+            category = _normalize_category(cat_raw)
+            # 発表日
+            disc_date = str(row.get("DisclosedDate", row.get("Date", trading_date))).strip()
+
             if code and code != "nan":
-                lines.append(f"{code} | {name} | {category}")
-        count = len(df)
-        logger.info(f"jquants: {trading_date} {count}社取得")
-        return "\n".join(lines) if count > 0 else ""
+                lines.append(f"{code} | {name} | {category} | {disc_date}")
+
+        if len(lines) <= 1:
+            return ""
+
+        logger.info(f"上位{len(lines)-1}社を出力")
+        return "\n".join(lines)
+
     except Exception as e:
-        logger.warning(f"jquants 例外: {e}")
+        logger.warning(f"_fetch_jquants_top10 例外: {e}")
         return ""
 
 
-def _fetch_tdnet_earnings(trading_date: str, api_key: str = "") -> str:
-    """J-Quants fins/announcement で決算発表企業一覧を取得する。"""
-    if not api_key:
-        logger.warning("J-Quants APIキーが未設定のためスキップ")
-        return ""
-    return _fetch_jquants_announcements(trading_date, api_key)
+def _normalize_category(raw: str) -> str:
+    """決算種別を人間が読みやすい形式に変換する。"""
+    mapping = {
+        "FYQ1": "第1四半期", "FYQ2": "第2四半期", "FYQ3": "第3四半期",
+        "FY": "本決算", "Annual": "本決算",
+        "Q1": "第1四半期", "Q2": "第2四半期", "Q3": "第3四半期", "Q4": "本決算",
+    }
+    for key, val in mapping.items():
+        if key in raw:
+            return val
+    if "第1" in raw or "1Q" in raw:
+        return "第1四半期"
+    if "第2" in raw or "2Q" in raw:
+        return "第2四半期"
+    if "第3" in raw or "3Q" in raw:
+        return "第3四半期"
+    if "本決算" in raw or "通期" in raw or "年度" in raw:
+        return "本決算"
+    return raw if raw and raw != "nan" else "決算発表"
 
 
 def _parse_extraction_output(text: str, trading_date: str) -> ExtractionResult:
