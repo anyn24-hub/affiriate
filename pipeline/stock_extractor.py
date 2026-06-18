@@ -158,6 +158,32 @@ def _get_earnings_with_fallback(api_key: str) -> tuple[str, str]:
     return today_str, ""
 
 
+def _extract_jquants_token(cli) -> str:
+    """ClientV2インスタンスからIDトークンを取り出す（複数の属性名を試みる）。"""
+    # 小さいAPIコールでトークンを生成させる
+    try:
+        cli.get_listed_info()
+    except Exception:
+        pass
+    for attr in ["_id_token", "id_token", "_access_token", "access_token", "_token", "token"]:
+        val = getattr(cli, attr, None)
+        if val and isinstance(val, str) and len(val) > 20:
+            logger.info(f"IDトークン取得成功 (attribute: {attr})")
+            return val
+    for method in ["get_id_token", "_get_id_token", "get_access_token"]:
+        fn = getattr(cli, method, None)
+        if fn and callable(fn):
+            try:
+                val = fn()
+                if val:
+                    logger.info(f"IDトークン取得成功 (method: {method})")
+                    return val
+            except Exception:
+                pass
+    logger.warning("IDトークン取得失敗: 属性が見つかりません")
+    return ""
+
+
 def _fetch_jquants_top10(trading_date: str, api_key: str) -> str:
     """
     J-Quants V2 で指定日の決算発表銘柄を取得し、
@@ -172,20 +198,35 @@ def _fetch_jquants_top10(trading_date: str, api_key: str) -> str:
 
         # ── 決算発表データ取得 ──────────────────────────────
         ann_df = None
-        try:
-            ann_df = cli.get_fin_summary(date_yyyymmdd=date_nodash)
-            if ann_df is not None and not ann_df.empty:
-                logger.info(f"fins/summary: {len(ann_df)}社取得")
-        except Exception as e:
-            logger.warning(f"fins/summary 例外: {e}")
 
+        # 方法1: fins/announcement をHTTP直接呼び出し（スケジュールデータ、12週制限なし期待）
+        try:
+            id_token = _extract_jquants_token(cli)
+            if id_token:
+                resp = __import__("requests").get(
+                    "https://api.jquants.com/v2/fins/announcement",
+                    params={"date": date_nodash},
+                    headers={"Authorization": f"Bearer {id_token}"},
+                    timeout=20,
+                )
+                logger.info(f"fins/announcement HTTP直接: {resp.status_code} {resp.text[:200]}")
+                if resp.ok:
+                    import pandas as pd
+                    items = resp.json().get("announcement", resp.json().get("Announcement", []))
+                    if items:
+                        ann_df = pd.DataFrame(items)
+                        logger.info(f"fins/announcement: {len(ann_df)}社取得")
+        except Exception as e:
+            logger.warning(f"fins/announcement直接呼出し 例外: {e}")
+
+        # 方法2: ライブラリメソッド fins/summary（有料プランまたは12週以上前なら動作）
         if ann_df is None or ann_df.empty:
             try:
-                ann_df = cli.get_fins_announcement(date_yyyymmdd=date_nodash)
+                ann_df = cli.get_fin_summary(date_yyyymmdd=date_nodash)
                 if ann_df is not None and not ann_df.empty:
-                    logger.info(f"fins/announcement: {len(ann_df)}社取得")
+                    logger.info(f"fins/summary: {len(ann_df)}社取得")
             except Exception as e:
-                logger.warning(f"fins/announcement 例外: {e}")
+                logger.warning(f"fins/summary 例外: {e}")
 
         if ann_df is None or ann_df.empty:
             return ""
