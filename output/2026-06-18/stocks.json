@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "code": "3544",
+    "name": "フリービット",
+    "section": "A",
+    "category": "第4四半期",
+    "content": "ソフトウェア",
+    "notes": ""
+  },
+  {
+    "code": "6905",
+    "name": "シーエーピー",
+    "section": "A",
+    "category": "第4四半期",
+    "content": "半導体",
+    "notes": ""
+  }
+]

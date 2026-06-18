@@ -209,3 +209,15 @@
 2026-06-18 14:18:16,590 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-18 14:18:16,602 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-18 14:18:16,602 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-18/stocks.json
+2026-06-18 14:35:08,762 [INFO] main: Output directory: output/2026-06-18
+2026-06-18 14:35:08,762 [INFO] main: ============================================================
+2026-06-18 14:35:08,762 [INFO] main: STEP 1: 銘柄抽出
+2026-06-18 14:35:08,762 [INFO] main: ============================================================
+2026-06-18 14:35:08,762 [INFO] pipeline.stock_extractor: [1/10] 2026-06-18 を試行中...
+2026-06-18 14:35:09,287 [INFO] pipeline.stock_extractor: kabutan: 200 (https://s.kabutan.jp/warnings/news_schedule/?market=all&date=20260618)
+2026-06-18 14:35:09,312 [INFO] pipeline.stock_extractor: kabutan: 2社取得
+2026-06-18 14:35:09,313 [INFO] pipeline.stock_extractor: みんかぶで取引日確定: 2026-06-18
+2026-06-18 14:35:09,313 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-18 14:35:09,816 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-18 14:35:09,830 [INFO] pipeline.stock_extractor: Parsed 2 in A, 0 in B, 0 in C.
+2026-06-18 14:35:09,830 [INFO] main: 銘柄抽出完了: 2社 → output/2026-06-18/stocks.json
