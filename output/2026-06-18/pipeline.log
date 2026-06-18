@@ -76,3 +76,37 @@
 2026-06-18 13:24:53,587 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-18 13:24:53,599 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-18 13:24:53,599 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-18/stocks.json
+2026-06-18 13:31:03,639 [INFO] main: Output directory: output/2026-06-18
+2026-06-18 13:31:03,640 [INFO] main: ============================================================
+2026-06-18 13:31:03,640 [INFO] main: STEP 1: 銘柄抽出
+2026-06-18 13:31:03,640 [INFO] main: ============================================================
+2026-06-18 13:31:03,640 [INFO] pipeline.stock_extractor: [1/10] 2026-06-18 を試行中...
+2026-06-18 13:31:04,636 [INFO] pipeline.stock_extractor: earnings-calendar: 全14件取得, columns=['Date', 'Code', 'CoName', 'FY', 'SectorNm', 'FQ', 'Section']
+2026-06-18 13:31:04,637 [INFO] pipeline.stock_extractor: earnings-calendar 2026-06-18: 0社
+2026-06-18 13:31:04,638 [INFO] pipeline.stock_extractor: [2/10] 2026-06-17 を試行中...
+2026-06-18 13:31:07,292 [INFO] pipeline.stock_extractor: earnings-calendar: 全14件取得, columns=['Date', 'Code', 'CoName', 'FY', 'SectorNm', 'FQ', 'Section']
+2026-06-18 13:31:07,293 [INFO] pipeline.stock_extractor: earnings-calendar 2026-06-17: 0社
+2026-06-18 13:31:07,294 [INFO] pipeline.stock_extractor: [3/10] 2026-06-16 を試行中...
+2026-06-18 13:31:09,923 [INFO] pipeline.stock_extractor: earnings-calendar: 全14件取得, columns=['Date', 'Code', 'CoName', 'FY', 'SectorNm', 'FQ', 'Section']
+2026-06-18 13:31:09,924 [INFO] pipeline.stock_extractor: earnings-calendar 2026-06-16: 0社
+2026-06-18 13:31:09,925 [INFO] pipeline.stock_extractor: [4/10] 2026-06-15 を試行中...
+2026-06-18 13:31:12,581 [INFO] pipeline.stock_extractor: earnings-calendar: 全14件取得, columns=['Date', 'Code', 'CoName', 'FY', 'SectorNm', 'FQ', 'Section']
+2026-06-18 13:31:12,582 [INFO] pipeline.stock_extractor: earnings-calendar 2026-06-15: 0社
+2026-06-18 13:31:12,583 [INFO] pipeline.stock_extractor: [5/10] 2026-06-12 を試行中...
+2026-06-18 13:31:15,259 [INFO] pipeline.stock_extractor: earnings-calendar: 全14件取得, columns=['Date', 'Code', 'CoName', 'FY', 'SectorNm', 'FQ', 'Section']
+2026-06-18 13:31:15,260 [INFO] pipeline.stock_extractor: earnings-calendar 2026-06-12: 0社
+2026-06-18 13:31:15,261 [INFO] pipeline.stock_extractor: [6/10] 2026-06-11 を試行中...
+2026-06-18 13:31:18,429 [WARNING] pipeline.stock_extractor: earnings-calendar 例外: HTTPSConnectionPool(host='api.jquants.com', port=443): Max retries exceeded with url: /v2/equities/earnings-calendar (Caused by ResponseError('too many 429 error responses'))
+2026-06-18 13:31:18,431 [INFO] pipeline.stock_extractor: [7/10] 2026-06-10 を試行中...
+2026-06-18 13:31:21,579 [WARNING] pipeline.stock_extractor: earnings-calendar 例外: HTTPSConnectionPool(host='api.jquants.com', port=443): Max retries exceeded with url: /v2/equities/earnings-calendar (Caused by ResponseError('too many 429 error responses'))
+2026-06-18 13:31:21,580 [INFO] pipeline.stock_extractor: [8/10] 2026-06-09 を試行中...
+2026-06-18 13:31:24,864 [WARNING] pipeline.stock_extractor: earnings-calendar 例外: HTTPSConnectionPool(host='api.jquants.com', port=443): Max retries exceeded with url: /v2/equities/earnings-calendar (Caused by ResponseError('too many 429 error responses'))
+2026-06-18 13:31:24,865 [INFO] pipeline.stock_extractor: [9/10] 2026-06-08 を試行中...
+2026-06-18 13:31:27,986 [WARNING] pipeline.stock_extractor: earnings-calendar 例外: HTTPSConnectionPool(host='api.jquants.com', port=443): Max retries exceeded with url: /v2/equities/earnings-calendar (Caused by ResponseError('too many 429 error responses'))
+2026-06-18 13:31:27,988 [INFO] pipeline.stock_extractor: [10/10] 2026-06-05 を試行中...
+2026-06-18 13:31:31,118 [WARNING] pipeline.stock_extractor: earnings-calendar 例外: HTTPSConnectionPool(host='api.jquants.com', port=443): Max retries exceeded with url: /v2/equities/earnings-calendar (Caused by ResponseError('too many 429 error responses'))
+2026-06-18 13:31:31,119 [WARNING] pipeline.stock_extractor: 10日間遡ってもデータなし
+2026-06-18 13:31:31,119 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-18 13:31:31,443 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-18 13:31:31,457 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-18 13:31:31,457 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-18/stocks.json
