@@ -228,6 +228,8 @@ def _fetch_minkabu_earnings(trading_date: str) -> str:
             return ""
 
         soup = BeautifulSoup(resp.text, "lxml")
+        # HTMLの先頭500文字をログに出力（構造確認用）
+        logger.info(f"kabutan HTML先頭: {resp.text[:800].replace(chr(10), ' ')}")
         lines = ["証券コード | 企業名 | 決算種別 | 発表日"]
         seen = set()
 
