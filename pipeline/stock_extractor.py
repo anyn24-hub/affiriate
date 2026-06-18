@@ -192,22 +192,32 @@ def _fetch_jquants_announcements(trading_date: str, api_key: str) -> str:
         import jquantsapi
         cli = jquantsapi.ClientV2(api_key=api_key)
         date_nodash = trading_date.replace("-", "")
-        # get_fin_summary = 決算サマリー (fins/announcement相当)
-        df = cli.get_fin_summary(date_yyyymmdd=date_nodash)
+        # fins/announcement エンドポイント（決算発表スケジュール）を試す
+        try:
+            df = cli.get_fins_announcement(date_yyyymmdd=date_nodash)
+        except Exception as e1:
+            logger.warning(f"fins/announcement 例外: {e1}")
+            # フォールバック: fins/summary (決算サマリー)
+            try:
+                df = cli.get_fin_summary(date_yyyymmdd=date_nodash)
+            except Exception as e2:
+                logger.warning(f"fins/summary 例外: {e2}")
+                return ""
         if df is None or df.empty:
-            logger.info(f"jquants-api-client fin_summary: {trading_date} データなし")
+            logger.info(f"jquants: {trading_date} データなし")
             return ""
         lines = ["証券コード | 企業名 | 決算種別"]
         for _, row in df.iterrows():
             code = str(row.get("Code", row.get("code", ""))).strip()
             name = str(row.get("CompanyName", row.get("company_name", ""))).strip()
             category = str(row.get("TypeOfDocument", row.get("FiscalYear", ""))).strip()
-            if code:
+            if code and code != "nan":
                 lines.append(f"{code} | {name} | {category}")
-        logger.info(f"jquants-api-client fin_summary: {len(df)}社取得")
-        return "\n".join(lines)
+        count = len(df)
+        logger.info(f"jquants: {trading_date} {count}社取得")
+        return "\n".join(lines) if count > 0 else ""
     except Exception as e:
-        logger.warning(f"jquants-api-client fin_summary 例外: {e}")
+        logger.warning(f"jquants 例外: {e}")
         return ""
 
 
