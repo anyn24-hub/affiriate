@@ -118,20 +118,97 @@ def _is_trading_day(d) -> bool:
 
 def _get_earnings_with_fallback(api_key: str) -> tuple[str, str]:
     """
-    J-Quantsの決算カレンダーから最新の決算発表データを1回で取得する。
+    Yahoo Finance Japan決算カレンダーから最新の決算発表データを取得する。
+    当日にデータがなければ最大10営業日さかのぼる。
     """
-    if not api_key:
-        logger.warning("J-Quants APIキーが未設定")
-        today = datetime.now(JST).date()
-        return today.strftime("%Y-%m-%d"), ""
+    now = datetime.now(JST)
+    candidate = now.date()
 
-    actual_date, data = _fetch_jquants_top10("", api_key)
-    if data:
-        return actual_date, data
+    # 15:30以前は前日を起点にする
+    if now.hour < 15 or (now.hour == 15 and now.minute < 30):
+        candidate -= timedelta(days=1)
+
+    for attempt in range(10):
+        while not _is_trading_day(candidate):
+            candidate -= timedelta(days=1)
+
+        date_str = candidate.strftime("%Y-%m-%d")
+        logger.info(f"[{attempt+1}/10] {date_str} を試行中...")
+
+        data = _fetch_yahoo_earnings(date_str)
+        if data:
+            logger.info(f"取引日確定: {date_str}")
+            return date_str, data
+
+        candidate -= timedelta(days=1)
 
     today_str = datetime.now(JST).date().strftime("%Y-%m-%d")
-    logger.warning("決算データ取得失敗")
+    logger.warning("10日間遡ってもデータなし")
     return today_str, ""
+
+
+def _fetch_yahoo_earnings(trading_date: str) -> str:
+    """
+    Yahoo Finance Japan の決算カレンダーから指定日の決算発表銘柄を取得する。
+    https://finance.yahoo.co.jp/calendar/earnings?date=YYYYMMDD
+    """
+    try:
+        from bs4 import BeautifulSoup
+
+        date_nodash = trading_date.replace("-", "")
+        url = f"https://finance.yahoo.co.jp/calendar/earnings?date={date_nodash}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
+            "Accept-Language": "ja,en;q=0.9",
+        }
+        resp = requests.get(url, headers=headers, timeout=20)
+        logger.info(f"Yahoo Finance earnings: {resp.status_code} ({url})")
+        if not resp.ok:
+            return ""
+
+        soup = BeautifulSoup(resp.text, "lxml")
+        rows = soup.select("table tbody tr")
+        if not rows:
+            rows = soup.select("tr")
+
+        lines = ["証券コード | 企業名 | 決算種別 | 発表日"]
+        seen = set()
+        for row in rows:
+            cols = row.find_all("td")
+            if len(cols) < 2:
+                continue
+            # コード取得（リンクから）
+            code = ""
+            link = row.find("a", href=True)
+            if link:
+                import re as _re
+                m = _re.search(r"/stocks/(\d{4,5})", link["href"])
+                if m:
+                    code = m.group(1)
+            if not code:
+                text = cols[0].get_text(strip=True)
+                m = __import__("re").search(r"\d{4,5}", text)
+                if m:
+                    code = m.group()
+            if not code or code in seen:
+                continue
+            seen.add(code)
+
+            name = cols[1].get_text(strip=True) if len(cols) > 1 else ""
+            category = cols[2].get_text(strip=True) if len(cols) > 2 else "決算発表"
+            category = _normalize_category(category)
+            lines.append(f"{code} | {name} | {category} | {trading_date}")
+
+        if len(lines) <= 1:
+            logger.info(f"Yahoo Finance: {trading_date} はデータなし")
+            return ""
+
+        logger.info(f"Yahoo Finance: {len(lines)-1}社取得")
+        return "\n".join(lines)
+
+    except Exception as e:
+        logger.warning(f"Yahoo Finance 例外: {e}")
+        return ""
 
 
 def _extract_jquants_token(cli) -> str:
