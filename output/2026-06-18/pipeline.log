@@ -1,0 +1,39 @@
+2026-06-18 13:09:15,781 [INFO] main: Output directory: output/2026-06-18
+2026-06-18 13:09:15,781 [INFO] main: ============================================================
+2026-06-18 13:09:15,781 [INFO] main: STEP 1: 銘柄抽出
+2026-06-18 13:09:15,781 [INFO] main: ============================================================
+2026-06-18 13:09:15,782 [INFO] pipeline.stock_extractor: [1/10] 2026-06-18 を試行中...
+2026-06-18 13:09:16,517 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260618 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:16,517 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:16,518 [INFO] pipeline.stock_extractor: [2/10] 2026-06-17 を試行中...
+2026-06-18 13:09:18,964 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260617 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:18,964 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:18,965 [INFO] pipeline.stock_extractor: [3/10] 2026-06-16 を試行中...
+2026-06-18 13:09:21,405 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260616 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:21,405 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:21,406 [INFO] pipeline.stock_extractor: [4/10] 2026-06-15 を試行中...
+2026-06-18 13:09:23,963 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260615 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:23,963 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:23,963 [INFO] pipeline.stock_extractor: [5/10] 2026-06-12 を試行中...
+2026-06-18 13:09:26,413 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260612 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:26,413 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:26,414 [INFO] pipeline.stock_extractor: [6/10] 2026-06-11 を試行中...
+2026-06-18 13:09:28,817 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260611 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:28,817 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:28,818 [INFO] pipeline.stock_extractor: [7/10] 2026-06-10 を試行中...
+2026-06-18 13:09:31,264 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260610 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:31,264 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:31,265 [INFO] pipeline.stock_extractor: [8/10] 2026-06-09 を試行中...
+2026-06-18 13:09:33,706 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260609 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:33,706 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:33,707 [INFO] pipeline.stock_extractor: [9/10] 2026-06-08 を試行中...
+2026-06-18 13:09:36,323 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260608 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:36,323 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:36,324 [INFO] pipeline.stock_extractor: [10/10] 2026-06-05 を試行中...
+2026-06-18 13:09:38,719 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260605 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:09:38,720 [WARNING] pipeline.stock_extractor: fins/announcement 例外: 'ClientV2' object has no attribute 'get_fins_announcement'
+2026-06-18 13:09:38,720 [WARNING] pipeline.stock_extractor: 10日間遡ってもデータなし
+2026-06-18 13:09:38,720 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-18 13:09:39,078 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-18 13:09:39,085 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-18 13:09:39,085 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-18/stocks.json
