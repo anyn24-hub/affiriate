@@ -194,8 +194,8 @@ def _fetch_jquants_calendar(api_key: str) -> tuple[str, str]:
 
 def _fetch_minkabu_earnings(trading_date: str) -> str:
     """
-    みんかぶ の決算発表カレンダーから指定日の銘柄を取得する。
-    https://minkabu.jp/financial_item_news/earning_schedule?selected_date=YYYY-MM-DD
+    株探（kabutan）の決算発表スケジュールから指定日の銘柄を取得する。
+    https://s.kabutan.jp/warnings/news_schedule/?market=all
     """
     try:
         from bs4 import BeautifulSoup
@@ -204,28 +204,42 @@ def _fetch_minkabu_earnings(trading_date: str) -> str:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0 Safari/537.36",
             "Accept-Language": "ja,en;q=0.9",
         }
+        date_nodash = trading_date.replace("-", "")
 
-        url = f"https://minkabu.jp/financial_item_news/earning_schedule?selected_date={trading_date}"
-        resp = requests.get(url, headers=headers, timeout=20)
-        logger.info(f"Minkabu earnings: {resp.status_code} ({url})")
-        if not resp.ok:
+        # 複数URLフォーマットを試みる
+        urls = [
+            f"https://s.kabutan.jp/warnings/news_schedule/?market=all&date={date_nodash}",
+            f"https://s.kabutan.jp/warnings/news_schedule/?market=all&yyyymmdd={date_nodash}",
+            f"https://kabutan.jp/warning/?mode=2&market=1&date={date_nodash}",
+            f"https://kabutan.jp/warning/?mode=2&market=1",
+        ]
+
+        resp = None
+        used_url = ""
+        for url in urls:
+            r = requests.get(url, headers=headers, timeout=20)
+            logger.info(f"kabutan: {r.status_code} ({url})")
+            if r.ok:
+                resp = r
+                used_url = url
+                break
+
+        if resp is None:
             return ""
 
         soup = BeautifulSoup(resp.text, "lxml")
         lines = ["証券コード | 企業名 | 決算種別 | 発表日"]
         seen = set()
 
-        # みんかぶの決算スケジュール表をパース
-        for row in soup.select("tr, .ly_row"):
+        for row in soup.select("tr"):
             cols = row.find_all(["td", "th"])
             if len(cols) < 2:
                 continue
-            # コードをリンクから抽出
             code = ""
             for a in row.find_all("a", href=True):
-                m = re.search(r"/stocks/(\d{4,5})", a["href"])
+                m = re.search(r"code=(\d{4,5})|/(\d{4,5})[/\.]", a["href"])
                 if m:
-                    code = m.group(1)
+                    code = m.group(1) or m.group(2)
                     break
             if not code:
                 m = re.search(r"\b(\d{4,5})\b", cols[0].get_text())
@@ -233,33 +247,43 @@ def _fetch_minkabu_earnings(trading_date: str) -> str:
                     code = m.group(1)
             if not code or code in seen:
                 continue
-            seen.add(code)
 
+            # 日付フィルタ（ページに複数日付混在の場合）
+            row_text = row.get_text()
+            if trading_date.replace("-", "/") in row_text or date_nodash in row_text or trading_date in row_text:
+                pass  # 日付一致
+            elif any(url == used_url for url in urls[:2]):
+                pass  # 日付パラメータ付きURLなら全行対象
+            else:
+                # 日付なしURLの場合は日付チェック
+                if trading_date.replace("-", "/") not in row_text and trading_date not in row_text:
+                    continue
+
+            seen.add(code)
             name = ""
             for col in cols[1:3]:
                 t = col.get_text(strip=True)
-                if t and not re.match(r"^\d", t):
+                if t and not re.match(r"^\d", t) and len(t) > 1:
                     name = t
                     break
-
             category_text = ""
             for col in cols:
                 t = col.get_text(strip=True)
-                if any(k in t for k in ["決算", "四半期", "Q", "FY"]):
+                if any(k in t for k in ["決算", "四半期", "本決算", "Q"]):
                     category_text = t
                     break
             category = _normalize_category(category_text) if category_text else "決算発表"
             lines.append(f"{code} | {name} | {category} | {trading_date}")
 
         if len(lines) <= 1:
-            logger.info(f"Minkabu: {trading_date} はデータなし")
+            logger.info(f"kabutan: {trading_date} はデータなし（HTMLサンプル: {soup.get_text()[:200]}）")
             return ""
 
-        logger.info(f"Minkabu: {len(lines)-1}社取得")
+        logger.info(f"kabutan: {len(lines)-1}社取得")
         return "\n".join(lines)
 
     except Exception as e:
-        logger.warning(f"Minkabu 例外: {e}")
+        logger.warning(f"kabutan 例外: {e}")
         return ""
 
 
