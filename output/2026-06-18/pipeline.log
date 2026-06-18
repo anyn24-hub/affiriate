@@ -37,3 +37,42 @@
 2026-06-18 13:09:39,078 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-18 13:09:39,085 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
 2026-06-18 13:09:39,085 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-18/stocks.json
+2026-06-18 13:24:29,422 [INFO] main: Output directory: output/2026-06-18
+2026-06-18 13:24:29,422 [INFO] main: ============================================================
+2026-06-18 13:24:29,422 [INFO] main: STEP 1: 銘柄抽出
+2026-06-18 13:24:29,422 [INFO] main: ============================================================
+2026-06-18 13:24:29,422 [INFO] pipeline.stock_extractor: [1/10] 2026-06-18 を試行中...
+2026-06-18 13:24:29,740 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:30,269 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260618 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:30,270 [INFO] pipeline.stock_extractor: [2/10] 2026-06-17 を試行中...
+2026-06-18 13:24:32,271 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:32,784 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260617 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:32,786 [INFO] pipeline.stock_extractor: [3/10] 2026-06-16 を試行中...
+2026-06-18 13:24:34,786 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:35,328 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260616 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:35,330 [INFO] pipeline.stock_extractor: [4/10] 2026-06-15 を試行中...
+2026-06-18 13:24:37,330 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:37,875 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260615 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:37,876 [INFO] pipeline.stock_extractor: [5/10] 2026-06-12 を試行中...
+2026-06-18 13:24:39,877 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:40,379 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260612 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:40,381 [INFO] pipeline.stock_extractor: [6/10] 2026-06-11 を試行中...
+2026-06-18 13:24:42,381 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:42,867 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260611 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:42,869 [INFO] pipeline.stock_extractor: [7/10] 2026-06-10 を試行中...
+2026-06-18 13:24:44,869 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:45,380 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260610 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:45,382 [INFO] pipeline.stock_extractor: [8/10] 2026-06-09 を試行中...
+2026-06-18 13:24:47,382 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:47,889 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260609 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:47,890 [INFO] pipeline.stock_extractor: [9/10] 2026-06-08 を試行中...
+2026-06-18 13:24:49,891 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:50,394 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260608 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:50,395 [INFO] pipeline.stock_extractor: [10/10] 2026-06-05 を試行中...
+2026-06-18 13:24:52,396 [WARNING] pipeline.stock_extractor: IDトークン取得失敗: 属性が見つかりません
+2026-06-18 13:24:52,869 [WARNING] pipeline.stock_extractor: fins/summary 例外: 400 for url: https://api.jquants.com/v2/fins/summary?date=20260605 body: Your subscription covers the following dates: 2024-03-26 ~ 2026-03-26. If you want more data, please check other plans:https://jpx-jquants.com/#dataset
+2026-06-18 13:24:52,871 [WARNING] pipeline.stock_extractor: 10日間遡ってもデータなし
+2026-06-18 13:24:52,871 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-18 13:24:53,587 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-18 13:24:53,599 [INFO] pipeline.stock_extractor: Parsed 0 in A, 0 in B, 0 in C.
+2026-06-18 13:24:53,599 [INFO] main: 銘柄抽出完了: 0社 → output/2026-06-18/stocks.json
