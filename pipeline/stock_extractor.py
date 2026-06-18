@@ -118,43 +118,19 @@ def _is_trading_day(d) -> bool:
 
 def _get_earnings_with_fallback(api_key: str) -> tuple[str, str]:
     """
-    今日から最大10日さかのぼって決算発表データを取得する。
-    データが見つかった日付とデータ文字列を返す。
+    J-Quantsの決算カレンダーから最新の決算発表データを1回で取得する。
     """
     if not api_key:
         logger.warning("J-Quants APIキーが未設定")
         today = datetime.now(JST).date()
         return today.strftime("%Y-%m-%d"), ""
 
-    now = datetime.now(JST)
-    candidate = now.date()
+    actual_date, data = _fetch_jquants_top10("", api_key)
+    if data:
+        return actual_date, data
 
-    # 15:30以前は前日を起点にする
-    if now.hour < 15 or (now.hour == 15 and now.minute < 30):
-        candidate -= timedelta(days=1)
-
-    # 最大10日間さかのぼる
-    for attempt in range(10):
-        # 土日祝をスキップ
-        while not _is_trading_day(candidate):
-            candidate -= timedelta(days=1)
-
-        date_str = candidate.strftime("%Y-%m-%d")
-        logger.info(f"[{attempt+1}/10] {date_str} を試行中...")
-
-        if attempt > 0:
-            time.sleep(2)  # APIレート制限対策
-
-        data = _fetch_jquants_top10(date_str, api_key)
-        if data:
-            logger.info(f"取引日確定: {date_str}")
-            return date_str, data
-
-        candidate -= timedelta(days=1)
-
-    # 全て空だった場合
     today_str = datetime.now(JST).date().strftime("%Y-%m-%d")
-    logger.warning("10日間遡ってもデータなし")
+    logger.warning("決算データ取得失敗")
     return today_str, ""
 
 
@@ -184,50 +160,57 @@ def _extract_jquants_token(cli) -> str:
     return ""
 
 
-def _fetch_jquants_top10(trading_date: str, api_key: str) -> str:
+def _fetch_jquants_top10(trading_date: str, api_key: str) -> tuple[str, str]:
     """
     J-Quants V2 で指定日の決算発表銘柄を取得し、
-    時価総額（TurnoverValue代用）上位10社を返す。
+    (実際に使った日付, データ文字列) を返す。データなしの場合は ("", "") を返す。
     """
     try:
         import jquantsapi
         import pandas as pd
 
         cli = jquantsapi.ClientV2(api_key=api_key)
+        # trading_dateが空の場合は今日をデフォルトにする
+        if not trading_date:
+            trading_date = datetime.now(JST).date().strftime("%Y-%m-%d")
         date_nodash = trading_date.replace("-", "")
 
         # ── 決算発表データ取得 ──────────────────────────────
         ann_df = None
 
-        # 方法1: 決算発表予定カレンダー（12週制限なし）
+        # 方法1: 決算発表予定カレンダー（過去・未来含む全件取得）
         try:
             cal_df = cli.get_eq_earnings_cal()
             if cal_df is not None and not cal_df.empty:
-                logger.info(f"earnings-calendar: 全{len(cal_df)}件取得, columns={list(cal_df.columns)}")
-                # 日付カラムを特定してフィルタ
-                date_col = None
-                for col in ["Date", "DisclosureDate", "AnnouncementDate", "date", "disclosure_date"]:
-                    if col in cal_df.columns:
-                        date_col = col
-                        break
-                if date_col is None:
-                    # 最初のカラムを試す
-                    date_col = cal_df.columns[0]
-                    logger.info(f"日付カラム自動選択: {date_col}")
+                date_col = "Date" if "Date" in cal_df.columns else cal_df.columns[0]
                 cal_df[date_col] = cal_df[date_col].astype(str).str[:10]
-                ann_df = cal_df[cal_df[date_col] == trading_date].copy()
-                if "Code" not in ann_df.columns:
-                    # コードカラムを特定
-                    for col in ["code", "stock_code", "StockCode"]:
-                        if col in ann_df.columns:
-                            ann_df = ann_df.rename(columns={col: "Code"})
-                            break
-                logger.info(f"earnings-calendar {trading_date}: {len(ann_df)}社")
+                unique_dates = sorted(cal_df[date_col].unique())
+                logger.info(f"earnings-calendar: 全{len(cal_df)}件, 日付一覧={unique_dates}")
+                # 指定日以前で最新の日付を使う
+                past_dates = [d for d in unique_dates if d <= trading_date]
+                if past_dates:
+                    best_date = past_dates[-1]
+                    ann_df = cal_df[cal_df[date_col] == best_date].copy()
+                    logger.info(f"earnings-calendar 使用日付: {best_date} ({len(ann_df)}社)")
+                    if "Code" not in ann_df.columns:
+                        for col in ["code", "stock_code", "StockCode"]:
+                            if col in ann_df.columns:
+                                ann_df = ann_df.rename(columns={col: "Code"})
+                                break
+                    # CompanyNameカラム統一
+                    if "CompanyName" not in ann_df.columns and "CoName" in ann_df.columns:
+                        ann_df = ann_df.rename(columns={"CoName": "CompanyName"})
+                    # TypeOfDocumentカラム統一
+                    if "TypeOfDocument" not in ann_df.columns and "FQ" in ann_df.columns:
+                        ann_df = ann_df.rename(columns={"FQ": "TypeOfDocument"})
+                    trading_date = best_date  # 実際に使った日付を返す
+                else:
+                    logger.info(f"earnings-calendar: {trading_date}以前のデータなし, 日付={unique_dates}")
         except Exception as e:
             logger.warning(f"earnings-calendar 例外: {e}")
 
         if ann_df is None or ann_df.empty:
-            return ""
+            return "", ""
 
         # Codeカラムを文字列に統一（先頭ゼロ保持）
         if "Code" in ann_df.columns:
@@ -266,14 +249,14 @@ def _fetch_jquants_top10(trading_date: str, api_key: str) -> str:
                 lines.append(f"{code} | {name} | {category} | {disc_date}")
 
         if len(lines) <= 1:
-            return ""
+            return "", ""
 
         logger.info(f"上位{len(lines)-1}社を出力")
-        return "\n".join(lines)
+        return trading_date, "\n".join(lines)
 
     except Exception as e:
         logger.warning(f"_fetch_jquants_top10 例外: {e}")
-        return ""
+        return "", ""
 
 
 def _normalize_category(raw: str) -> str:
