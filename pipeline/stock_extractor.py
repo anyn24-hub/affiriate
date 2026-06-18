@@ -228,12 +228,15 @@ def _fetch_minkabu_earnings(trading_date: str) -> str:
             return ""
 
         soup = BeautifulSoup(resp.text, "lxml")
-        # HTMLの先頭500文字をログに出力（構造確認用）
-        logger.info(f"kabutan HTML先頭: {resp.text[:800].replace(chr(10), ' ')}")
+        # 最初の5行をログに出力（構造確認用）
+        all_rows = soup.select("tr")
+        for i, r in enumerate(all_rows[:5]):
+            logger.info(f"kabutan row[{i}]: {r.get_text(' ', strip=True)[:200]}")
+        logger.info(f"kabutan 全tr行数: {len(all_rows)}")
         lines = ["証券コード | 企業名 | 決算種別 | 発表日"]
         seen = set()
 
-        for row in soup.select("tr"):
+        for row in all_rows:
             cols = row.find_all(["td", "th"])
             if len(cols) < 2:
                 continue
