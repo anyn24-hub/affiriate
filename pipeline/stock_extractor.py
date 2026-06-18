@@ -118,13 +118,13 @@ def _is_trading_day(d) -> bool:
 
 def _get_earnings_with_fallback(api_key: str) -> tuple[str, str]:
     """
-    Yahoo Finance Japan決算カレンダーから最新の決算発表データを取得する。
-    当日にデータがなければ最大10営業日さかのぼる。
+    最新の決算発表データを取得する。
+    1. みんかぶ（直近10営業日を試行）
+    2. J-Quantsカレンダー（フォールバック、4〜6週前のデータになる場合あり）
     """
     now = datetime.now(JST)
     candidate = now.date()
 
-    # 15:30以前は前日を起点にする
     if now.hour < 15 or (now.hour == 15 and now.minute < 30):
         candidate -= timedelta(days=1)
 
@@ -135,19 +135,64 @@ def _get_earnings_with_fallback(api_key: str) -> tuple[str, str]:
         date_str = candidate.strftime("%Y-%m-%d")
         logger.info(f"[{attempt+1}/10] {date_str} を試行中...")
 
-        data = _fetch_yahoo_earnings(date_str)
+        data = _fetch_minkabu_earnings(date_str)
         if data:
-            logger.info(f"取引日確定: {date_str}")
+            logger.info(f"みんかぶで取引日確定: {date_str}")
             return date_str, data
 
         candidate -= timedelta(days=1)
 
+    # フォールバック: J-Quantsカレンダーから最新利用可能データを取得
+    logger.warning("みんかぶ失敗 → J-Quantsカレンダーへフォールバック")
+    if api_key:
+        actual_date, data = _fetch_jquants_calendar(api_key)
+        if data:
+            return actual_date, data
+
     today_str = datetime.now(JST).date().strftime("%Y-%m-%d")
-    logger.warning("10日間遡ってもデータなし")
     return today_str, ""
 
 
-def _fetch_yahoo_earnings(trading_date: str) -> str:
+def _fetch_jquants_calendar(api_key: str) -> tuple[str, str]:
+    """J-Quantsカレンダーから最新利用可能な決算データを返す。"""
+    try:
+        import jquantsapi, pandas as pd
+        cli = jquantsapi.ClientV2(api_key=api_key)
+        cal_df = cli.get_eq_earnings_cal()
+        if cal_df is None or cal_df.empty:
+            return "", ""
+        date_col = "Date" if "Date" in cal_df.columns else cal_df.columns[0]
+        cal_df[date_col] = cal_df[date_col].astype(str).str[:10]
+        today_str = datetime.now(JST).date().strftime("%Y-%m-%d")
+        past = [d for d in sorted(cal_df[date_col].unique()) if d <= today_str]
+        if not past:
+            return "", ""
+        best_date = past[-1]
+        df = cal_df[cal_df[date_col] == best_date].copy()
+        if "CoName" in df.columns:
+            df = df.rename(columns={"CoName": "CompanyName"})
+        if "FQ" in df.columns:
+            df = df.rename(columns={"FQ": "TypeOfDocument"})
+        if "Code" not in df.columns:
+            return "", ""
+        df["Code"] = df["Code"].astype(str).str.zfill(4)
+        lines = ["証券コード | 企業名 | 決算種別 | 発表日"]
+        for _, row in df.iterrows():
+            code = str(row.get("Code", "")).strip().lstrip("0") or str(row.get("Code", "")).strip()
+            name = str(row.get("CompanyName", "")).strip()
+            cat = _normalize_category(str(row.get("TypeOfDocument", "")).strip())
+            if code and code != "nan":
+                lines.append(f"{code} | {name} | {cat} | {best_date}")
+        if len(lines) <= 1:
+            return "", ""
+        logger.info(f"J-Quantsカレンダー: {best_date} {len(lines)-1}社")
+        return best_date, "\n".join(lines)
+    except Exception as e:
+        logger.warning(f"J-Quantsカレンダー例外: {e}")
+        return "", ""
+
+
+def _fetch_minkabu_earnings(trading_date: str) -> str:
     """
     みんかぶ の決算発表カレンダーから指定日の銘柄を取得する。
     https://minkabu.jp/financial_item_news/earning_schedule?selected_date=YYYY-MM-DD
