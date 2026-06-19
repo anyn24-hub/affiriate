@@ -2,344 +2,530 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="決算Bot">
-<title>@kessan_class 決算Bot</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>決算投稿Bot | @kessan_class</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #0D1B2A;
-    color: #fff;
-    min-height: 100vh;
-    padding: 20px 16px 40px;
-  }
-  h1 { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
-  .sub { font-size: 13px; color: #8899aa; text-align: center; margin-bottom: 24px; }
+:root {
+  --bg:     #06101f;
+  --bg2:    #0a1628;
+  --card:   #0d1d30;
+  --card2:  #111f33;
+  --border: rgba(255,255,255,0.10);
+  --gold:   #f5c518;
+  --cyan:   #00d4ff;
+  --blue:   #4a90e2;
+  --green:  #4ee27a;
+  --text:   #ffffff;
+  --muted:  rgba(255,255,255,0.55);
+  --radius: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hiragino Kaku Gothic ProN','Yu Gothic','YuGothic','Meiryo',sans-serif;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+a { color: var(--cyan); text-decoration: none; }
 
-  /* 設定パネル */
-  .settings-toggle {
-    background: none; border: 1px solid #334; color: #8899aa;
-    border-radius: 8px; padding: 8px 16px; font-size: 13px;
-    width: 100%; cursor: pointer; margin-bottom: 16px;
-  }
-  .settings-panel { display: none; background: #1a2a3a; border-radius: 12px; padding: 16px; margin-bottom: 20px; }
-  .settings-panel.open { display: block; }
-  label { font-size: 12px; color: #8899aa; display: block; margin-bottom: 4px; }
-  input[type=text], input[type=password] {
-    width: 100%; padding: 10px 12px; border-radius: 8px;
-    border: 1px solid #334; background: #0D1B2A; color: #fff;
-    font-size: 14px; margin-bottom: 12px;
-  }
-  .save-btn {
-    background: #334; color: #fff; border: none; border-radius: 8px;
-    padding: 10px; width: 100%; font-size: 14px; cursor: pointer;
-  }
+/* ─── Header ─── */
+.app-header {
+  background: linear-gradient(135deg, #04091a 0%, #0a1628 100%);
+  border-bottom: 1px solid rgba(245,197,24,0.3);
+  padding: 10px 16px 8px;
+  position: sticky; top: 0; z-index: 100;
+}
+.app-header-inner { max-width: 680px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+.app-title   { font-size: 17px; font-weight: 900; color: var(--gold); letter-spacing: 0.04em; }
+.app-subtitle{ font-size: 10px; color: var(--muted); margin-top: 1px; }
+.app-date    { font-size: 12px; color: var(--cyan); font-weight: 700; }
 
-  /* ステップカード */
-  .step-card {
-    background: #1a2a3a; border-radius: 16px; padding: 20px; margin-bottom: 16px;
-  }
-  .step-num {
-    font-size: 11px; font-weight: 700; color: #4488cc;
-    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;
-  }
-  .step-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
-  .step-desc { font-size: 13px; color: #8899aa; margin-bottom: 16px; line-height: 1.5; }
-  .manual-badge {
-    display: inline-block; background: #2a3a2a; color: #88cc88;
-    border-radius: 6px; padding: 4px 10px; font-size: 12px; margin-bottom: 16px;
-  }
+/* ─── Schedule strip (シンプルなテキスト表示) ─── */
+.sched-strip {
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 5px 16px;
+  position: sticky; top: 46px; z-index: 99;
+}
+.sched-strip-inner {
+  max-width: 680px; margin: 0 auto;
+  display: flex; align-items: center; gap: 0;
+  font-size: 11px; color: var(--muted);
+  overflow-x: auto; scrollbar-width: none;
+}
+.sched-strip-inner::-webkit-scrollbar { display: none; }
+.sched-item { white-space: nowrap; }
+.sched-item.now  { color: var(--gold); font-weight: 800; }
+.sched-item.past { opacity: 0.35; }
+.sched-sep  { margin: 0 6px; opacity: 0.3; }
 
-  /* ボタン */
-  .btn {
-    width: 100%; padding: 16px; border-radius: 12px; border: none;
-    font-size: 16px; font-weight: 700; cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  .btn:active { opacity: 0.7; }
-  .btn-primary { background: #2266dd; color: #fff; }
-  .btn-success { background: #22aa66; color: #fff; }
-  .btn-disabled { background: #334; color: #556; cursor: not-allowed; }
+/* ─── Layout ─── */
+.page { max-width: 680px; margin: 0 auto; padding: 0 12px; }
 
-  /* ステータス */
-  .status {
-    margin-top: 12px; padding: 12px; border-radius: 10px;
-    font-size: 13px; line-height: 1.6; display: none;
-  }
-  .status.show { display: block; }
-  .status.running { background: #1a2a4a; color: #88aaff; }
-  .status.done { background: #1a3a2a; color: #88ffaa; }
-  .status.error { background: #3a1a1a; color: #ff8888; }
+/* ─── Section ─── */
+.section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 14px; overflow: hidden; }
+.section-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.section-header:hover { background: rgba(255,255,255,0.03); }
+.step-badge { background: var(--gold); color: #000; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; }
+.step-badge.green { background: var(--green); }
+.section-title { font-size: 15px; font-weight: 800; flex: 1; }
+.chevron { color: var(--muted); font-size: 14px; transition: transform 0.2s; }
+.section.open .chevron { transform: rotate(180deg); }
+.section-body { display: none; padding: 0 16px 18px; border-top: 1px solid var(--border); }
+.section.open .section-body { display: block; }
 
-  /* 結果表示 */
-  .result-area { margin-top: 12px; display: none; }
-  .result-area.show { display: block; }
-  .result-box {
-    background: #0D1B2A; border: 1px solid #334; border-radius: 10px;
-    padding: 12px; margin-bottom: 10px;
-  }
-  .result-label { font-size: 11px; color: #4488cc; font-weight: 700; margin-bottom: 6px; }
-  .result-text {
-    font-size: 13px; line-height: 1.7; white-space: pre-wrap;
-    word-break: break-word; color: #ddeeff;
-    max-height: 300px; overflow-y: auto;
-  }
-  .copy-btn {
-    width: 100%; margin-top: 8px; padding: 10px; border-radius: 8px;
-    border: 1px solid #334; background: #1a2a3a; color: #88aaff;
-    font-size: 13px; cursor: pointer;
-  }
-  .copy-btn:active { background: #2a3a4a; }
+/* ─── Buttons ─── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 13px 18px; border: none; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer; text-decoration: none; transition: opacity 0.15s, transform 0.1s; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+.btn:active { opacity: 0.7; transform: scale(0.97); }
+.btn-primary { background: var(--gold); color: #000; }
+.btn-cyan    { background: var(--cyan); color: #000; }
+.btn-blue    { background: var(--blue); color: #fff; }
+.btn-full    { width: 100%; }
+.btn-sm      { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
 
-  .spinner {
-    display: inline-block; width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #fff; border-radius: 50%;
-    animation: spin 0.8s linear infinite; margin-right: 8px;
-    vertical-align: middle;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* ─── Big link buttons ─── */
+.big-btn { display: flex; align-items: center; gap: 14px; background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; color: var(--text); text-decoration: none; transition: background 0.15s; -webkit-tap-highlight-color: transparent; cursor: pointer; width: 100%; font-family: inherit; text-align: left; margin-top: 10px; }
+.big-btn:hover { background: rgba(255,255,255,0.05); }
+.big-btn.gold { border-color: rgba(245,197,24,0.4); }
+.big-btn.cyan { border-color: rgba(0,212,255,0.3); }
+.big-btn.blue { border-color: rgba(74,144,226,0.3); }
+.big-btn .bico   { font-size: 24px; min-width: 32px; text-align: center; flex-shrink: 0; }
+.big-btn .btxt   { flex: 1; }
+.big-btn .blabel { font-size: 15px; font-weight: 800; }
+.big-btn .bsub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.big-btn .barr   { color: var(--muted); font-size: 15px; }
+
+/* ─── Region tabs ─── */
+.rtab-row { display: flex; gap: 6px; margin-top: 12px; }
+.rtab { padding: 8px 14px; font-size: 12px; font-weight: 800; border: 1px solid var(--border); border-radius: 100px; cursor: pointer; color: var(--muted); background: none; font-family: inherit; -webkit-tap-highlight-color: transparent; }
+.rtab.active { border-color: var(--gold); color: var(--gold); background: rgba(245,197,24,0.1); }
+.rtab-body { display: none; margin-top: 10px; }
+.rtab-body.active { display: block; }
+
+/* ─── Resource list ─── */
+.res-list { list-style: none; margin-top: 10px; }
+.res-list li { margin-bottom: 8px; }
+.res-link { display: flex; align-items: center; gap: 10px; background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); text-decoration: none; font-size: 13px; font-weight: 700; -webkit-tap-highlight-color: transparent; cursor: pointer; width: 100%; font-family: inherit; transition: background 0.15s; }
+.res-link:hover { background: rgba(255,255,255,0.05); }
+.res-ico  { font-size: 16px; min-width: 22px; text-align: center; }
+.res-desc { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+
+/* ─── Form ─── */
+.fg { margin-top: 12px; }
+.fg label { font-size: 12px; color: var(--muted); font-weight: 700; margin-bottom: 5px; display: block; }
+.finput { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 15px; padding: 13px 12px; outline: none; -webkit-appearance: none; }
+.finput:focus { border-color: var(--cyan); }
+
+/* ─── Company chips ─── */
+.company-chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 8px; min-height: 0;
+}
+.company-chip {
+  background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.3);
+  color: var(--cyan); border-radius: 100px;
+  font-size: 12px; font-weight: 700; padding: 4px 12px;
+  white-space: nowrap;
+}
+
+/* ─── Info box ─── */
+.info { border-radius: 8px; padding: 12px 14px; font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.8); margin-top: 12px; }
+.info.cyan  { background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.2); }
+.info.gold  { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); }
+
+/* ─── Post preview ─── */
+.post-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 12px; line-height: 1.75; white-space: pre-wrap; word-break: break-all; margin-top: 10px; min-height: 80px; max-height: 280px; overflow-y: auto; color: rgba(255,255,255,0.75); }
+
+/* ─── Toggle ─── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-of-type { border-bottom: none; }
+.toggle-label { font-size: 14px; }
+.toggle { position: relative; width: 44px; height: 24px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.tslider { position: absolute; inset: 0; background: rgba(255,255,255,0.15); border-radius: 100px; cursor: pointer; transition: background 0.2s; }
+.tslider::before { content: ''; position: absolute; width: 18px; height: 18px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+.toggle input:checked + .tslider { background: var(--green); }
+.toggle input:checked + .tslider::before { transform: translateX(20px); }
+
+/* ─── Toast ─── */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--green); color: #000; padding: 10px 24px; border-radius: 100px; font-size: 13px; font-weight: 800; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999; white-space: nowrap; }
+#toast.show { opacity: 1; }
+
+.mt12 { margin-top: 12px; }
+.sec-label { font-size: 12px; font-weight: 800; color: var(--muted); margin-top: 14px; margin-bottom: 6px; }
 </style>
 </head>
 <body>
 
-<h1>📊 @kessan_class</h1>
-<p class="sub">決算投稿Bot</p>
-
-<!-- 設定 -->
-<button class="settings-toggle" onclick="toggleSettings()">⚙️ GitHub設定</button>
-<div class="settings-panel" id="settingsPanel">
-  <label>GitHub Personal Access Token</label>
-  <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
-  <label>リポジトリ（owner/repo）</label>
-  <input type="text" id="ghRepo" placeholder="anyn24-hub/affiriate">
-  <label>ブランチ</label>
-  <input type="text" id="ghBranch" placeholder="main">
-  <button class="save-btn" onclick="saveSettings()">💾 保存</button>
+<!-- ─── Header ─── -->
+<div class="app-header">
+  <div class="app-header-inner">
+    <div>
+      <div class="app-title">📊 決算投稿Bot</div>
+      <div class="app-subtitle">@kessan_class — 決算SNS投稿ワークフロー</div>
+    </div>
+    <div class="app-date" id="headerDate"></div>
+  </div>
 </div>
 
-<!-- STEP 1: 銘柄抽出 -->
-<div class="step-card">
-  <div class="step-num">Step 1 · 自動</div>
-  <div class="step-title">📋 銘柄抽出</div>
-  <div class="step-desc">J-Quants APIから本日の決算銘柄を自動取得・整理します（約1分）</div>
-  <button class="btn btn-primary" id="btn1" onclick="runStep1()">銘柄抽出を実行</button>
-  <div class="status" id="status1"></div>
-  <div class="result-area" id="result1">
-    <div class="result-box">
-      <div class="result-label">抽出結果</div>
-      <div class="result-text" id="result1text"></div>
-      <button class="copy-btn" onclick="copyText('result1text')">📋 コピー</button>
+<!-- ─── Schedule strip ─── -->
+<div class="sched-strip">
+  <div class="sched-strip-inner" id="schedStrip"></div>
+</div>
+
+<div class="page">
+
+<!-- ─────────── STEP 1 ─────────── -->
+<div class="section open" id="sec1">
+  <div class="section-header" onclick="tog('sec1')">
+    <span class="step-badge">STEP 1</span>
+    <span class="section-title">決算発表企業を確認</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="info cyan">
+      SBI証券の決算発表スケジュールを開き、日本・米国・中国・香港の発表予定を確認します。
+      AIプロンプトをコピーして貼り付けるだけで候補リストが返ってきます。
+    </div>
+
+    <a class="big-btn gold" href="https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on&OutSide=on" target="_blank" rel="noopener">
+      <span class="bico">🏦</span>
+      <div class="btxt">
+        <div class="blabel">SBI決算発表スケジュールを開く</div>
+        <div class="bsub">日本・米国・中国・香港の決算予定を確認</div>
+      </div>
+      <span class="barr">↗</span>
+    </a>
+
+    <button class="big-btn cyan" onclick="copyAiPrompt()">
+      <span class="bico">🤖</span>
+      <div class="btxt">
+        <div class="blabel">AI抽出用プロンプトをコピー</div>
+        <div class="bsub">最低10社を国・証券コード・企業名・発表日でリストアップ</div>
+      </div>
+      <span class="barr">📋</span>
+    </button>
+  </div>
+</div>
+
+<!-- ─────────── STEP 2 ─────────── -->
+<div class="section" id="sec2">
+  <div class="section-header" onclick="tog('sec2')">
+    <span class="step-badge">STEP 2</span>
+    <span class="section-title">決算資料を取得 → Driveに保存</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="section-body">
+
+    <div class="rtab-row">
+      <button class="rtab active" onclick="switchRegion('jp',this)">🇯🇵 日本</button>
+      <button class="rtab"        onclick="switchRegion('intl',this)">🌍 米国・中国・香港</button>
+    </div>
+
+    <!-- 日本 -->
+    <div class="rtab-body active" id="region-jp">
+      <div class="info cyan">
+        TDnetで決算短信PDFを検索してダウンロードし、Google Driveに保存してください。
+      </div>
+      <ul class="res-list">
+        <li>
+          <a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener">
+            <span class="res-ico">📋</span>
+            <div><div>TDnetを開く</div><div class="res-desc">決算短信・業績予想修正・配当・自社株買いの適時開示を検索</div></div>
+          </a>
+        </li>
+        <li>
+          <a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener">
+            <span class="res-ico">📁</span>
+            <div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算資料PDFをここに保存</div></div>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 米国・中国・香港 -->
+    <div class="rtab-body" id="region-intl">
+      <div class="info cyan">
+        企業名・ティッカー・証券コードを入力してChatGPTに<strong> Annual Results のURL</strong>を調べてもらいます。
+      </div>
+      <div class="fg">
+        <label>企業名 / ティッカー / 証券コード（カンマ区切りで複数可）</label>
+        <input class="finput" id="intlTicker"
+          placeholder="例：AAPL, NVDA, テンセント, 0700"
+          oninput="renderCompanyChips()"
+          autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="company-chips" id="companyChips"></div>
+      </div>
+
+      <button class="big-btn blue" onclick="copyIntlUrlPrompt()">
+        <span class="bico">🤖</span>
+        <div class="btxt">
+          <div class="blabel">ChatGPTに決算書URL抽出を依頼</div>
+          <div class="bsub">Annual Results のURL のみを回答させる</div>
+        </div>
+        <span class="barr">📋</span>
+      </button>
+
+      <ul class="res-list mt12">
+        <li>
+          <a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener">
+            <span class="res-ico">📁</span>
+            <div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算資料PDFをここに保存</div></div>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─────────── STEP 3: 収益化 ─────────── -->
+<div class="section" id="secAff">
+  <div class="section-header" onclick="tog('secAff')">
+    <span class="step-badge green">STEP 3</span>
+    <span class="section-title">楽天アフィリエイトURL設定</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="info gold">
+      ここで設定したURLは、STEP 4のChatGPTプロンプトに自動で組み込まれます。
+    </div>
+    <div class="toggle-row mt12">
+      <span class="toggle-label">投稿文にアフィリエイトリンクを含める</span>
+      <label class="toggle"><input type="checkbox" id="affEnabled" onchange="saveAff()"><span class="tslider"></span></label>
+    </div>
+    <div class="fg">
+      <label>楽天アフィリエイトURL</label>
+      <input class="finput" id="affUrl" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()">
+    </div>
+    <div class="info cyan mt12" style="font-size:12px;">URLは入力後すぐに自動保存されます。</div>
+  </div>
+</div>
+
+<!-- ─────────── STEP 4: プロンプト生成 ─────────── -->
+<div class="section" id="sec4">
+  <div class="section-header" onclick="tog('sec4')">
+    <span class="step-badge">STEP 4</span>
+    <span class="section-title">ChatGPTプロンプトを生成・コピー</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="info cyan">
+      Driveの決算書フォルダを自動参照します。「プロンプトをコピー」してChatGPTに貼り付けてください。
+    </div>
+
+    <div class="sec-label" style="margin-top:16px;">プロンプトプレビュー</div>
+    <div class="post-box" id="promptPreview"></div>
+
+    <button class="btn btn-primary btn-full mt12" onclick="copyPrompt()">
+      📋 プロンプトをコピーしてChatGPTへ
+    </button>
+
+    <div class="info gold mt12" style="font-size:12px;">
+      コピー後はChatGPTに貼り付けるだけで、<strong>X投稿文・X用画像指示書</strong>が生成されます。
     </div>
   </div>
 </div>
 
-<!-- STEP 2: 手動 -->
-<div class="step-card">
-  <div class="step-num">Step 2 · 手動</div>
-  <div class="step-title">📥 決算書をDriveに保存</div>
-  <div class="step-desc">
-    抽出された銘柄の決算短信PDFをTDnetからダウンロードし、
-    Googleドライブの所定フォルダに保存してください。
-  </div>
-  <span class="manual-badge">✋ 手動作業</span><br>
-  <a href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank"
-     style="display:block; padding:14px; background:#1a3a5a; border-radius:10px;
-            color:#88ccff; text-align:center; font-size:14px; font-weight:700;
-            text-decoration:none;">
-    🔗 TDnetを開く
-  </a>
-</div>
-
-<!-- STEP 3: 投稿文生成 -->
-<div class="step-card">
-  <div class="step-num">Step 3 · 自動</div>
-  <div class="step-title">✍️ 投稿文・画像指示書を生成</div>
-  <div class="step-desc">DriveのPDFを読み取り、X投稿文とChatGPT画像生成指示書を作成します（約3分）</div>
-  <button class="btn btn-success" id="btn3" onclick="runStep3()">投稿文を生成</button>
-  <div class="status" id="status3"></div>
-  <div class="result-area" id="result3">
-    <div class="result-box">
-      <div class="result-label">X投稿文（アフィリエイトリンク付き）</div>
-      <div class="result-text" id="result3xpost"></div>
-      <button class="copy-btn" onclick="copyText('result3xpost')">📋 コピー</button>
-    </div>
-    <div class="result-box">
-      <div class="result-label">ChatGPT画像生成指示書</div>
-      <div class="result-text" id="result3img"></div>
-      <button class="copy-btn" onclick="copyText('result3img')">📋 コピー</button>
-    </div>
-  </div>
-</div>
+</div><!-- /page -->
+<div id="toast"></div>
 
 <script>
-const OWNER_REPO_DEFAULT = 'anyn24-hub/affiriate';
-const BRANCH_DEFAULT = 'main';
+const DRIVE_URL = 'https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0';
+const AFF_KEY   = 'kessan_aff2';
 
-function loadSettings() {
-  document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
-  document.getElementById('ghRepo').value = localStorage.getItem('ghRepo') || OWNER_REPO_DEFAULT;
-  document.getElementById('ghBranch').value = localStorage.getItem('ghBranch') || BRANCH_DEFAULT;
+const SCHEDULE = [
+  { time: '07:00', label: '第1投稿' },
+  { time: '12:00', label: '第2投稿' },
+  { time: '18:00', label: '第3投稿' },
+  { time: '20:00', label: '⭐第4投稿' },
+];
+
+// ─── UTILS ───
+function tog(id) { document.getElementById(id).classList.toggle('open'); }
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-function saveSettings() {
-  localStorage.setItem('ghToken', document.getElementById('ghToken').value.trim());
-  localStorage.setItem('ghRepo', document.getElementById('ghRepo').value.trim());
-  localStorage.setItem('ghBranch', document.getElementById('ghBranch').value.trim());
-  document.getElementById('settingsPanel').classList.remove('open');
-  alert('保存しました！');
+function copyText(text) {
+  navigator.clipboard.writeText(text)
+    .then(() => toast('コピーしました ✓'))
+    .catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast('コピーしました ✓');
+    });
 }
 
-function toggleSettings() {
-  document.getElementById('settingsPanel').classList.toggle('open');
+// ─── HEADER ───
+function updateHeaderDate() {
+  const d  = new Date(new Date().toLocaleString('en-US', {timeZone:'Asia/Tokyo'}));
+  const wd = ['日','月','火','水','木','金','土'][d.getDay()];
+  document.getElementById('headerDate').textContent =
+    `${d.getMonth()+1}/${d.getDate()}（${wd}）`;
+  return d;
 }
 
-function getSettings() {
-  return {
-    token: localStorage.getItem('ghToken') || '',
-    repo: localStorage.getItem('ghRepo') || OWNER_REPO_DEFAULT,
-    branch: localStorage.getItem('ghBranch') || BRANCH_DEFAULT,
-  };
-}
-
-function setStatus(id, type, msg) {
-  const el = document.getElementById(id);
-  el.className = `status show ${type}`;
-  el.innerHTML = msg;
-}
-
-async function triggerWorkflow(workflowFile) {
-  const { token, repo, branch } = getSettings();
-  if (!token) { alert('GitHubトークンを設定してください（⚙️ GitHub設定）'); return false; }
-  const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/${workflowFile}/dispatches`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/vnd.github+json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ ref: branch }),
+// ─── SCHEDULE STRIP (シンプルテキスト) ───
+function buildScheduleStrip(now) {
+  const hhmm = now.getHours() * 60 + now.getMinutes();
+  let nextIdx = -1;
+  SCHEDULE.forEach((s, i) => {
+    const [h, m] = s.time.split(':').map(Number);
+    if ((h * 60 + m) > hhmm && nextIdx === -1) nextIdx = i;
   });
-  if (res.status !== 204) {
-    const body = await res.json().catch(() => ({}));
-    const msg = body.message || `HTTP ${res.status}`;
-    throw new Error(msg);
-  }
-  return true;
-}
 
-async function waitForWorkflow(workflowFile, timeoutMs = 300000) {
-  const { token, repo } = getSettings();
-  const start = Date.now();
-  await new Promise(r => setTimeout(r, 5000));
-  while (Date.now() - start < timeoutMs) {
-    const res = await fetch(
-      `https://api.github.com/repos/${repo}/actions/workflows/${workflowFile}/runs?per_page=1`,
-      { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } }
-    );
-    const data = await res.json();
-    const run = data.workflow_runs?.[0];
-    if (!run) { await new Promise(r => setTimeout(r, 5000)); continue; }
-    if (run.status === 'completed') return run.conclusion === 'success';
-    await new Promise(r => setTimeout(r, 5000));
-  }
-  return false;
-}
-
-async function fetchFileContent(path) {
-  const { token, repo, branch } = getSettings();
-  const today = new Date().toISOString().slice(0, 10);
-  const fullPath = `output/${today}/${path}`;
-  const res = await fetch(
-    `https://api.github.com/repos/${repo}/contents/${fullPath}?ref=${branch}`,
-    { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } }
-  );
-  if (!res.ok) return null;
-  const data = await res.json();
-  const binary = atob(data.content.replace(/\n/g, ''));
-  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
-  return new TextDecoder('utf-8').decode(bytes);
-}
-
-async function runStep1() {
-  const btn = document.getElementById('btn1');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>実行中...';
-  setStatus('status1', 'running', '⏳ 銘柄抽出を開始しました。約1〜2分お待ちください...');
-  document.getElementById('result1').classList.remove('show');
-
-  let ok;
-  try {
-    ok = await triggerWorkflow('step1_extract.yml');
-  } catch(e) {
-    setStatus('status1', 'error', `❌ 起動失敗: ${e.message}`);
-    btn.disabled = false; btn.innerHTML = '銘柄抽出を実行';
-    return;
-  }
-
-  const success = await waitForWorkflow('step1_extract.yml');
-  if (success) {
-    const text = await fetchFileContent('raw_stock_extraction.txt');
-    if (text) {
-      document.getElementById('result1text').textContent = text;
-      document.getElementById('result1').classList.add('show');
-      setStatus('status1', 'done', '✅ 銘柄抽出完了！結果を確認してTDnetからPDFをダウンロードしてください。');
-    } else {
-      setStatus('status1', 'done', '✅ 完了。GitHubのoutputフォルダで結果を確認してください。');
-    }
-  } else {
-    setStatus('status1', 'error', '❌ エラーが発生しました。GitHub Actionsのログを確認してください。');
-  }
-
-  btn.disabled = false; btn.innerHTML = '銘柄抽出を実行';
-}
-
-async function runStep3() {
-  const btn = document.getElementById('btn3');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>生成中...';
-  setStatus('status3', 'running', '⏳ 投稿文を生成中です。Driveを読み取っています（約3分）...');
-  document.getElementById('result3').classList.remove('show');
-
-  let ok;
-  try {
-    ok = await triggerWorkflow('step2_generate.yml');
-  } catch(e) {
-    setStatus('status3', 'error', `❌ 起動失敗: ${e.message}`);
-    btn.disabled = false; btn.innerHTML = '投稿文を生成';
-    return;
-  }
-
-  const success = await waitForWorkflow('step2_generate.yml');
-  if (success) {
-    const xpost = await fetchFileContent('x_posts.txt');
-    const imgprompt = await fetchFileContent('image_prompts.txt');
-    if (xpost || imgprompt) {
-      if (xpost) document.getElementById('result3xpost').textContent = xpost;
-      if (imgprompt) document.getElementById('result3img').textContent = imgprompt;
-      document.getElementById('result3').classList.add('show');
-      setStatus('status3', 'done', '✅ 生成完了！投稿文をコピーしてXに投稿、画像指示書をChatGPTに貼り付けてください。');
-    } else {
-      setStatus('status3', 'done', '✅ 完了。GitHubのoutputフォルダで結果を確認してください。');
-    }
-  } else {
-    setStatus('status3', 'error', '❌ エラーが発生しました。GitHub Actionsのログを確認してください。');
-  }
-
-  btn.disabled = false; btn.innerHTML = '投稿文を生成';
-}
-
-function copyText(id) {
-  const text = document.getElementById(id).textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    alert('コピーしました！');
+  const items = SCHEDULE.map((s, i) => {
+    const [h, m] = s.time.split(':').map(Number);
+    const past   = (h * 60 + m) < hhmm;
+    const isNext = i === nextIdx;
+    let cls = 'sched-item';
+    if (isNext) cls += ' now';
+    if (past)   cls += ' past';
+    return `<span class="${cls}">${s.label} ${s.time}</span>`;
   });
+
+  const html = items.map((item, i) =>
+    i < items.length - 1 ? item + '<span class="sched-sep">·</span>' : item
+  ).join('');
+
+  document.getElementById('schedStrip').innerHTML = html;
 }
 
-loadSettings();
+// ─── AFFILIATE ───
+let aff = { enabled: false, url: '' };
+
+function loadAff() {
+  try { const a = JSON.parse(localStorage.getItem(AFF_KEY) || 'null'); if (a) aff = a; } catch {}
+  document.getElementById('affEnabled').checked = !!aff.enabled;
+  document.getElementById('affUrl').value = aff.url || '';
+}
+
+function saveAff() {
+  aff.enabled = document.getElementById('affEnabled').checked;
+  aff.url     = document.getElementById('affUrl').value.trim();
+  try { localStorage.setItem(AFF_KEY, JSON.stringify(aff)); } catch {}
+  updatePromptPreview();
+}
+
+// ─── REGION TABS ───
+function switchRegion(id, el) {
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.rtab-body').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('region-' + id).classList.add('active');
+}
+
+// ─── COMPANY CHIPS (STEP 2) ───
+function renderCompanyChips() {
+  const val    = document.getElementById('intlTicker').value;
+  const names  = val.split(',').map(s => s.trim()).filter(Boolean);
+  const wrap   = document.getElementById('companyChips');
+  wrap.innerHTML = names.map(n => `<span class="company-chip">${n}</span>`).join('');
+}
+
+// ─── STEP 1: AI 抽出プロンプト ───
+const AI_PROMPT = `以下のSBI証券 決算発表スケジュールページを確認し、本日の決算発表企業を抽出してください。
+
+URL：
+https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on&OutSide=on
+
+出力形式（この形式のみで回答してください）：
+| 国 | 証券コード | 企業名 | 発表日 |
+|---|---|---|---|
+| 日本 | 7203 | トヨタ自動車 | 2026-06-20 |
+...
+
+条件：
+・日本・米国・中国・香港すべて対象
+・本日の発表が10社未満の場合は前日・前々日にさかのぼって補足し、合計最低10社を出力
+・さかのぼった場合は発表日を正確に記載
+・表以外の説明文は不要`;
+
+function copyAiPrompt() { copyText(AI_PROMPT); }
+
+// ─── STEP 2: 海外 URL 抽出プロンプト ───
+function copyIntlUrlPrompt() {
+  const q = document.getElementById('intlTicker').value.trim();
+  const companies = q || '（企業名またはティッカー・証券コードを入力してください）';
+
+  const prompt = `以下の企業の最新 Annual Results（決算発表資料）のPDF直リンクURLを調べてください。
+
+対象企業：
+${companies}
+
+出力形式（この形式のみで回答してください）：
+企業名（ティッカー）: https://...
+
+条件：
+・Annual Results（決算発表プレスリリース）のPDF直リンクURLのみを回答
+・Annual Report（年次報告書）は不要
+・URLが不明な場合は「不明」と記載
+・説明文・補足は不要`;
+
+  copyText(prompt);
+}
+
+// ─── STEP 4: ChatGPT プロンプト（X専用） ───
+function buildPrompt() {
+  const affUrl = (aff.enabled && aff.url) ? aff.url : '';
+
+  const affInstruction = affUrl
+    ? `\n【アフィリエイトリンク】
+X投稿文の末尾にスペースがあれば以下を追記してください：
+PR: ${affUrl}`
+    : '';
+
+  return `あなたは「プロの財務アナリスト兼SNSマーケター」として、指定されたGoogle DriveフォルダにあるすべてのPDF決算資料を解析し、以下のコンテンツを作成してください。
+
+【重要】スマホ操作優先のため、各項目を個別の「コードブロック」に分けて出力してください。資料が複数ある場合は資料ごとに出力してください。
+
+【SNS投稿ルール】
+・すべての投稿文と画像指示書に @kessan_class を含める
+・専門メディアのトーン（個人の感想・体験談は排除）、適切な改行を使用
+・これまでの @kessan_class の投稿スタイル（100件以上の実績）と統一感を保つこと
+・買い煽り・売り煽り・断定的な株価予想は禁止
+・事実ベースで売上・利益・利益率・EPS・配当・通期見通し・セグメント動向を中心にする
+
+【作成内容（資料ごとに出力）】
+1 X用投稿文（140字以内）
+  ・数字インパクト重視、絵文字でフック
+  ・例：📊 売上/利益の数値と増減率 → 一言インサイト → @kessan_class
+
+2 X用画像生成指示書（ChatGPTへ貼り付ける用）
+  サイズ：16:9（横長）※Xのタイムラインに最適化
+  デザイン（濃紺・グラファイトグレー基調）：
+  ・ヘッダー：「証券コード＋企業名」を非常に大きく配置
+  ・サブヘッダー：事業内容（15文字程度）
+  ・メイン：6つのカード型ボックスに売上・利益（青/赤）・実績数値・フラットアイコンを配置
+  ・フッター：✅ インサイト（注目ポイント）＋右下に @kessan_class の署名
+${affInstruction}
+
+解析対象（Google Driveフォルダ内のすべての決算PDFを確認）：
+${DRIVE_URL}`;
+}
+
+function updatePromptPreview() {
+  document.getElementById('promptPreview').textContent = buildPrompt();
+}
+
+function copyPrompt() { copyText(buildPrompt()); }
+
+// ─── INIT ───
+(function init() {
+  const now = updateHeaderDate();
+  buildScheduleStrip(now);
+  loadAff();
+  updatePromptPreview();
+})();
 </script>
 </body>
 </html>
