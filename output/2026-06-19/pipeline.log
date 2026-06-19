@@ -16,3 +16,74 @@
 2026-06-19 15:42:37,638 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
 2026-06-19 15:42:37,650 [INFO] pipeline.stock_extractor: Parsed 1 in A, 0 in B, 0 in C.
 2026-06-19 15:42:37,650 [INFO] main: 銘柄抽出完了: 1社 → output/2026-06-19/stocks.json
+2026-06-19 17:28:40,634 [INFO] main: Output directory: output/2026-06-19
+2026-06-19 17:28:40,634 [INFO] main: ============================================================
+2026-06-19 17:28:40,634 [INFO] main: STEP 1: 銘柄抽出
+2026-06-19 17:28:40,634 [INFO] main: ============================================================
+2026-06-19 17:28:40,634 [INFO] pipeline.stock_extractor: [1/10] 2026-06-19 を試行中...
+2026-06-19 17:28:41,572 [INFO] pipeline.stock_extractor: kabutan: 200 (https://s.kabutan.jp/warnings/news_schedule/?market=all&date=20260619)
+2026-06-19 17:28:41,591 [INFO] pipeline.stock_extractor: kabutan row[0]: 銘柄 株価 決算期 今期 予想 時価総額 (億円) PER PBR 利回り 流動性 表記
+2026-06-19 17:28:41,591 [INFO] pipeline.stock_extractor: kabutan row[1]: あさひ 3333 東P 1,267 1Q 12.1 倍 0.82 倍 3.95 %
+2026-06-19 17:28:41,591 [INFO] pipeline.stock_extractor: kabutan row[2]: 略称 市場
+2026-06-19 17:28:41,591 [INFO] pipeline.stock_extractor: kabutan row[3]: 東P 東証プライム
+2026-06-19 17:28:41,591 [INFO] pipeline.stock_extractor: kabutan row[4]: 東S 東証スタンダード
+2026-06-19 17:28:41,591 [INFO] pipeline.stock_extractor: kabutan 全tr行数: 22
+2026-06-19 17:28:41,593 [INFO] pipeline.stock_extractor: kabutan: 1社取得
+2026-06-19 17:28:41,594 [INFO] pipeline.stock_extractor: みんかぶで取引日確定: 2026-06-19
+2026-06-19 17:28:41,594 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-19 17:28:41,947 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:28:41,958 [INFO] pipeline.stock_extractor: Parsed 1 in A, 0 in B, 0 in C.
+2026-06-19 17:28:41,959 [INFO] main: 銘柄抽出完了: 1社 → output/2026-06-19/stocks.json
+2026-06-19 17:28:41,959 [INFO] main: ============================================================
+2026-06-19 17:28:41,959 [INFO] main: STEP 3: 投稿文・画像指示書生成
+2026-06-19 17:28:41,959 [INFO] main: ============================================================
+2026-06-19 17:28:43,202 [WARNING] affiliate_links: 楽天API取得エラー: 400 Client Error: 400 for url: https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=53ffe77a-e8a3-4b5c-bee7-ca3bd2744dca&affiliateId=5335e187.bd9b90cd.5335e188.d302f85f&keyword=%E8%B2%A1%E5%8B%99%E8%AB%B8%E8%A1%A8&booksGenreId=001&hits=20&sort=sales&format=json。フォールバックURLを使用します。
+2026-06-19 17:28:43,203 [INFO] main: アフィリエイトリンク: https://books.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8
+2026-06-19 17:28:43,250 [INFO] googleapiclient.discovery_cache: file_cache is only supported with oauth2client<4.0.0
+2026-06-19 17:28:46,534 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: ＴＯブックス.pdf (11133文字)
+2026-06-19 17:28:48,999 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: 犬猫生活.pdf (12333文字)
+2026-06-19 17:28:50,165 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: 共和工業所.pdf (14908文字)
+2026-06-19 17:28:51,124 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: ブラス.pdf (7962文字)
+2026-06-19 17:28:53,713 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: Ｈａｍｅｅ.pdf (24404文字)
+2026-06-19 17:28:58,190 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: フロンティアインターナショナル.pdf (14010文字)
+2026-06-19 17:28:59,913 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: クラシコム.pdf (11699文字)
+2026-06-19 17:29:02,219 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: ＣＡＩＣＡ　ＤＩＧＩＴＡＬ.pdf (19219文字)
+2026-06-19 17:29:02,219 [INFO] pipeline.content_generator: 8件のPDFを処理します。
+2026-06-19 17:29:02,236 [INFO] pipeline.content_generator: コンテンツ生成中: ＴＯブックス.pdf
+2026-06-19 17:29:04,723 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:29:04,724 [INFO] pipeline.content_generator: コンテンツ生成中: 犬猫生活.pdf
+2026-06-19 17:29:04,778 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:29:04,778 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 5.000000 seconds
+2026-06-19 17:29:09,853 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:29:09,853 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 10.000000 seconds
+2026-06-19 17:29:22,207 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:29:22,208 [INFO] pipeline.content_generator: コンテンツ生成中: 共和工業所.pdf
+2026-06-19 17:29:22,261 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:29:22,261 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 36.000000 seconds
+2026-06-19 17:30:00,457 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:30:00,458 [INFO] pipeline.content_generator: コンテンツ生成中: ブラス.pdf
+2026-06-19 17:30:00,515 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:30:00,515 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 32.000000 seconds
+2026-06-19 17:30:35,488 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:30:35,489 [INFO] pipeline.content_generator: コンテンツ生成中: Ｈａｍｅｅ.pdf
+2026-06-19 17:30:35,563 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:30:35,564 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 33.000000 seconds
+2026-06-19 17:31:08,625 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:31:08,625 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 7.000000 seconds
+2026-06-19 17:31:18,148 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:31:18,149 [INFO] pipeline.content_generator: コンテンツ生成中: フロンティアインターナショナル.pdf
+2026-06-19 17:31:18,361 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:31:18,362 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 32.000000 seconds
+2026-06-19 17:31:52,919 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:31:52,920 [INFO] pipeline.content_generator: コンテンツ生成中: クラシコム.pdf
+2026-06-19 17:31:52,974 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:31:52,974 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 36.000000 seconds
+2026-06-19 17:32:29,037 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:32:29,038 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 1.000000 seconds
+2026-06-19 17:32:32,432 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:32:32,433 [INFO] pipeline.content_generator: コンテンツ生成中: ＣＡＩＣＡ　ＤＩＧＩＴＡＬ.pdf
+2026-06-19 17:32:32,506 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-19 17:32:32,507 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 33.000000 seconds
+2026-06-19 17:33:07,896 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 17:33:07,898 [INFO] pipeline.content_generator: 8社分のコンテンツを生成しました。
+2026-06-19 17:33:07,898 [INFO] main: 投稿文生成完了: 8社
