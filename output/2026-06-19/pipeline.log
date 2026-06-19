@@ -1,0 +1,18 @@
+2026-06-19 15:42:36,108 [INFO] main: Output directory: output/2026-06-19
+2026-06-19 15:42:36,108 [INFO] main: ============================================================
+2026-06-19 15:42:36,108 [INFO] main: STEP 1: 銘柄抽出
+2026-06-19 15:42:36,109 [INFO] main: ============================================================
+2026-06-19 15:42:36,109 [INFO] pipeline.stock_extractor: [1/10] 2026-06-19 を試行中...
+2026-06-19 15:42:36,955 [INFO] pipeline.stock_extractor: kabutan: 200 (https://s.kabutan.jp/warnings/news_schedule/?market=all&date=20260619)
+2026-06-19 15:42:36,973 [INFO] pipeline.stock_extractor: kabutan row[0]: 銘柄 株価 決算期 今期 予想 時価総額 (億円) PER PBR 利回り 流動性 表記
+2026-06-19 15:42:36,973 [INFO] pipeline.stock_extractor: kabutan row[1]: あさひ 3333 東P 1,267 1Q 12.1 倍 0.82 倍 3.95 %
+2026-06-19 15:42:36,973 [INFO] pipeline.stock_extractor: kabutan row[2]: 略称 市場
+2026-06-19 15:42:36,973 [INFO] pipeline.stock_extractor: kabutan row[3]: 東P 東証プライム
+2026-06-19 15:42:36,973 [INFO] pipeline.stock_extractor: kabutan row[4]: 東S 東証スタンダード
+2026-06-19 15:42:36,974 [INFO] pipeline.stock_extractor: kabutan 全tr行数: 22
+2026-06-19 15:42:36,975 [INFO] pipeline.stock_extractor: kabutan: 1社取得
+2026-06-19 15:42:36,976 [INFO] pipeline.stock_extractor: みんかぶで取引日確定: 2026-06-19
+2026-06-19 15:42:36,976 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-19 15:42:37,638 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-19 15:42:37,650 [INFO] pipeline.stock_extractor: Parsed 1 in A, 0 in B, 0 in C.
+2026-06-19 15:42:37,650 [INFO] main: 銘柄抽出完了: 1社 → output/2026-06-19/stocks.json
