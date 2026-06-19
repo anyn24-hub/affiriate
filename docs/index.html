@@ -24,8 +24,6 @@ a{color:var(--cyan);text-decoration:none}
 .sched-strip{background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.05);padding:5px 16px;position:sticky;top:46px;z-index:99}
 .sched-strip-inner{max-width:680px;margin:0 auto;display:flex;align-items:center;font-size:11px;color:var(--muted);overflow-x:auto;scrollbar-width:none;white-space:nowrap}
 .sched-strip-inner::-webkit-scrollbar{display:none}
-.sched-item.now{color:var(--gold);font-weight:800}
-.sched-item.past{opacity:.35}
 .sched-sep{margin:0 7px;opacity:.3}
 
 /* Layout */
@@ -218,13 +216,24 @@ a{color:var(--cyan);text-decoration:none}
     </div>
     <!-- 海外 -->
     <div class="rtab-body" id="s2-intl">
-      <div class="info cyan">企業名・ティッカーを入力してChatGPTに<strong>Annual Results のURL</strong>を調べてもらうか、SEC/HKEXから直接検索してください。</div>
+      <div class="info cyan">STEP1でAIが抽出した企業名・ティッカーをそのまま貼り付けてください。カンマまたは改行で区切ると自動的に一覧表示されます。</div>
       <div class="fg">
-        <label>企業名 / ティッカー / 証券コード（カンマ区切りで複数可）</label>
-        <input class="finput" id="intlTicker" placeholder="例：AAPL, NVDA, テンセント, 0700" oninput="renderChips()" autocomplete="off" spellcheck="false">
-        <div class="company-chips" id="companyChips"></div>
+        <label>企業名 / ティッカー / 証券コード</label>
+        <textarea class="ftarea" id="intlTicker" placeholder="例：
+AAPL
+NVDA
+テンセント（0700）
+台湾セミコンダクター（TSM）
+
+← AIの出力をそのまま貼り付けOK" oninput="renderChips()" autocomplete="off" spellcheck="false" rows="4" style="font-size:13px"></textarea>
       </div>
-      <button class="big-btn blue" onclick="copyIntlPrompt()">
+      <!-- chips appear here after input -->
+      <div id="chipArea" style="display:none;margin-top:10px">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">入力された企業 <span id="chipCount" style="color:var(--cyan)"></span></div>
+        <div class="company-chips" id="companyChips"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:8px;font-size:11px" onclick="clearChips()">✕ クリア</button>
+      </div>
+      <button class="big-btn blue" style="margin-top:12px" onclick="copyIntlPrompt()">
         <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算書URL抽出を依頼</div><div class="bsub">Annual Results のPDF直リンクURLのみを回答させる</div></div><span class="barr">📋</span>
       </button>
       <ul class="res-list mt12">
@@ -450,15 +459,8 @@ function initHeader(){
   const d  = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
   const wd = ['日','月','火','水','木','金','土'][d.getDay()];
   document.getElementById('headerDate').textContent = `${d.getMonth()+1}/${d.getDate()}（${wd}）`;
-  const hhmm = d.getHours()*60+d.getMinutes();
   const slotTimes = schedule.length ? schedule.map(s=>s.time) : SLOT_DEFAULTS.map(s=>s.time);
-  let nextIdx = -1;
-  slotTimes.forEach((t,i)=>{ const [h,m]=t.split(':').map(Number); if((h*60+m)>hhmm&&nextIdx===-1)nextIdx=i; });
-  const items = slotTimes.map((t,i)=>{
-    const [h,m]=t.split(':').map(Number); const past=(h*60+m)<hhmm; const isNext=i===nextIdx;
-    let cls='sched-item'; if(isNext)cls+=' now'; if(past)cls+=' past';
-    return `<span class="${cls}">${t}</span>`;
-  });
+  const items = slotTimes.map(t=>`<span class="sched-item">${t}</span>`);
   document.getElementById('schedStrip').innerHTML =
     items.map((item,i)=>i<items.length-1?item+`<span class="sched-sep">·</span>`:item).join('');
 }
@@ -547,11 +549,34 @@ function copyAiPrompt(){ copyText(AI_PROMPT); }
 // ─────────────────────────────────────────
 // STEP 2: LINKS + CHIPS
 // ─────────────────────────────────────────
-function renderChips(){
-  const val   = document.getElementById('intlTicker').value;
-  const names = val.split(',').map(s=>s.trim()).filter(Boolean);
-  document.getElementById('companyChips').innerHTML = names.map(n=>`<span class="company-chip">${n}</span>`).join('');
+function parseEntries(){
+  const val = document.getElementById('intlTicker').value;
+  // split by comma or newline, strip leading/trailing spaces and empty lines
+  return val.split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
 }
+function renderChips(){
+  const entries = parseEntries();
+  const area = document.getElementById('chipArea');
+  if(!entries.length){ area.style.display='none'; return; }
+  area.style.display='block';
+  document.getElementById('chipCount').textContent = `${entries.length}社`;
+  document.getElementById('companyChips').innerHTML = entries.map((n,i)=>
+    `<span class="company-chip" style="cursor:pointer" title="タップで削除" onclick="removeChip(${i})">
+      ${escHtml(n)} <span style="opacity:.6;font-size:10px">×</span>
+    </span>`
+  ).join('');
+}
+function removeChip(idx){
+  const entries = parseEntries();
+  entries.splice(idx,1);
+  document.getElementById('intlTicker').value = entries.join('\n');
+  renderChips();
+}
+function clearChips(){
+  document.getElementById('intlTicker').value='';
+  renderChips();
+}
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function openIrSearch(type){
   const el = document.getElementById(`irSearch${type==='jp'?'Jp':'Intl'}`);
   el.style.display = el.style.display==='none' ? 'block' : 'none';
@@ -565,8 +590,10 @@ function goIrSearch(type){
   window.open(url,'_blank','noopener');
 }
 function copyIntlPrompt(){
-  const q = document.getElementById('intlTicker').value.trim();
-  const companies = q || '（企業名またはティッカー・証券コードを入力してください）';
+  const entries = parseEntries();
+  const companies = entries.length
+    ? entries.map((e,i)=>`${i+1}. ${e}`).join('\n')
+    : '（企業名またはティッカー・証券コードを入力してから押してください）';
   const prompt = `以下の企業の最新 Annual Results（決算発表資料）のPDF直リンクURLを調べてください。
 
 対象企業：
