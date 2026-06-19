@@ -244,88 +244,6 @@ a{color:var(--cyan);text-decoration:none}
   </div>
 </div>
 
-<!-- ─── STEP 3: 投稿候補 ─── -->
-<div class="section" id="sec3">
-  <div class="section-header" onclick="tog('sec3')">
-    <span class="step-badge">STEP 3</span>
-    <span class="section-title">投稿候補を登録</span>
-    <span class="chevron">▼</span>
-  </div>
-  <div class="section-body">
-    <div class="info cyan">STEP1で抽出した企業を登録します。登録した候補はSTEP4で投稿枠に割り当てられます。</div>
-    <button class="btn btn-cyan btn-full mt12" onclick="toggleAddForm()">＋ 候補を追加</button>
-
-    <!-- Add/Edit Form -->
-    <div class="add-form" id="addForm">
-      <div class="form-title" id="formTitle">新しい投稿候補を追加</div>
-      <input type="hidden" id="editId">
-      <div class="frow">
-        <div class="fg"><label>証券コード / ティッカー</label><input class="finput" id="fCode" placeholder="7203 / AAPL"></div>
-        <div class="fg"><label>企業名 *</label><input class="finput" id="fName" placeholder="トヨタ自動車"></div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label>地域</label>
-          <select class="fsel" id="fRegion">
-            <option value="日本">🇯🇵 日本</option>
-            <option value="米国">🇺🇸 米国</option>
-            <option value="中国">🇨🇳 中国</option>
-            <option value="香港">🇭🇰 香港</option>
-            <option value="その他">その他</option>
-          </select>
-        </div>
-        <div class="fg"><label>投稿優先度</label>
-          <select class="fsel" id="fPriority">
-            <option value="A">A — 最優先</option>
-            <option value="B">B — 空き枠</option>
-            <option value="C">C — 手動選択</option>
-          </select>
-        </div>
-      </div>
-      <div class="frow">
-        <div class="fg"><label>注目度</label>
-          <select class="fsel" id="fFocus">
-            <option value="高">高</option>
-            <option value="中">中</option>
-            <option value="低">低</option>
-          </select>
-        </div>
-        <div class="fg"><label>決算発表日</label><input class="finput" id="fDate" type="date"></div>
-      </div>
-      <div class="fg"><label>決算種別</label><input class="finput" id="fType" placeholder="本決算 / 1Q / 2Q / 半期など"></div>
-      <div class="sec-label">資料URL（入力したURLはワンタップで開けます）</div>
-      <div class="fg"><label>TDnet URL</label><input class="finput" id="fTdnet" placeholder="https://..."></div>
-      <div class="fg"><label>SEC / HKEX URL</label><input class="finput" id="fSec" placeholder="https://..."></div>
-      <div class="fg"><label>企業IR URL</label><input class="finput" id="fIr" placeholder="https://..."></div>
-      <div class="fg"><label>決算資料URL（PDF直リンク）</label><input class="finput" id="fPdf" placeholder="https://..."></div>
-      <div class="fg"><label>Google Drive内PDF URL</label><input class="finput" id="fDrive" placeholder="https://drive.google.com/..."></div>
-      <div class="fg"><label>メモ・投稿テーマ</label><textarea class="ftarea" id="fMemo" placeholder="例：AI半導体需要でガイダンス上振れ / 通期増収増益"></textarea></div>
-      <div class="form-actions">
-        <button class="btn btn-primary" style="flex:1" onclick="saveCandidate()">💾 保存</button>
-        <button class="btn btn-ghost" onclick="cancelForm()">キャンセル</button>
-      </div>
-    </div>
-
-    <div class="candidate-list mt12" id="candidateList"></div>
-  </div>
-</div>
-
-<!-- ─── STEP 4: スケジュール ─── -->
-<div class="section" id="sec4">
-  <div class="section-header" onclick="tog('sec4')">
-    <span class="step-badge">STEP 4</span>
-    <span class="section-title">投稿スケジュールを作成</span>
-    <span class="chevron">▼</span>
-  </div>
-  <div class="section-body">
-    <div class="info cyan">4つの投稿枠（06:00 / 12:00 / 18:00 / 21:00 JST）に候補を割り当てます。「自動割当」ボタンで地域別に自動配置されます。</div>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn btn-green" style="flex:1" onclick="autoAssign()">⚡ 自動割当</button>
-      <button class="btn btn-ghost" onclick="clearSchedule()">クリア</button>
-    </div>
-    <div class="slot-list mt12" id="slotList"></div>
-  </div>
-</div>
-
 <!-- ─── 収益化設定 ─── -->
 <div class="section" id="secAff">
   <div class="section-header" onclick="tog('secAff')">
@@ -350,45 +268,19 @@ a{color:var(--cyan);text-decoration:none}
   </div>
 </div>
 
-<!-- ─── STEP 5: プロンプト生成 ─── -->
+<!-- ─── STEP 3: プロンプト生成 ─── -->
 <div class="section" id="sec5">
   <div class="section-header" onclick="tog('sec5')">
-    <span class="step-badge">STEP 5</span>
+    <span class="step-badge">STEP 3</span>
     <span class="section-title">投稿コンテンツをChatGPTで生成</span>
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info cyan">登録した候補またはDriveフォルダをもとに、ChatGPTへのプロンプトを生成します。コピーしてChatGPTに貼り付けてください。</div>
-    <div class="fg">
-      <label>対象候補を選択（未選択時はDriveフォルダ全体を参照）</label>
-      <select class="fsel" id="promptCandidate" onchange="updatePromptPreview()">
-        <option value="">— Driveフォルダ内のPDFを全て解析 —</option>
-      </select>
-    </div>
+    <div class="info cyan">DriveフォルダのPDFをもとに、ChatGPTへのプロンプトを生成します。コピーしてChatGPTに貼り付けてください。</div>
     <div class="sec-label" style="margin-top:16px">プロンプトプレビュー</div>
     <div class="post-box" id="promptPreview"></div>
     <button class="btn btn-primary btn-full mt12" onclick="copyPrompt()">📋 プロンプトをコピーしてChatGPTへ</button>
     <div class="info gold mt12" style="font-size:12px">コピー後はChatGPTに貼り付けるだけで <strong>X投稿文・X用画像指示書</strong> が生成されます。</div>
-  </div>
-</div>
-
-<!-- ─── データ管理 ─── -->
-<div class="section" id="secData">
-  <div class="section-header" onclick="tog('secData')">
-    <span class="step-badge b">データ</span>
-    <span class="section-title">データ管理（エクスポート・インポート）</span>
-    <span class="chevron">▼</span>
-  </div>
-  <div class="section-body">
-    <div class="info cyan">投稿候補・スケジュール・アフィリエイト設定をJSONで保存・復元できます。機種変更時やバックアップに使用してください。</div>
-    <button class="btn btn-ghost btn-full mt12" onclick="exportData()">⬇️ 設定をJSONでエクスポート</button>
-    <div class="fg mt12">
-      <label>JSONから復元（テキストを貼り付けて「復元」を押してください）</label>
-      <textarea class="ftarea" id="importJson" placeholder='{"candidates":[...],"schedule":[...],"affiliate":{...}}' style="min-height:80px"></textarea>
-    </div>
-    <button class="btn btn-green btn-full mt8" onclick="importData()">⬆️ JSONから復元</button>
-    <div class="divider"></div>
-    <button class="btn btn-red btn-full" onclick="clearAllData()">🗑️ 全データをリセット</button>
   </div>
 </div>
 
@@ -401,24 +293,12 @@ a{color:var(--cyan);text-decoration:none}
 // ─────────────────────────────────────────
 const DRIVE_URL = 'https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0';
 const SBI_URL   = 'https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on&OutSide=on';
-const KEYS = {
-  candidates: 'kessan_post_candidates',
-  schedule:   'kessan_post_schedule',
-  affiliate:  'kessan_affiliate_settings',
-};
-const SLOT_DEFAULTS = [
-  { time:'06:00', region:'米国',     theme:'前日発表・大型テック・注目決算', candidateId:null },
-  { time:'12:00', region:'日本',     theme:'国内注目決算・個人投資家向け',   candidateId:null },
-  { time:'18:00', region:'日本/中国',theme:'大引け後発表・アジア企業',       candidateId:null },
-  { time:'21:00', region:'米国/中国',theme:'海外決算の深掘り・レア銘柄',     candidateId:null },
-];
+const KEYS = { affiliate: 'kessan_affiliate_settings' };
 
 // ─────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────
-let candidates = [];
-let schedule   = [];
-let aff        = { enabled:false, random:false, urls:['','',''] };
+let aff = { enabled:false, random:false, urls:['','',''] };
 
 // ─────────────────────────────────────────
 // UTILS
@@ -444,8 +324,6 @@ function copyText(text){
   });
 }
 
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-
 // ─────────────────────────────────────────
 // DATE / SCHEDULE STRIP
 // ─────────────────────────────────────────
@@ -462,16 +340,6 @@ function initHeader(){
 // ─────────────────────────────────────────
 // STORAGE
 // ─────────────────────────────────────────
-function loadAll(){
-  try{ candidates = JSON.parse(localStorage.getItem(KEYS.candidates)||'[]'); }catch{ candidates=[]; }
-  try{ schedule   = JSON.parse(localStorage.getItem(KEYS.schedule)||'null') || JSON.parse(JSON.stringify(SLOT_DEFAULTS)); }catch{ schedule=JSON.parse(JSON.stringify(SLOT_DEFAULTS)); }
-  try{
-    const a = JSON.parse(localStorage.getItem(KEYS.affiliate)||'null');
-    if(a){ aff=a; if(!Array.isArray(aff.urls))aff.urls=['','','']; }
-  }catch{}
-}
-function saveCandidates(){ try{ localStorage.setItem(KEYS.candidates, JSON.stringify(candidates)); }catch{} }
-function saveSchedule(){   try{ localStorage.setItem(KEYS.schedule,   JSON.stringify(schedule));   }catch{} }
 function saveAff(){
   aff.enabled = document.getElementById('affEnabled').checked;
   aff.random  = document.getElementById('affRandom').checked;
@@ -573,232 +441,20 @@ ${companies}
 }
 
 // ─────────────────────────────────────────
-// STEP 3: CANDIDATES CRUD
+// STEP 3: PROMPT GENERATION
 // ─────────────────────────────────────────
-function toggleAddForm(){
-  const f = document.getElementById('addForm');
-  if(f.classList.contains('open')){ cancelForm(); } else { f.classList.add('open'); document.getElementById('formTitle').textContent='新しい投稿候補を追加'; }
-}
-function cancelForm(){
-  document.getElementById('addForm').classList.remove('open');
-  clearForm();
-}
-function clearForm(){
-  ['editId','fCode','fName','fType','fTdnet','fSec','fIr','fPdf','fDrive','fMemo'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
-  document.getElementById('fRegion').value='日本';
-  document.getElementById('fPriority').value='A';
-  document.getElementById('fFocus').value='高';
-  document.getElementById('fDate').value='';
-}
-function saveCandidate(){
-  const name = document.getElementById('fName').value.trim();
-  if(!name){ toast('企業名を必須入力してください',true); return; }
-  const editId = document.getElementById('editId').value;
-  const c = {
-    id:        editId || uid(),
-    code:      document.getElementById('fCode').value.trim(),
-    name,
-    region:    document.getElementById('fRegion').value,
-    priority:  document.getElementById('fPriority').value,
-    focus:     document.getElementById('fFocus').value,
-    date:      document.getElementById('fDate').value,
-    type:      document.getElementById('fType').value.trim(),
-    memo:      document.getElementById('fMemo').value.trim(),
-    urls: {
-      tdnet: document.getElementById('fTdnet').value.trim(),
-      sec:   document.getElementById('fSec').value.trim(),
-      ir:    document.getElementById('fIr').value.trim(),
-      pdf:   document.getElementById('fPdf').value.trim(),
-      drive: document.getElementById('fDrive').value.trim(),
-    }
-  };
-  if(editId){
-    const idx = candidates.findIndex(x=>x.id===editId);
-    if(idx>=0) candidates[idx]=c;
-  } else {
-    candidates.unshift(c);
-  }
-  saveCandidates();
-  renderCandidates();
-  updateScheduleSelectors();
-  updatePromptSelector();
-  cancelForm();
-  toast(editId ? '更新しました ✓' : '候補を追加しました ✓');
-}
-function editCandidate(id){
-  const c = candidates.find(x=>x.id===id); if(!c) return;
-  document.getElementById('editId').value   = c.id;
-  document.getElementById('fCode').value    = c.code||'';
-  document.getElementById('fName').value    = c.name||'';
-  document.getElementById('fRegion').value  = c.region||'日本';
-  document.getElementById('fPriority').value= c.priority||'A';
-  document.getElementById('fFocus').value   = c.focus||'高';
-  document.getElementById('fDate').value    = c.date||'';
-  document.getElementById('fType').value    = c.type||'';
-  document.getElementById('fMemo').value    = c.memo||'';
-  document.getElementById('fTdnet').value   = c.urls?.tdnet||'';
-  document.getElementById('fSec').value     = c.urls?.sec||'';
-  document.getElementById('fIr').value      = c.urls?.ir||'';
-  document.getElementById('fPdf').value     = c.urls?.pdf||'';
-  document.getElementById('fDrive').value   = c.urls?.drive||'';
-  document.getElementById('formTitle').textContent = '候補を編集';
-  const f = document.getElementById('addForm'); f.classList.add('open');
-  f.scrollIntoView({behavior:'smooth',block:'start'});
-}
-function deleteCandidate(id){
-  if(!confirm('この候補を削除しますか？')) return;
-  candidates = candidates.filter(x=>x.id!==id);
-  schedule.forEach(s=>{ if(s.candidateId===id) s.candidateId=null; });
-  saveCandidates(); saveSchedule();
-  renderCandidates(); renderSchedule(); updateScheduleSelectors(); updatePromptSelector();
-  toast('削除しました');
-}
-function renderCandidates(){
-  const list = document.getElementById('candidateList');
-  if(!candidates.length){ list.innerHTML='<div class="empty-state">候補がまだ登録されていません</div>'; return; }
-  list.innerHTML = candidates.map(c=>{
-    const urlBtns = [
-      c.urls?.tdnet ? `<a class="url-chip" href="${c.urls.tdnet}" target="_blank" rel="noopener">TDnet</a>` : '',
-      c.urls?.sec   ? `<a class="url-chip" href="${c.urls.sec}"   target="_blank" rel="noopener">SEC/HKEX</a>` : '',
-      c.urls?.ir    ? `<a class="url-chip" href="${c.urls.ir}"    target="_blank" rel="noopener">企業IR</a>` : '',
-      c.urls?.pdf   ? `<a class="url-chip" href="${c.urls.pdf}"   target="_blank" rel="noopener">📄 決算資料</a>` : '',
-      c.urls?.drive ? `<a class="url-chip" href="${c.urls.drive}" target="_blank" rel="noopener">📁 Drive</a>` : '',
-    ].filter(Boolean).join('');
-    return `<div class="candidate-card">
-      <div class="candidate-header">
-        <div><div class="candidate-name">${c.name}${c.code?` <span style="font-size:12px;color:var(--muted)">(${c.code})</span>`:''}</div>
-        <div class="candidate-meta">${c.region} · ${c.type||'決算種別未設定'} · ${c.date||'日付未設定'} · 注目度:${c.focus}</div></div>
-        <span class="pri-badge pri-${c.priority}">優先度${c.priority}</span>
-      </div>
-      ${c.memo?`<div style="font-size:12px;color:var(--muted);margin-top:6px">${c.memo}</div>`:''}
-      ${urlBtns?`<div class="candidate-urls">${urlBtns}</div>`:''}
-      <div class="candidate-actions">
-        <button class="btn btn-ghost btn-sm" onclick="editCandidate('${c.id}')">✏️ 編集</button>
-        <button class="btn btn-red btn-sm" onclick="deleteCandidate('${c.id}')">削除</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ─────────────────────────────────────────
-// STEP 4: SCHEDULE
-// ─────────────────────────────────────────
-function autoAssign(){
-  // Clear current assignments
-  schedule.forEach(s=>s.candidateId=null);
-  // Filter A+B candidates
-  const pool = candidates.filter(c=>c.priority==='A'||c.priority==='B').slice();
-  // Sort: A first, then by focus
-  const focusOrder = {'高':0,'中':1,'低':2};
-  pool.sort((a,b)=>{
-    if(a.priority!==b.priority) return a.priority==='A'?-1:1;
-    return (focusOrder[a.focus]??1)-(focusOrder[b.focus]??1);
-  });
-  const usedIds = new Set();
-  schedule.forEach(slot=>{
-    const preferredRegions = {
-      '06:00':['米国'],
-      '12:00':['日本'],
-      '18:00':['日本','中国','香港'],
-      '21:00':['米国','中国','香港'],
-    }[slot.time] || [];
-    // Try preferred region first
-    let found = pool.find(c=>!usedIds.has(c.id)&&preferredRegions.includes(c.region));
-    // Fallback to any unassigned
-    if(!found) found = pool.find(c=>!usedIds.has(c.id));
-    if(found){ slot.candidateId=found.id; usedIds.add(found.id); }
-  });
-  saveSchedule(); renderSchedule(); toast('自動割当しました ✓');
-}
-function clearSchedule(){
-  schedule.forEach(s=>s.candidateId=null);
-  saveSchedule(); renderSchedule();
-}
-function assignCandidate(slotTime, candidateId){
-  const slot = schedule.find(s=>s.time===slotTime);
-  if(slot) slot.candidateId = candidateId||null;
-  saveSchedule(); renderSchedule();
-}
-function renderSchedule(){
-  const now = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
-  const hhmm = now.getHours()*60+now.getMinutes();
-  document.getElementById('slotList').innerHTML = schedule.map(slot=>{
-    const [h,m]=slot.time.split(':').map(Number); const past=(h*60+m)<hhmm;
-    const c = candidates.find(x=>x.id===slot.candidateId);
-    const opts = candidates.map(cd=>`<option value="${cd.id}"${cd.id===slot.candidateId?' selected':''}>${cd.name} (${cd.region}・優先度${cd.priority})</option>`).join('');
-    return `<div class="slot-card" style="${past?'opacity:.6':''}">
-      <div class="slot-time">${slot.time}</div>
-      <div class="slot-region">${slot.region}</div>
-      <div class="slot-theme">${slot.theme}</div>
-      ${c
-        ? `<div class="slot-assigned">✅ ${c.name}${c.code?` (${c.code})`:''}</div>${c.urls?.pdf?`<a class="url-chip" href="${c.urls.pdf}" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px">📄 決算資料</a>`:''}`
-        : `<div class="slot-empty">未割当</div>`}
-      <div class="fg mt8">
-        <select class="fsel" style="font-size:12px;padding:7px 30px 7px 10px" onchange="assignCandidate('${slot.time}',this.value)">
-          <option value="">— 候補を選択 —</option>${opts}
-        </select>
-      </div>
-    </div>`;
-  }).join('');
-}
-function updateScheduleSelectors(){ if(document.getElementById('slotList').children.length) renderSchedule(); }
-
-// ─────────────────────────────────────────
-// STEP 5: PROMPT GENERATION
-// ─────────────────────────────────────────
-function updatePromptSelector(){
-  const sel = document.getElementById('promptCandidate');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">— Driveフォルダ内のPDFを全て解析 —</option>' +
-    candidates.map(c=>`<option value="${c.id}"${c.id===cur?' selected':''}>${c.name}${c.code?` (${c.code})`:''} · ${c.region}</option>`).join('');
-  updatePromptPreview();
-}
 function buildPrompt(){
   const affUrl = getAffUrl();
-  const selId  = document.getElementById('promptCandidate').value;
-  const c      = selId ? candidates.find(x=>x.id===selId) : null;
-
-  const docUrl = c
-    ? (c.urls?.pdf || c.urls?.drive || c.urls?.tdnet || c.urls?.sec || DRIVE_URL)
-    : DRIVE_URL;
-
-  const regionNote = !c ? '' : {
-    '日本':
-`【日本企業の注意点】
-・決算短信・決算説明資料・有価証券報告書を主に参照してください。
-・証券コード（4桁）と企業名を必ず明記してください。
-・数値は日本円（百万円・億円・兆円）で表記してください。`,
-    '米国':
-`【米国企業の注意点】
-・Earnings Release・10-Q・10-K・決算プレスリリースを主に参照してください。
-・ティッカーシンボルと企業名を必ず明記してください。
-・数値は米ドル（$M・$B）で表記し、日本円換算も添えてください。
-・EPS・ガイダンスの情報も含めてください。
-・英語資料の場合は日本語に翻訳して出力してください。`,
-    '中国': `【中国・香港企業の注意点】
-・Annual Results・Interim Results・業績公告を主に参照してください。
-・数値はHKD（港ドル）またはCNY（人民元）で表記し、日本円換算も添えてください。
-・中国語・英語資料の場合は日本語に翻訳して出力してください。`,
-    '香港': `【中国・香港企業の注意点】
-・Annual Results・Interim Results・業績公告を主に参照してください。
-・数値はHKD（港ドル）またはCNY（人民元）で表記し、日本円換算も添えてください。
-・中国語・英語資料の場合は日本語に翻訳して出力してください。`,
-  }[c?.region] || '';
-
-  const candidateNote = c
-    ? `\n【対象企業】\n企業名：${c.name}${c.code?`（${c.code}）`:''}\n地域：${c.region}\n決算種別：${c.type||'不明'}\n${c.memo?`メモ：${c.memo}`:''}` : '';
-
   const affInstruction = affUrl
     ? `\n【アフィリエイトリンク（PR表記必須）】\nX投稿文の末尾にスペースがあれば以下を追記してください：\nPR: ${affUrl}` : '';
 
   return `あなたは「プロの財務アナリスト兼SNSマーケター」として、指定された決算資料を解析し、以下のコンテンツを作成してください。
 
-【重要】スマホ操作優先のため、各項目を個別の「コードブロック」に分けて出力してください。${candidateNote}
+【重要】スマホ操作優先のため、各項目を個別の「コードブロック」に分けて出力してください。
 
 【SNS投稿ルール（厳守）】
 ・すべての投稿文と画像指示書に @kessan_class を含める
 ・専門メディアのトーン（個人の感想・体験談は排除）、適切な改行を使用
-・これまでの @kessan_class の投稿スタイル（100件以上の実績）と統一感を保つこと
 ・買い煽り・売り煽り・断定的な株価予想・「買い」「売り」「爆益」「テンバガー」等の表現は禁止
 ・事実ベースで売上・利益・利益率・EPS・配当・通期見通し・セグメント動向を中心にする
 ・投資助言ではなく、決算内容の要約・分析として表現する
@@ -817,64 +473,22 @@ function buildPrompt(){
   ・数値の増減は青（増）/赤（減）で直感的に表示
   ・フッター：✅インサイト（注目ポイント）＋右下に @kessan_class の署名
   ・スマホでも読める文字サイズ・余白を十分に確保
-${regionNote}${affInstruction}
+${affInstruction}
 
 解析対象URL：
-${docUrl}`;
+${DRIVE_URL}`;
 }
 function updatePromptPreview(){ document.getElementById('promptPreview').textContent = buildPrompt(); }
 function copyPrompt(){ copyText(buildPrompt()); }
 
 // ─────────────────────────────────────────
-// DATA MANAGEMENT
-// ─────────────────────────────────────────
-function exportData(){
-  const data = {
-    candidates,
-    schedule,
-    affiliate: aff,
-    exported: new Date().toISOString(),
-  };
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `kessan-bot-${new Date().toISOString().slice(0,10)}.json`;
-  a.click(); URL.revokeObjectURL(a.href);
-}
-function importData(){
-  const text = document.getElementById('importJson').value.trim();
-  if(!text){ toast('JSONを貼り付けてください',true); return; }
-  try{
-    const data = JSON.parse(text);
-    if(data.candidates) candidates = data.candidates;
-    if(data.schedule)   schedule   = data.schedule;
-    if(data.affiliate)  aff        = data.affiliate;
-    saveCandidates(); saveSchedule();
-    try{ localStorage.setItem(KEYS.affiliate,JSON.stringify(aff)); }catch{}
-    renderCandidates(); renderSchedule(); loadAffUI(); updateScheduleSelectors(); updatePromptSelector();
-    document.getElementById('importJson').value='';
-    toast('復元しました ✓');
-  }catch(e){ toast('JSONの形式が正しくありません',true); }
-}
-function clearAllData(){
-  if(!confirm('すべてのデータをリセットしますか？\nこの操作は取り消せません。')) return;
-  candidates=[]; schedule=JSON.parse(JSON.stringify(SLOT_DEFAULTS)); aff={enabled:false,random:false,urls:['','','']};
-  saveCandidates(); saveSchedule();
-  try{ localStorage.setItem(KEYS.affiliate,JSON.stringify(aff)); }catch{}
-  renderCandidates(); renderSchedule(); loadAffUI(); updateScheduleSelectors(); updatePromptSelector();
-  toast('リセットしました');
-}
-
-// ─────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────
 (function init(){
-  loadAll();
+  try{ aff = JSON.parse(localStorage.getItem(KEYS.affiliate)||'null') || aff; if(!Array.isArray(aff.urls))aff.urls=['','','']; }catch{}
   initHeader();
   loadAffUI();
-  renderCandidates();
-  renderSchedule();
-  updatePromptSelector();
+  updatePromptPreview();
 })();
 </script>
 </body>
