@@ -254,23 +254,29 @@ a{color:var(--cyan);text-decoration:none}
 <div class="section" id="sec5">
   <div class="section-header" onclick="tog('sec5')">
     <span class="step-badge">STEP 4</span>
-    <span class="section-title">投稿コンテンツをChatGPTで生成</span>
+    <span class="section-title">投稿コンテンツをGeminiで生成</span>
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="fg" style="margin-top:8px">
-      <label>解析対象PDFのURL（任意）</label>
-      <input class="finput" id="pdfUrl" placeholder="https://drive.google.com/file/d/... または PDF直リンク" oninput="updatePromptPreview()" autocomplete="off">
+    <div class="info green" style="font-size:12px;margin-top:8px">
+      💡 <strong>Gemini ならPDFダウンロード不要</strong><br>
+      Google AI StudioでDriveと連携すると、DriveのPDFをそのまま読み込めます。<br>
+      ① Geminiを開く → ② Driveのファイルを選択 → ③ 下のプロンプトを貼り付けるだけ。
+    </div>
+    <a class="big-btn green" href="https://aistudio.google.com/" target="_blank" rel="noopener" style="margin-top:10px">
+      <span class="bico">✨</span><div class="btxt"><div class="blabel">Google AI Studio を開く</div><div class="bsub">Gemini 2.5 Pro — Drive連携でPDF直読み込み可</div></div><span class="barr">↗</span>
+    </a>
+    <div class="fg" style="margin-top:12px">
+      <label>Drive共有リンク / PDF URL（任意）</label>
+      <input class="finput" id="pdfUrl" placeholder="https://drive.google.com/file/d/..." oninput="updatePromptPreview()" autocomplete="off">
     </div>
     <div class="info cyan" style="font-size:12px;margin-top:8px">
-      URLを入力するとプロンプトに自動で反映されます。<br>
-      入力しない場合は「<strong>ChatGPTにPDFを直接アップロード</strong>」する指示に切り替わります。<br>
-      DriveのPDFを使う場合：ファイルを右クリック →「共有」→「リンクをコピー」で取得できます。
+      Drive連携済みなら入力不要。<br>未連携の場合：DriveでPDFを右クリック →「共有」→「リンクをコピー」して貼り付け。
     </div>
     <div class="sec-label" style="margin-top:14px">プロンプトプレビュー</div>
     <div class="post-box" id="promptPreview"></div>
-    <button class="btn btn-primary btn-full mt12" onclick="copyPrompt()">📋 プロンプトをコピーしてChatGPTへ</button>
-    <div class="info gold mt12" style="font-size:12px">コピー後はChatGPTに貼り付けてください。URLなしの場合はPDFも一緒にアップロードしてください。</div>
+    <button class="btn btn-primary btn-full mt12" onclick="copyPrompt()">📋 プロンプトをコピーしてGeminiへ</button>
+    <div class="info gold mt12" style="font-size:12px">コピー後はGeminiに貼り付けてください。Drive未連携の場合はURLも一緒に渡してください。</div>
   </div>
 </div>
 
@@ -432,7 +438,7 @@ function buildPrompt(){
     ? `\n【アフィリエイトリンク（PR表記必須）】\nX投稿文の末尾にスペースがあれば以下を追記してください：\nPR: ${affUrl}` : '';
   const docSection = pdfUrl
     ? `解析対象URL：\n${pdfUrl}`
-    : `解析対象：\n添付のPDFファイルを解析してください。\n（このプロンプトと一緒にChatGPTへPDFをアップロードしてください）`;
+    : `解析対象：\n接続済みのGoogleドライブから最新の決算短信PDFを読み込んでください。\n（Drive未連携の場合は、PDFの共有リンクをこのプロンプトと一緒に渡してください）`;
 
   return `あなたは「プロの財務アナリスト兼SNSマーケター」として、指定された決算資料を解析し、以下のコンテンツを作成してください。
 
