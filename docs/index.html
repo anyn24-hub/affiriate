@@ -183,7 +183,7 @@ a{color:var(--cyan);text-decoration:none}
       <span class="bico">🏦</span><div class="btxt"><div class="blabel">SBI決算発表スケジュールを開く</div><div class="bsub">日本・米国・中国・香港の決算予定を確認</div></div><span class="barr">↗</span>
     </a>
     <button class="big-btn cyan" onclick="copyAiPrompt()">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">AI抽出用プロンプトをコピー</div><div class="bsub">最低10社・さかのぼり対応 / Gemini・ChatGPTへ貼り付け</div></div><span class="barr">📋</span>
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">AI抽出用プロンプトをコピー</div><div class="bsub">本日日付を自動挿入・全件10社以上 / Gemini・ChatGPTへ貼り付け</div></div><span class="barr">📋</span>
     </button>
   </div>
 </div>
@@ -354,26 +354,37 @@ function getAffUrl(){
 // ─────────────────────────────────────────
 // STEP 1: AI PROMPT
 // ─────────────────────────────────────────
-const AI_PROMPT = `以下のSBI証券 決算発表スケジュールページを確認し、本日の決算発表企業を抽出してください。
+function copyAiPrompt(){
+  const today = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  const irBankUrl = `https://irbank.net/market/kessan?y=${todayStr}`;
+
+  const prompt = `以下のIRBank 決算発表スケジュールページにアクセスし、掲載されている決算発表企業を全件抽出してください。
 
 URL：
-${SBI_URL}
+${irBankUrl}
 
 出力形式（この形式のみで回答してください）：
 | 国 | 証券コード | 企業名 | 発表日 |
 |---|---|---|---|
-| 日本 | 7203 | トヨタ自動車 | 2026-06-20 |
-...
+| 日本 | XXXX | ○○○○株式会社 | ${todayStr} |
+（ページに掲載されている全社を同形式で続ける）
 
 条件：
 ・日本・米国・中国・香港すべて対象
-・本日の発表が10社未満の場合は前日・前々日にさかのぼって補足し、合計最低10社を出力
+・上記URLのページに掲載されている企業を1社も漏らさず全件出力すること
+・必ず10社以上出力すること（本日分が10社未満の場合は前日・前々日にさかのぼって補足）
 ・さかのぼった場合は発表日を正確に記載
+・上記「XXXX / ○○○○」はフォーマット説明用の仮例。実際のデータを入れること
 ・表以外の説明文は不要
 
-最後に抽出した全企業をコンマ区切りで1行で出力してください（例：AAAA, BBBB, CCCC, ...）`;
+【重要】1社・数社のみの出力は不可。ページに掲載されている企業を全件・最低10社以上出力すること。
 
-function copyAiPrompt(){ copyText(AI_PROMPT); }
+最後に抽出した全企業のコードをコンマ区切りで1行で出力してください（例：7203, 6758, AAPL, NVDA, 0700, ...）`;
+
+  copyText(prompt);
+}
 
 // ─────────────────────────────────────────
 // STEP 2: LINKS + CHIPS
