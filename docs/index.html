@@ -258,11 +258,19 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info cyan">DriveフォルダのPDFをもとに、ChatGPTへのプロンプトを生成します。コピーしてChatGPTに貼り付けてください。</div>
-    <div class="sec-label" style="margin-top:16px">プロンプトプレビュー</div>
+    <div class="fg" style="margin-top:8px">
+      <label>解析対象PDFのURL（任意）</label>
+      <input class="finput" id="pdfUrl" placeholder="https://drive.google.com/file/d/... または PDF直リンク" oninput="updatePromptPreview()" autocomplete="off">
+    </div>
+    <div class="info cyan" style="font-size:12px;margin-top:8px">
+      URLを入力するとプロンプトに自動で反映されます。<br>
+      入力しない場合は「<strong>ChatGPTにPDFを直接アップロード</strong>」する指示に切り替わります。<br>
+      DriveのPDFを使う場合：ファイルを右クリック →「共有」→「リンクをコピー」で取得できます。
+    </div>
+    <div class="sec-label" style="margin-top:14px">プロンプトプレビュー</div>
     <div class="post-box" id="promptPreview"></div>
     <button class="btn btn-primary btn-full mt12" onclick="copyPrompt()">📋 プロンプトをコピーしてChatGPTへ</button>
-    <div class="info gold mt12" style="font-size:12px">コピー後はChatGPTに貼り付けるだけで <strong>X投稿文・X用画像指示書</strong> が生成されます。</div>
+    <div class="info gold mt12" style="font-size:12px">コピー後はChatGPTに貼り付けてください。URLなしの場合はPDFも一緒にアップロードしてください。</div>
   </div>
 </div>
 
@@ -419,8 +427,12 @@ ${companies}
 // ─────────────────────────────────────────
 function buildPrompt(){
   const affUrl = getAffUrl();
+  const pdfUrl = document.getElementById('pdfUrl')?.value.trim() || '';
   const affInstruction = affUrl
     ? `\n【アフィリエイトリンク（PR表記必須）】\nX投稿文の末尾にスペースがあれば以下を追記してください：\nPR: ${affUrl}` : '';
+  const docSection = pdfUrl
+    ? `解析対象URL：\n${pdfUrl}`
+    : `解析対象：\n添付のPDFファイルを解析してください。\n（このプロンプトと一緒にChatGPTへPDFをアップロードしてください）`;
 
   return `あなたは「プロの財務アナリスト兼SNSマーケター」として、指定された決算資料を解析し、以下のコンテンツを作成してください。
 
@@ -449,8 +461,7 @@ function buildPrompt(){
   ・スマホでも読める文字サイズ・余白を十分に確保
 ${affInstruction}
 
-解析対象URL：
-${DRIVE_URL}`;
+${docSection}`;
 }
 function updatePromptPreview(){ document.getElementById('promptPreview').textContent = buildPrompt(); }
 function copyPrompt(){ copyText(buildPrompt()); }
