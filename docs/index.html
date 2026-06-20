@@ -206,13 +206,8 @@ a{color:var(--cyan);text-decoration:none}
       <ul class="res-list">
         <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">決算短信・業績予想修正・配当・自社株買いの適時開示</div></div></a></li>
         <li><a class="res-link" href="https://disclosure2.edinet-fsa.go.jp/" target="_blank" rel="noopener"><span class="res-ico">🏛</span><div><div>EDINETを開く</div><div class="res-desc">有価証券報告書・四半期報告書・半期報告書</div></div></a></li>
-        <li><button class="res-link" onclick="openIrSearch('jp')"><span class="res-ico">🔍</span><div><div>企業IRをGoogle検索</div><div class="res-desc">企業名を入力してIRページ・決算説明資料を検索</div></div></button></li>
         <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算短信・説明資料PDFをここに保存</div></div></a></li>
       </ul>
-      <div class="fg" id="irSearchJp" style="display:none">
-        <label>企業名</label>
-        <div style="display:flex;gap:8px"><input class="finput" id="irNameJp" placeholder="例：トヨタ自動車" style="flex:1"><button class="btn btn-blue btn-sm" onclick="goIrSearch('jp')">検索</button></div>
-      </div>
     </div>
     <!-- 海外 -->
     <div class="rtab-body" id="s2-intl">
@@ -224,15 +219,8 @@ a{color:var(--cyan);text-decoration:none}
         <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算書URL抽出を依頼</div><div class="bsub">Annual Results のPDF直リンクURLのみを回答させる</div></div><span class="barr">📋</span>
       </button>
       <ul class="res-list mt12">
-        <li><a class="res-link" href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener"><span class="res-ico">🇺🇸</span><div><div>SEC EDGARを開く（米国）</div><div class="res-desc">10-K・10-Q・8-K Earnings Release を検索</div></div></a></li>
-        <li><a class="res-link" href="https://www.hkexnews.hk/" target="_blank" rel="noopener"><span class="res-ico">🇭🇰</span><div><div>HKEXnewsを開く（香港・中国）</div><div class="res-desc">Annual Results・決算公告・年次報告書を検索</div></div></a></li>
-        <li><button class="res-link" onclick="openIrSearch('intl')"><span class="res-ico">🔍</span><div><div>企業IRをGoogle検索（海外）</div><div class="res-desc">ティッカーを入力してIR / Investor Relations を検索</div></div></button></li>
         <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算資料PDFをここに保存</div></div></a></li>
       </ul>
-      <div class="fg" id="irSearchIntl" style="display:none">
-        <label>ティッカー / 企業名</label>
-        <div style="display:flex;gap:8px"><input class="finput" id="irNameIntl" placeholder="例：AAPL" style="flex:1"><button class="btn btn-blue btn-sm" onclick="goIrSearch('intl')">検索</button></div>
-      </div>
       <!-- 企業名 横並び表示 (末尾) -->
       <div id="chipArea" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:8px">入力中の企業 <span id="chipCount"></span></div>
@@ -244,34 +232,28 @@ a{color:var(--cyan);text-decoration:none}
   </div>
 </div>
 
-<!-- ─── 収益化設定 ─── -->
+<!-- ─── STEP 3: 収益化設定 ─── -->
 <div class="section" id="secAff">
   <div class="section-header" onclick="tog('secAff')">
-    <span class="step-badge g">収益化</span>
+    <span class="step-badge">STEP 3</span>
     <span class="section-title">楽天アフィリエイトURL設定</span>
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info gold">ここで設定したURLはSTEP5のChatGPTプロンプトに自動で組み込まれます。</div>
+    <div class="info gold">ここで設定したURLはSTEP4のChatGPTプロンプトに自動で組み込まれます。</div>
     <div class="toggle-row mt12">
       <span class="toggle-label">アフィリエイトリンクを投稿文に含める</span>
       <label class="toggle"><input type="checkbox" id="affEnabled" onchange="saveAff()"><span class="tslider"></span></label>
     </div>
-    <div class="toggle-row">
-      <span class="toggle-label">URLをランダム選択</span>
-      <label class="toggle"><input type="checkbox" id="affRandom" onchange="saveAff()"><span class="tslider"></span></label>
-    </div>
-    <div class="fg"><label>アフィリエイトURL 1</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
-    <div class="fg"><label>アフィリエイトURL 2（任意）</label><input class="finput" id="affUrl2" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
-    <div class="fg"><label>アフィリエイトURL 3（任意）</label><input class="finput" id="affUrl3" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
-    <div class="info cyan mt12" style="font-size:12px">URLは入力後すぐに自動保存されます。複数登録時にランダム選択ONで順番に/ランダムに選択します。</div>
+    <div class="fg mt8"><label>アフィリエイトURL</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
+    <div class="info cyan mt12" style="font-size:12px">URLは入力後すぐに自動保存されます。</div>
   </div>
 </div>
 
-<!-- ─── STEP 3: プロンプト生成 ─── -->
+<!-- ─── STEP 4: プロンプト生成 ─── -->
 <div class="section" id="sec5">
   <div class="section-header" onclick="tog('sec5')">
-    <span class="step-badge">STEP 3</span>
+    <span class="step-badge">STEP 4</span>
     <span class="section-title">投稿コンテンツをChatGPTで生成</span>
     <span class="chevron">▼</span>
   </div>
@@ -342,27 +324,17 @@ function initHeader(){
 // ─────────────────────────────────────────
 function saveAff(){
   aff.enabled = document.getElementById('affEnabled').checked;
-  aff.random  = document.getElementById('affRandom').checked;
-  aff.urls    = [
-    document.getElementById('affUrl1').value.trim(),
-    document.getElementById('affUrl2').value.trim(),
-    document.getElementById('affUrl3').value.trim(),
-  ];
+  aff.url     = document.getElementById('affUrl1').value.trim();
   try{ localStorage.setItem(KEYS.affiliate, JSON.stringify(aff)); }catch{}
   updatePromptPreview();
 }
 function loadAffUI(){
   document.getElementById('affEnabled').checked = !!aff.enabled;
-  document.getElementById('affRandom').checked  = !!aff.random;
-  document.getElementById('affUrl1').value = aff.urls[0]||'';
-  document.getElementById('affUrl2').value = aff.urls[1]||'';
-  document.getElementById('affUrl3').value = aff.urls[2]||'';
+  document.getElementById('affUrl1').value = aff.url||aff.urls?.[0]||'';
 }
 function getAffUrl(){
   if(!aff.enabled) return '';
-  const urls = aff.urls.filter(Boolean);
-  if(!urls.length) return '';
-  return aff.random ? urls[Math.floor(Math.random()*urls.length)] : urls[0];
+  return aff.url || aff.urls?.[0] || '';
 }
 
 // ─────────────────────────────────────────
@@ -383,7 +355,9 @@ ${SBI_URL}
 ・日本・米国・中国・香港すべて対象
 ・本日の発表が10社未満の場合は前日・前々日にさかのぼって補足し、合計最低10社を出力
 ・さかのぼった場合は発表日を正確に記載
-・表以外の説明文は不要`;
+・表以外の説明文は不要
+
+最後に抽出した全企業をコンマ区切りで1行で出力してください（例：AAAA, BBBB, CCCC, ...）`;
 
 function copyAiPrompt(){ copyText(AI_PROMPT); }
 
