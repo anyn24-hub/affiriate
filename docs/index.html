@@ -279,18 +279,23 @@ a{color:var(--cyan);text-decoration:none}
   </div>
   <div class="section-body">
     <div class="s4-method-box recommended">
-      <div class="s4-method-title">PCのClaudeに依頼</div>
-      <div class="s4-method-desc">DriveにPDFを保存後、ClaudeがDriveを直接読み込んで投稿文・画像プロンプトを自動生成します。</div>
+      <div class="s4-method-title">Claudeに依頼（2ステップ送信）</div>
+      <div class="s4-method-desc">長いテキストを貼り付けると「PASTED」ブロックになり、Claudeがドキュメント扱いします。<br>必ず <strong>2回に分けて</strong>送信してください。</div>
       <div class="s4-steps">
         <div class="s4-step"><span class="s4-step-n">①</span>STEP2でPDFをDriveの資料フォルダに保存</div>
-        <div class="s4-step"><span class="s4-step-n">②</span>下の「Claude用プロンプトをコピー」を押す</div>
-        <div class="s4-step"><span class="s4-step-n">③</span>PCのClaudeに貼り付けて送信</div>
+        <div class="s4-step"><span class="s4-step-n">②</span>「①プロンプトをコピー」を押してClaudeに貼り付け → 送信</div>
+        <div class="s4-step"><span class="s4-step-n">③</span>Claudeが「本日はどのようなお手伝いを…」と返したら<br>「②実行指示をコピー」を押して追加送信</div>
         <div class="s4-step"><span class="s4-step-n">④</span>投稿文・画像プロンプトが会社ごとにコピーしやすい形で出力される</div>
       </div>
     </div>
-    <button class="big-btn cyan" onclick="copyClaudePrompt()" style="margin-top:12px">
-      <span class="bico">📋</span><div class="btxt"><div class="blabel">Claude用プロンプトをコピー</div><div class="bsub">PCのClaudeに貼り付けて送信するだけ</div></div><span class="barr">📋</span>
-    </button>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="big-btn cyan" onclick="copyClaudePrompt()" style="flex:1">
+        <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー</div><div class="bsub">まずこれを貼り付けて送信</div></div>
+      </button>
+      <button class="big-btn" onclick="copyText('上記の指示に従って実行してください。')" style="flex:1;background:var(--blue);color:#fff">
+        <span class="bico">▶</span><div class="btxt"><div class="blabel">② 実行指示をコピー</div><div class="bsub">追加で貼り付けて送信</div></div>
+      </button>
+    </div>
     <a class="big-btn" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener" style="margin-top:8px;background:rgba(255,255,255,.06);border:1px solid var(--border)">
       <span class="bico">📁</span><div class="btxt"><div class="blabel">資料フォルダを開く</div><div class="bsub">PDFが保存されているか確認</div></div><span class="barr">↗</span>
     </a>
