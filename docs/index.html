@@ -258,17 +258,23 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info cyan" style="font-size:13px;line-height:1.8">
-      <strong>① AI Studioを開く</strong><br>
-      <strong>② 画面下の「+」→「ファイルを追加」→「マイドライブ」→ PDFを選択</strong><br>
-      <strong>③ 下のボタンでプロンプトをコピー → テキスト欄に貼り付け → 送信</strong>
+    <div class="info gold" style="font-size:12px;line-height:1.7;margin-bottom:4px">
+      💡 Geminiアプリにコピペするだけ。APIや連携設定は不要。<br>
+      結果はGemini画面に表示されます（このアプリには戻りません）。
     </div>
-    <a class="big-btn green" href="https://aistudio.google.com/" target="_blank" rel="noopener" style="margin-top:10px">
-      <span class="bico">✨</span><div class="btxt"><div class="blabel">Google AI Studio を開く</div><div class="bsub">Gemini 2.5 Pro — ファイル添付でPDFを直接解析</div></div><span class="barr">↗</span>
-    </a>
-    <button class="big-btn cyan mt12" onclick="copyPrompt()">
-      <span class="bico">📋</span><div class="btxt"><div class="blabel">プロンプトをコピーしてGeminiへ</div><div class="bsub">PDFを添付してからこのプロンプトを貼り付け</div></div><span class="barr">📋</span>
+    <div class="info cyan" style="font-size:13px;line-height:2;margin-top:8px">
+      <strong>① 下の「プロンプトをコピー」を押す</strong><br>
+      <strong>② Geminiアプリ or gemini.google.com を開く</strong><br>
+      <strong>③ 📎添付ボタン → DriveのPDFを選ぶ</strong><br>
+      <strong>④ テキスト欄に貼り付けて送信</strong><br>
+      <strong>⑤ Gemini画面にX投稿文・画像指示が表示される</strong>
+    </div>
+    <button class="big-btn cyan" onclick="copyPrompt()" style="margin-top:12px">
+      <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー</div><div class="bsub">まずここを押してからGeminiを開く</div></div><span class="barr">📋</span>
     </button>
+    <a class="big-btn green mt12" href="https://gemini.google.com/" target="_blank" rel="noopener">
+      <span class="bico">✨</span><div class="btxt"><div class="blabel">② Geminiを開く → PDFを添付して貼り付け</div><div class="bsub">📎でDriveのPDFを選択 → プロンプト貼り付け → 送信</div></div><span class="barr">↗</span>
+    </a>
   </div>
 </div>
 
