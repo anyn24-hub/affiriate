@@ -221,40 +221,26 @@ a{color:var(--cyan);text-decoration:none}
     </div>
     <!-- 日本 -->
     <div class="rtab-body active" id="s2-jp">
-      <ul class="res-list">
-        <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">企業名で検索 → 決算短信PDF → URLをコピー</div></div></a></li>
+      <div class="info cyan" style="font-size:12px">TDnetで各社の決算短信PDFを開き → Driveの「資料」フォルダに保存してください。</div>
+      <ul class="res-list" style="margin-top:10px">
+        <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">企業名で検索 → 決算短信PDFを開く → Driveに保存</div></div></a></li>
+        <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Driveの資料フォルダを開く</div><div class="res-desc">保存済みPDFの確認・追加</div></div></a></li>
       </ul>
-      <div class="info cyan" style="font-size:11px;margin-top:8px">各社のTDnet PDFを開き → URLをコピー → 貼り付け（最大5社・自動保存）</div>
-      <div class="url-list" style="margin-top:10px">
-        <div class="url-row"><span class="url-num">1</span><input class="finput" id="pdfUrl_jp_0" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
-        <div class="url-row"><span class="url-num">2</span><input class="finput" id="pdfUrl_jp_1" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
-        <div class="url-row"><span class="url-num">3</span><input class="finput" id="pdfUrl_jp_2" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
-        <div class="url-row"><span class="url-num">4</span><input class="finput" id="pdfUrl_jp_3" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
-        <div class="url-row"><span class="url-num">5</span><input class="finput" id="pdfUrl_jp_4" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
-      </div>
     </div>
     <!-- 海外 -->
     <div class="rtab-body" id="s2-intl">
-      <div class="fg" style="margin-top:8px">
-        <label>企業名 / ティッカー（ChatGPT URL取得用）</label>
+      <div class="info cyan" style="font-size:12px;margin-top:8px">公式IRページからPDFをダウンロードし、Driveの「資料」フォルダに保存してください。</div>
+      <div class="fg" style="margin-top:10px">
+        <label>企業名 / ティッカー（IR検索の参考用）</label>
         <input class="finput" id="intlTicker" placeholder="例：AAPL, NVDA, テンセント, 0700" oninput="renderChips()" autocomplete="off" spellcheck="false">
       </div>
-      <button class="big-btn blue" onclick="copyIntlPrompt()">
-        <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTにPDF URL取得を依頼</div><div class="bsub">取得したURLを下に貼り付け</div></div><span class="barr">📋</span>
-      </button>
-      <div class="info gold" style="font-size:11px;margin-top:6px;line-height:1.6">⚠️ ChatGPTのURLが誤っている場合があります。公式IRページから直接URLを取得するとより確実です。</div>
       <div id="chipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="chipCount"></span></div>
         <div class="company-chips" id="companyChips"><span style="font-size:12px;color:var(--border)">企業名を入力すると表示されます</span></div>
       </div>
-      <div class="info cyan" style="font-size:11px;margin-top:10px">PDF URLを貼り付け（最大5社・自動保存）</div>
-      <div class="url-list" style="margin-top:8px">
-        <div class="url-row"><span class="url-num">1</span><input class="finput" id="pdfUrl_intl_0" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
-        <div class="url-row"><span class="url-num">2</span><input class="finput" id="pdfUrl_intl_1" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
-        <div class="url-row"><span class="url-num">3</span><input class="finput" id="pdfUrl_intl_2" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
-        <div class="url-row"><span class="url-num">4</span><input class="finput" id="pdfUrl_intl_3" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
-        <div class="url-row"><span class="url-num">5</span><input class="finput" id="pdfUrl_intl_4" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
-      </div>
+      <ul class="res-list" style="margin-top:12px">
+        <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Driveの資料フォルダを開く</div><div class="res-desc">ダウンロードしたPDFをここに保存</div></div></a></li>
+      </ul>
     </div>
   </div>
 </div>
@@ -283,38 +269,26 @@ a{color:var(--cyan);text-decoration:none}
 <div class="section" id="sec5">
   <div class="section-header" onclick="tog('sec5')">
     <span class="step-badge">STEP 4</span>
-    <span class="section-title">投稿コンテンツをGeminiで生成</span>
+    <span class="section-title">投稿コンテンツをClaude Codeで生成</span>
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-
-    <!-- ─ 推奨：Drive添付方式 ─ -->
     <div class="s4-method-box recommended">
-      <div class="s4-method-title">⭐ 推奨：DriveのPDFを直接添付</div>
-      <div class="s4-method-desc">TDnet等から保存したPDFをGeminiで読み込む最確実の方法。URLのアクセスエラーが起きません。</div>
+      <div class="s4-method-title">PCのClaude Codeに依頼</div>
+      <div class="s4-method-desc">DriveにPDFを保存後、Claude CodeがDriveを直接読み込んで投稿文・画像プロンプトを自動生成します。</div>
       <div class="s4-steps">
-        <div class="s4-step"><span class="s4-step-n">①</span>「プロンプトをコピー」を押す</div>
-        <div class="s4-step"><span class="s4-step-n">②</span>AI Studioを開く</div>
-        <div class="s4-step"><span class="s4-step-n">③</span>入力欄の <strong>「+」→「マイドライブ」</strong> でPDFを選択（複数可）</div>
-        <div class="s4-step"><span class="s4-step-n">④</span>プロンプトを貼り付けて送信</div>
+        <div class="s4-step"><span class="s4-step-n">①</span>STEP2でPDFをDriveの資料フォルダに保存</div>
+        <div class="s4-step"><span class="s4-step-n">②</span>下の「Claude Code用プロンプトをコピー」を押す</div>
+        <div class="s4-step"><span class="s4-step-n">③</span>PCのClaude Codeに貼り付けて送信</div>
+        <div class="s4-step"><span class="s4-step-n">④</span>投稿文・画像プロンプトが自動生成・ローカル保存される</div>
       </div>
-      <a class="big-btn green" href="https://aistudio.google.com/" target="_blank" rel="noopener" style="margin-top:10px">
-        <span class="bico">✨</span><div class="btxt"><div class="blabel">Google AI Studioを開く</div><div class="bsub">「+」→「マイドライブ」でPDF添付 → プロンプト貼り付け</div></div><span class="barr">↗</span>
-      </a>
-      <a class="big-btn" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener" style="margin-top:8px;background:rgba(255,255,255,.06);border:1px solid var(--border)">
-        <span class="bico">📁</span><div class="btxt"><div class="blabel">資料フォルダを開く</div><div class="bsub">PDFをDriveに保存済みならここから確認</div></div><span class="barr">↗</span>
-      </a>
     </div>
-
-    <!-- ─ URL方式（サブ） ─ -->
-    <div class="s4-method-box" style="margin-top:12px">
-      <div class="s4-method-title">🔗 URL方式：STEP2のURL設定状況</div>
-      <div id="s4summary" style="margin-top:6px"></div>
-    </div>
-
-    <button class="big-btn cyan" onclick="copyPrompt()" style="margin-top:14px">
-      <span class="bico">📋</span><div class="btxt"><div class="blabel">プロンプトをコピー（全社一括）</div><div class="bsub">Drive添付・URL両方に対応 / まずここを押す</div></div><span class="barr">📋</span>
+    <button class="big-btn cyan" onclick="copyClaudePrompt()" style="margin-top:12px">
+      <span class="bico">📋</span><div class="btxt"><div class="blabel">Claude Code用プロンプトをコピー</div><div class="bsub">PCのClaude Codeに貼り付けて送信するだけ</div></div><span class="barr">📋</span>
     </button>
+    <a class="big-btn" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener" style="margin-top:8px;background:rgba(255,255,255,.06);border:1px solid var(--border)">
+      <span class="bico">📁</span><div class="btxt"><div class="blabel">資料フォルダを開く</div><div class="bsub">PDFが保存されているか確認</div></div><span class="barr">↗</span>
+    </a>
   </div>
 </div>
 
@@ -327,11 +301,7 @@ a{color:var(--cyan);text-decoration:none}
 // ─────────────────────────────────────────
 const DRIVE_URL = 'https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0';
 const SBI_URL   = 'https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on&OutSide=on';
-const KEYS = {
-  affiliate:   'kessan_affiliate_settings',
-  pdfJpUrls:   'kessan_pdf_jp_urls',
-  pdfIntlUrls: 'kessan_pdf_intl_urls',
-};
+const KEYS = { affiliate: 'kessan_affiliate_settings' };
 
 // ─────────────────────────────────────────
 // STATE
@@ -480,122 +450,37 @@ ${companies}
 }
 
 // ─────────────────────────────────────────
-// STEP 2: URL SAVE / LOAD / SUMMARY
+// STEP 4: CLAUDE CODE PROMPT GENERATION
 // ─────────────────────────────────────────
-function getPdfUrls(type){
-  return Array.from({length:5},(_,i)=>document.getElementById(`pdfUrl_${type}_${i}`)?.value.trim()||'');
-}
-
-function savePdfUrls(type){
-  try{ localStorage.setItem(KEYS['pdf'+(type==='jp'?'Jp':'Intl')+'Urls'], JSON.stringify(getPdfUrls(type))); }catch{}
-  updateStep4Summary();
-}
-
-function loadPdfUrls(){
-  ['jp','intl'].forEach(type=>{
-    try{
-      const key  = KEYS['pdf'+(type==='jp'?'Jp':'Intl')+'Urls'];
-      const urls = JSON.parse(localStorage.getItem(key)||'null');
-      if(Array.isArray(urls)) urls.forEach((u,i)=>{
-        const el = document.getElementById(`pdfUrl_${type}_${i}`);
-        if(el) el.value = u||'';
-      });
-    }catch{}
-  });
-  updateStep4Summary();
-}
-
-function updateStep4Summary(){
-  const el = document.getElementById('s4summary');
-  if(!el) return;
-  let html = '';
-  const groups = [
-    {type:'jp',   flag:'🇯🇵', label:'日本'},
-    {type:'intl', flag:'🌍',  label:'米国・中国・香港'},
-  ];
-  groups.forEach(({type,flag,label})=>{
-    const urls = getPdfUrls(type);
-    const setCount = urls.filter(u=>u).length;
-    html += `<div class="s4-group">
-      <div class="s4-group-hd">${flag} ${label} <span style="font-weight:400;font-size:11px;color:${setCount?'var(--green)':'rgba(255,255,255,.4)'}">(${setCount}/5 設定済み)</span></div>`;
-    urls.forEach((u,i)=>{
-      if(u){
-        const short = u.length>55?u.slice(0,55)+'…':u;
-        html += `<div class="s4-url-item set">✅ ${i+1}. ${short}</div>`;
-      } else {
-        html += `<div class="s4-url-item unset">— ${i+1}. 未設定</div>`;
-      }
-    });
-    html += '</div>';
-  });
-  el.innerHTML = html;
-}
-
-// ─────────────────────────────────────────
-// STEP 4: PROMPT GENERATION
-// ─────────────────────────────────────────
-function buildPrompt(){
+function copyClaudePrompt(){
   const affUrl = getAffUrl();
-  const affInstruction = affUrl
-    ? `\n【アフィリエイトリンク（PR表記必須）】\nX投稿文の末尾にスペースがあれば以下を追記してください：\nPR: ${affUrl}` : '';
+  const affLine = affUrl ? `\nX投稿文の末尾に追記（PR表記必須）：PR: ${affUrl}` : '';
+  const prompt = `Driveの「資料」フォルダ（フォルダID: 18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0）にある決算短信PDFを読み込み、@kessan_class向けの投稿素材を生成してください。
 
-  const jpUrls   = getPdfUrls('jp').filter(u=>u);
-  const intlUrls = getPdfUrls('intl').filter(u=>u);
+各PDFについて以下を生成してください：
 
-  let docSection = '';
-  if(jpUrls.length){
-    docSection += `【解析対象 - 日本】\n` + jpUrls.map((u,i)=>`${i+1}. ${u}`).join('\n') + '\n\n';
-  }
-  if(intlUrls.length){
-    docSection += `【解析対象 - 海外（米国・中国・香港）】\n` + intlUrls.map((u,i)=>`${i+1}. ${u}`).join('\n') + '\n\n';
-  }
-  if(!docSection){
-    docSection = `【解析対象】\nこのプロンプトと一緒に添付されたPDFファイルを解析してください（URLが未設定のため手動添付が必要です）。\n\n`;
-  }
+① X用投稿文（140字以内）
+・数字インパクト重視、絵文字でフック
+・企業名→数値→一言インサイト→@kessan_class の構成
+・企業名・証券コード・数値はPDF原文のまま使用（翻訳・変換禁止）${affLine}
 
-  const total = jpUrls.length + intlUrls.length;
-  return `あなたは「プロの財務アナリスト兼SNSマーケター」として、以下${total}社の決算資料をまとめて解析し、各社のコンテンツを作成してください。
+② X用画像生成指示書（日本語・ChatGPTへ貼り付ける用）
+サイズ：16:9（横長）※Xタイムラインに最適化
+デザイン（濃紺・グラファイトグレー基調）：
+・ヘッダー：「証券コード＋企業名」を非常に大きく配置
+・メイン：売上・利益などの数値を6つのカードボックスで表示（増：青 / 減：赤）
+・フッター：✅注目ポイント ＋ @kessan_class
 
-━━━━━━━━━━━━━━━━━━━━━━
-【絶対ルール（最優先）】
-━━━━━━━━━━━━━━━━━━━━━━
-① 投稿文・画像指示書の説明テキスト・インサイトコメントは必ず日本語で作成すること
-② 企業名・証券コード・数値・事業内容はPDFに記載されている原文のまま使用すること（日本語への翻訳・変換・省略は禁止。中国語・英語の企業名はそのまま表記）
-③ 企業名・証券コード・数値は、必ず上記URLのPDFを実際に読み取った値のみ使用すること
-③ URLにアクセスできなかった場合、または内容が読み取れなかった場合は、架空・推測のデータは一切作成せず、「⚠️ URLを読み込めませんでした。PDFを直接添付して再送してください。」とだけ記載すること
-④ 出力開始前に「▶ PDFから確認した企業名：〇〇（証券コード：〇〇）」を必ず明記すること
+投稿ルール：
+・買い煽り・売り煽り・断定的な株価予想禁止
+・投資助言ではなく決算内容の要約・分析として表現
+・「買い」「売り」「爆益」「テンバガー」等の表現禁止
 
-━━━━━━━━━━━━━━━━━━━━━━
-【出力形式】
-━━━━━━━━━━━━━━━━━━━━━━
-各社ごとに「## ── 【企業N：企業名（証券コード）】──」という見出しを付け、各項目を個別のコードブロックで出力してください（スマホ操作優先）
-
-【SNS投稿ルール（厳守）】
-・すべての投稿文と画像指示書に @kessan_class を含める
-・専門メディアのトーン（個人の感想・体験談は排除）、適切な改行を使用
-・買い煽り・売り煽り・断定的な株価予想・「買い」「売り」「爆益」「テンバガー」等の表現は禁止
-・事実ベースで売上・利益・利益率・EPS・配当・通期見通し・セグメント動向を中心にする
-・投資助言ではなく、決算内容の要約・分析として表現する
-
-【各社の作成内容】
-1 X用投稿文（140字以内・厳守）
-  ・数字インパクト重視、絵文字でフック
-  ・企業名→数値→一言インサイト→@kessan_class の構成
-
-2 X用画像生成指示書（日本語で作成・ChatGPTへ貼り付ける用）
-  サイズ：16:9（横長）※Xタイムラインに最適化
-  デザイン（濃紺・グラファイトグレー基調）：
-  ・ヘッダー：「証券コード＋企業名」を非常に大きく、視認性高く配置
-  ・サブヘッダー：事業内容（15文字程度）
-  ・メイン：6つのカード型ボックスに売上・利益（青/赤）・実績数値・フラットアイコンを配置
-  ・数値の増減は青（増）/赤（減）で直感的に表示
-  ・フッター：✅インサイト（注目ポイント）＋右下に @kessan_class の署名
-  ・スマホでも読める文字サイズ・余白を十分に確保
-${affInstruction}
-
-${docSection}上記各URLのPDFを実際に読み込んでから、各社ごとに独立したセクションで出力してください。`;
+生成後：
+・ローカル（C:\\Users\\zima2\\Desktop\\AIビジネス\\決算書\\）に{会社名}_{決算期}_post.txt として保存
+・処理済みPDFを「資料/済」フォルダ（ID: 10RhnKLI8bOIB1rXhzzK8FWt4rPplaeGs）に移動`;
+  copyText(prompt);
 }
-function copyPrompt(){ copyText(buildPrompt()); }
 
 // ─────────────────────────────────────────
 // INIT
@@ -604,7 +489,6 @@ function copyPrompt(){ copyText(buildPrompt()); }
   try{ aff = JSON.parse(localStorage.getItem(KEYS.affiliate)||'null') || aff; if(!Array.isArray(aff.urls))aff.urls=['','','']; }catch{}
   initHeader();
   loadAffUI();
-  loadPdfUrls();
 })();
 </script>
 </body>
