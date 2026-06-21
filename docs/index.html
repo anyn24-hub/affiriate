@@ -279,23 +279,18 @@ a{color:var(--cyan);text-decoration:none}
   </div>
   <div class="section-body">
     <div class="s4-method-box recommended">
-      <div class="s4-method-title">Claudeに依頼（2ステップ送信）</div>
-      <div class="s4-method-desc">長いテキストを貼り付けると「PASTED」ブロックになり、Claudeがドキュメント扱いします。<br>必ず <strong>2回に分けて</strong>送信してください。</div>
+      <div class="s4-method-title">Claudeに依頼</div>
+      <div class="s4-method-desc">DriveにPDFを保存後、Claudeに貼り付けて送信するだけで投稿素材が生成されます。</div>
       <div class="s4-steps">
         <div class="s4-step"><span class="s4-step-n">①</span>STEP2でPDFをDriveの資料フォルダに保存</div>
-        <div class="s4-step"><span class="s4-step-n">②</span>「①プロンプトをコピー」を押してClaudeに貼り付け → 送信</div>
-        <div class="s4-step"><span class="s4-step-n">③</span>Claudeが「本日はどのようなお手伝いを…」と返したら<br>「②実行指示をコピー」を押して追加送信</div>
-        <div class="s4-step"><span class="s4-step-n">④</span>投稿文・画像プロンプトが会社ごとにコピーしやすい形で出力される</div>
+        <div class="s4-step"><span class="s4-step-n">②</span>下の「Claudeプロンプトをコピー」を押す</div>
+        <div class="s4-step"><span class="s4-step-n">③</span>Claudeに貼り付けて送信</div>
+        <div class="s4-step"><span class="s4-step-n">④</span>X投稿文・画像指示書が会社ごとに出力される</div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="big-btn cyan" onclick="copyClaudePrompt()" style="flex:1">
-        <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー</div><div class="bsub">まずこれを貼り付けて送信</div></div>
-      </button>
-      <button class="big-btn" onclick="copyText('上記の指示に従って実行してください。')" style="flex:1;background:var(--blue);color:#fff">
-        <span class="bico">▶</span><div class="btxt"><div class="blabel">② 実行指示をコピー</div><div class="bsub">追加で貼り付けて送信</div></div>
-      </button>
-    </div>
+    <button class="big-btn cyan" onclick="copyClaudePrompt()" style="margin-top:12px">
+      <span class="bico">📋</span><div class="btxt"><div class="blabel">Claudeプロンプトをコピー</div><div class="bsub">Claudeに貼り付けて送信するだけ</div></div><span class="barr">📋</span>
+    </button>
     <a class="big-btn" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener" style="margin-top:8px;background:rgba(255,255,255,.06);border:1px solid var(--border)">
       <span class="bico">📁</span><div class="btxt"><div class="blabel">資料フォルダを開く</div><div class="bsub">PDFが保存されているか確認</div></div><span class="barr">↗</span>
     </a>
@@ -494,85 +489,35 @@ ${companies}
 // ─────────────────────────────────────────
 function copyClaudePrompt(){
   const affUrl = getAffUrl();
-  const affLine = affUrl ? `\n・X投稿文の末尾（@kessan_classの直前）に必ず以下を1行追記すること（PR表記必須）：\n　PR: ${affUrl}` : '';
-  const prompt = `Driveの「資料」フォルダ（フォルダID: 18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0）にある決算短信PDFを全て読み込み、@kessan_class向けの投稿素材を生成してください。
+  const affPr  = affUrl ? `\nPR: ${affUrl}` : '';
+  const prompt = `Drive資料フォルダ(ID:18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0)の決算短信PDFを全件読み込み、投稿素材を生成してください。先にファイル名と件数を一覧表示し、漏れなく全件処理すること。
 
-【重要】処理前にフォルダ内の全PDFファイル名と件数を一覧表示すること。1件でも漏れがないよう全件処理してください。
-
-各PDFについて「① X用投稿文」と「② X用画像生成プロンプト（ChatGPT貼り付け用）」の2点のみを生成してください。
-
-━━━━━━━━━━━━━━━━━━━━━━
-① X用投稿文（文字数 厳守）
-━━━━━━━━━━━━━━━━━━━━━━
-【Xの文字数カウントルール】
-・日本語・全角文字：2ポイント／文字
-・英数字・記号・スペース：1ポイント／文字
-・絵文字（📈✅等）：2ポイント
-・改行：1ポイント
-・合計 200ポイント以内 に収めること
-
-【スタイルテンプレート（必ずこの雰囲気で作成）】
----
+①X投稿文（全角=2pt・英数=1pt・絵文字=2pt・改行=1pt、合計200pt以内）
+形式：
 【決算速報】会社名 決算期
-
-売上高 ▶XX億円(＋XX%)✅
-営業利益▶XX億円(＋XX% or 黒字転換)📈
-純利益 ▶XX億円(＋XX% or 黒字転換)📈
-
-事業の強み・黒字化要因などを1行で凝縮${affLine}
-
+売上高 ▶数値(増減%)✅
+営業利益▶数値(増減%)📈
+純利益 ▶数値(増減%)📈
+インサイト1行${affPr}
 @kessan_class
----
+※指標3行のみ・PDF原文の企業名/数値そのまま・買い煽り/「買い売り爆益」禁止
 
-【ルール】
-・指標は売上高・営業利益・純利益の3行のみ（経常利益は省略）
-・説明文は1行・40ポイント以内
-・企業名・証券コード・数値はPDF原文のまま（翻訳・変換禁止）
-・買い煽り・断定的な株価予想・「買い」「売り」「爆益」等の表現禁止
+②ChatGPT用画像指示書テキスト（コードブロックで出力・このAIは画像生成しない）
+16:9横長／濃紺(#0D1B2A)×グレー(#2E2E2E)基調
+ヘッダー：左=証券コード+企業名(超大)・右=決算期・サブ=事業内容
+6カード3×2：売上高(青📊)・営業利益(緑📈)・純利益(✅)・成長要因(シアン)・財務配当(🛡️)・予想(オレンジ🔮)→各カードにPDF値を記入
+フッター：インサイト3行+@kessan_class(右小)
 
-━━━━━━━━━━━━━━━━━━━━━━
-② ChatGPT用・画像生成プロンプトテキストの作成
-━━━━━━━━━━━━━━━━━━━━━━
-※このAIが画像を生成するのではありません。
-　ChatGPTに貼り付けて画像を生成させるための「テキスト形式の指示書」をコードブロック内に出力してください。
-
-作成するテキストの構成（以下の各項目をPDFデータで埋めてテキスト出力すること）：
-
-【冒頭の固定文（そのまま書く）】
-アスペクト比16:9の横長インフォグラフィック。Xタイムライン最適化。1枚完結。
-
-【■全体デザイン】
-濃紺（#0D1B2A）×グラファイトグレー（#2E2E2E）基調
-
-【■ヘッダー（最上部・全幅帯）】
-・左：超大フォントで「証券コード　企業名」
-・右：「決算期 決算種別 決算」
-・サブ：事業内容（15文字程度）
-
-【■メイン（6カード・3×2グリッド）各カードにPDFの実データを記入】
-カード①「売上高」青系・📊：数値／前年比増減率
-カード②「営業利益」緑系（減益は赤）・📈：数値／前年比増減率
-カード③「当期純利益」緑系（減益は赤）・✅：数値／前年比増減率
-カード④「決算キートピック名」シアン系：PDFから3つの注目ポイントを箇条書き＋アイコン
-カード⑤「財務健全性・配当」青系・🛡️：自己資本比率・配当情報などPDFの財務データ
-カード⑥「通期/来期予想」オレンジ系・🔮：売上・営業利益の予想値と前年比増減率
-
-【■フッター（最下部・全幅帯）】
-左：✅インサイト「なぜ今注目か・数字の背景・今後の展望を3行で記述（PDFから読み取る）」
-右：@kessan_class（白文字・小さめ）
-
-━━━━━━━━━━━━━━━━━━━━━━
-【出力形式】スマホからコピーしやすいよう、会社ごとに以下の形式で出力：
----【会社名（証券コード）】---
-▼ X用投稿文（推定ポイント数：XX pt）
+出力（各社）：
+---【会社名(証券コード)】---
+▼X投稿文(推定Xpt)
 \`\`\`
-（投稿文をここに）
+投稿文
 \`\`\`
-▼ ChatGPT用・画像生成プロンプト（そのままChatGPTに貼り付け）
+▼ChatGPT画像指示書
 \`\`\`
-（画像生成指示書テキストをここに）
-\`\`\`
----（ここまで）---`;
+指示書テキスト
+\`\`\``;
   copyText(prompt);
 }
 
