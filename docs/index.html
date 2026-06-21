@@ -229,16 +229,19 @@ a{color:var(--cyan);text-decoration:none}
     </div>
     <!-- 海外 -->
     <div class="rtab-body" id="s2-intl">
-      <div class="info cyan" style="font-size:12px;margin-top:8px">公式IRページからPDFをダウンロードし、Driveの「資料」フォルダに保存してください。</div>
+      <div class="info cyan" style="font-size:12px;margin-top:8px">企業名/ティッカーを入力 → ChatGPTにPDF URLを調べてもらう → PDFをDriveの「資料」フォルダに保存してください。</div>
       <div class="fg" style="margin-top:10px">
-        <label>企業名 / ティッカー（IR検索の参考用）</label>
+        <label>企業名 / ティッカー（コンマ区切りで複数入力可）</label>
         <input class="finput" id="intlTicker" placeholder="例：AAPL, NVDA, テンセント, 0700" oninput="renderChips()" autocomplete="off" spellcheck="false">
       </div>
       <div id="chipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="chipCount"></span></div>
         <div class="company-chips" id="companyChips"><span style="font-size:12px;color:var(--border)">企業名を入力すると表示されます</span></div>
       </div>
-      <ul class="res-list" style="margin-top:12px">
+      <button class="big-btn" onclick="copyIntlPrompt()" style="margin-top:12px;width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border)">
+        <span class="bico">📋</span><div class="btxt"><div class="blabel">ChatGPT用プロンプトをコピー</div><div class="bsub">ChatGPTにPDF URLを調べてもらう</div></div><span class="barr">📋</span>
+      </button>
+      <ul class="res-list" style="margin-top:10px">
         <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Driveの資料フォルダを開く</div><div class="res-desc">ダウンロードしたPDFをここに保存</div></div></a></li>
       </ul>
     </div>
@@ -269,22 +272,22 @@ a{color:var(--cyan);text-decoration:none}
 <div class="section" id="sec5">
   <div class="section-header" onclick="tog('sec5')">
     <span class="step-badge">STEP 4</span>
-    <span class="section-title">投稿コンテンツをClaude Codeで生成</span>
+    <span class="section-title">投稿コンテンツをClaudeで生成</span>
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
     <div class="s4-method-box recommended">
-      <div class="s4-method-title">PCのClaude Codeに依頼</div>
-      <div class="s4-method-desc">DriveにPDFを保存後、Claude CodeがDriveを直接読み込んで投稿文・画像プロンプトを自動生成します。</div>
+      <div class="s4-method-title">PCのClaudeに依頼</div>
+      <div class="s4-method-desc">DriveにPDFを保存後、ClaudeがDriveを直接読み込んで投稿文・画像プロンプトを自動生成します。</div>
       <div class="s4-steps">
         <div class="s4-step"><span class="s4-step-n">①</span>STEP2でPDFをDriveの資料フォルダに保存</div>
-        <div class="s4-step"><span class="s4-step-n">②</span>下の「Claude Code用プロンプトをコピー」を押す</div>
-        <div class="s4-step"><span class="s4-step-n">③</span>PCのClaude Codeに貼り付けて送信</div>
-        <div class="s4-step"><span class="s4-step-n">④</span>投稿文・画像プロンプトが自動生成・ローカル保存される</div>
+        <div class="s4-step"><span class="s4-step-n">②</span>下の「Claude用プロンプトをコピー」を押す</div>
+        <div class="s4-step"><span class="s4-step-n">③</span>PCのClaudeに貼り付けて送信</div>
+        <div class="s4-step"><span class="s4-step-n">④</span>投稿文・画像プロンプトが会社ごとにコピーしやすい形で出力される</div>
       </div>
     </div>
     <button class="big-btn cyan" onclick="copyClaudePrompt()" style="margin-top:12px">
-      <span class="bico">📋</span><div class="btxt"><div class="blabel">Claude Code用プロンプトをコピー</div><div class="bsub">PCのClaude Codeに貼り付けて送信するだけ</div></div><span class="barr">📋</span>
+      <span class="bico">📋</span><div class="btxt"><div class="blabel">Claude用プロンプトをコピー</div><div class="bsub">PCのClaudeに貼り付けて送信するだけ</div></div><span class="barr">📋</span>
     </button>
     <a class="big-btn" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener" style="margin-top:8px;background:rgba(255,255,255,.06);border:1px solid var(--border)">
       <span class="bico">📁</span><div class="btxt"><div class="blabel">資料フォルダを開く</div><div class="bsub">PDFが保存されているか確認</div></div><span class="barr">↗</span>
@@ -455,7 +458,9 @@ ${companies}
 function copyClaudePrompt(){
   const affUrl = getAffUrl();
   const affLine = affUrl ? `\nX投稿文の末尾に追記（PR表記必須）：PR: ${affUrl}` : '';
-  const prompt = `Driveの「資料」フォルダ（フォルダID: 18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0）にある決算短信PDFを読み込み、@kessan_class向けの投稿素材を生成してください。
+  const prompt = `Driveの「資料」フォルダ（フォルダID: 18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0）にある決算短信PDFを全て読み込み、@kessan_class向けの投稿素材を生成してください。
+
+【重要】処理前にフォルダ内の全PDFファイル名と件数を一覧表示すること。1件でも漏れがないよう全件処理してください。
 
 各PDFについて以下を生成してください：
 
@@ -476,9 +481,17 @@ function copyClaudePrompt(){
 ・投資助言ではなく決算内容の要約・分析として表現
 ・「買い」「売り」「爆益」「テンバガー」等の表現禁止
 
-生成後：
-・ローカル（C:\\Users\\zima2\\Desktop\\AIビジネス\\決算書\\）に{会社名}_{決算期}_post.txt として保存
-・処理済みPDFを「資料/済」フォルダ（ID: 10RhnKLI8bOIB1rXhzzK8FWt4rPplaeGs）に移動`;
+【出力形式】スマホからコピーしやすいよう、会社ごとに以下の形式で出力：
+---【会社名（証券コード）】---
+▼ X用投稿文
+\`\`\`
+（ここに投稿文）
+\`\`\`
+▼ 画像生成指示書
+\`\`\`
+（ここに指示書）
+\`\`\`
+---（ここまで）---`;
   copyText(prompt);
 }
 
