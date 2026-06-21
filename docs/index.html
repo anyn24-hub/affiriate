@@ -163,6 +163,14 @@ a{color:var(--cyan);text-decoration:none}
 .s4-url-item{font-size:11px;line-height:1.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .s4-url-item.set{color:var(--green)}
 .s4-url-item.unset{color:rgba(255,255,255,.3)}
+/* STEP4 method boxes */
+.s4-method-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.s4-method-box.recommended{border-color:var(--gold);background:rgba(245,197,24,.04)}
+.s4-method-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:4px}
+.s4-method-desc{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px}
+.s4-steps{display:flex;flex-direction:column;gap:5px;margin-bottom:4px}
+.s4-step{font-size:12px;color:rgba(255,255,255,.85);display:flex;gap:8px;align-items:baseline}
+.s4-step-n{background:var(--gold);color:#000;font-size:10px;font-weight:800;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -279,17 +287,34 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="sec-label" style="margin-bottom:6px">STEP2の入力状況</div>
-    <div id="s4summary"></div>
-    <div class="info cyan" style="font-size:12px;margin-top:8px;line-height:1.6">
-      URLが設定されている全社を一括で解析するプロンプトが生成されます。<br>URLなしの場合はGeminiで📎手動添付してください。
+
+    <!-- ─ 推奨：Drive添付方式 ─ -->
+    <div class="s4-method-box recommended">
+      <div class="s4-method-title">⭐ 推奨：DriveのPDFを直接添付</div>
+      <div class="s4-method-desc">TDnet等から保存したPDFをGeminiで読み込む最確実の方法。URLのアクセスエラーが起きません。</div>
+      <div class="s4-steps">
+        <div class="s4-step"><span class="s4-step-n">①</span>「プロンプトをコピー」を押す</div>
+        <div class="s4-step"><span class="s4-step-n">②</span>AI Studioを開く</div>
+        <div class="s4-step"><span class="s4-step-n">③</span>入力欄の <strong>「+」→「マイドライブ」</strong> でPDFを選択（複数可）</div>
+        <div class="s4-step"><span class="s4-step-n">④</span>プロンプトを貼り付けて送信</div>
+      </div>
+      <a class="big-btn green" href="https://aistudio.google.com/" target="_blank" rel="noopener" style="margin-top:10px">
+        <span class="bico">✨</span><div class="btxt"><div class="blabel">Google AI Studioを開く</div><div class="bsub">「+」→「マイドライブ」でPDF添付 → プロンプト貼り付け</div></div><span class="barr">↗</span>
+      </a>
+      <a class="big-btn" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener" style="margin-top:8px;background:rgba(255,255,255,.06);border:1px solid var(--border)">
+        <span class="bico">📁</span><div class="btxt"><div class="blabel">資料フォルダを開く</div><div class="bsub">PDFをDriveに保存済みならここから確認</div></div><span class="barr">↗</span>
+      </a>
     </div>
-    <button class="big-btn cyan" onclick="copyPrompt()" style="margin-top:12px">
-      <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー（全社一括）</div><div class="bsub">日本＋海外をまとめて解析 / まずここを押す</div></div><span class="barr">📋</span>
+
+    <!-- ─ URL方式（サブ） ─ -->
+    <div class="s4-method-box" style="margin-top:12px">
+      <div class="s4-method-title">🔗 URL方式：STEP2のURL設定状況</div>
+      <div id="s4summary" style="margin-top:6px"></div>
+    </div>
+
+    <button class="big-btn cyan" onclick="copyPrompt()" style="margin-top:14px">
+      <span class="bico">📋</span><div class="btxt"><div class="blabel">プロンプトをコピー（全社一括）</div><div class="bsub">Drive添付・URL両方に対応 / まずここを押す</div></div><span class="barr">📋</span>
     </button>
-    <a class="big-btn green mt12" href="https://gemini.google.com/" target="_blank" rel="noopener">
-      <span class="bico">✨</span><div class="btxt"><div class="blabel">② Geminiを開いて貼り付け・送信</div><div class="bsub">URLあり→そのまま送信 / URLなし→📎添付後送信</div></div><span class="barr">↗</span>
-    </a>
   </div>
 </div>
 
