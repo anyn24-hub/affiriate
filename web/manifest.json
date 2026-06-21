@@ -1,0 +1,22 @@
+{
+  "name": "おとな偏愛Lab 楽天アフィBot",
+  "short_name": "偏愛Lab Bot",
+  "description": "楽天アフィリエイト投稿自動生成アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f14",
+  "theme_color": "#a855f7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

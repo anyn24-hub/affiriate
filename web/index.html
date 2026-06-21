@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>楽天アフィ投稿Bot | @おとな偏愛Lab</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#a855f7">
 <style>
 :root{
   --bg:#0f0f14;--bg2:#16161e;--card:#1c1c26;--card2:#22222e;
@@ -634,6 +637,30 @@ function initHeader(){
   const wd = ['日','月','火','水','木','金','土'][d.getDay()];
   document.getElementById('hdrDate').textContent = `${d.getMonth()+1}/${d.getDate()}（${wd}）`;
 }
+
+// ─── PWA ICON GENERATION ──────────────────────────────────────────────────────
+function generateIcon(size){
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const g = ctx.createLinearGradient(0,0,size,size);
+  g.addColorStop(0,'#a855f7'); g.addColorStop(1,'#ff6b9d');
+  ctx.fillStyle=g; ctx.beginPath();
+  ctx.roundRect(0,0,size,size,size*0.2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font=`${size*0.5}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🛍️',size/2,size/2);
+  return canvas.toDataURL('image/png');
+}
+(function setupPwaIcons(){
+  try{
+    ['192','512'].forEach(sz=>{
+      const link=document.createElement('link');
+      link.rel='apple-touch-icon'; link.href=generateIcon(parseInt(sz));
+      document.head.appendChild(link);
+    });
+  }catch{}
+})();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 (function init(){
