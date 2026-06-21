@@ -152,6 +152,15 @@ a{color:var(--cyan);text-decoration:none}
 .divider{border:none;border-top:1px solid var(--border);margin:12px 0}
 .sec-label{font-size:12px;font-weight:800;color:var(--muted);margin-top:14px;margin-bottom:6px}
 .empty-state{text-align:center;color:var(--muted);font-size:13px;padding:20px 0}
+/* STEP4 target selector */
+.s4-target-row{display:flex;align-items:flex-start;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:border-color .2s}
+.s4-target-row:has(input:checked){border-color:var(--cyan);background:rgba(0,212,255,.06)}
+.s4-target-row input[type=radio]{margin-top:4px;accent-color:var(--cyan);flex-shrink:0}
+.s4-target-body{display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0}
+.s4-target-flag{font-size:22px;flex-shrink:0}
+.s4-target-info{flex:1;min-width:0}
+.s4-target-name{font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s4-target-url{font-size:11px;margin-top:3px;word-break:break-all;line-height:1.5}
 </style>
 </head>
 <body>
@@ -202,41 +211,44 @@ a{color:var(--cyan);text-decoration:none}
     </div>
     <!-- 日本 -->
     <div class="rtab-body active" id="s2-jp">
-      <div class="info cyan" style="font-size:12px">TDnetで対象企業を検索 → PDFを開く → URLをコピーして下の入力欄に貼り付け。</div>
       <ul class="res-list">
-        <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">企業名で検索 → 決算短信PDFを開く → URLをコピー</div></div></a></li>
+        <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">企業名で検索 → 決算短信PDF → URLをコピー</div></div></a></li>
         <li><a class="res-link" href="https://disclosure2.edinet-fsa.go.jp/" target="_blank" rel="noopener"><span class="res-ico">🏛</span><div><div>EDINETを開く</div><div class="res-desc">有価証券報告書・四半期報告書</div></div></a></li>
       </ul>
+      <div class="fg" style="margin-top:12px">
+        <label>🇯🇵 会社名</label>
+        <input class="finput" id="companyName_jp" placeholder="例：トヨタ自動車" oninput="savePdfTarget('jp')" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="fg" style="margin-top:8px">
+        <label>📄 TDnet PDF URL</label>
+        <input class="finput" id="pdfUrl_jp" placeholder="https://www.release.tdnet.info/inbs/140120..." oninput="savePdfTarget('jp')" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="info cyan" style="font-size:11px;margin-top:4px">TDnetでPDFを開き → URLバーのURLをコピー → 貼り付け。自動保存されます。</div>
     </div>
     <!-- 海外 -->
     <div class="rtab-body" id="s2-intl">
-      <div class="info cyan" style="font-size:12px;margin-top:8px">ChatGPTにPDF URLを取得してもらい、下の入力欄に貼り付け。</div>
       <div class="fg" style="margin-top:8px">
-        <label>企業名 / ティッカー / 証券コード（カンマ区切りで複数可）</label>
+        <label>企業名 / ティッカー（ChatGPT URL取得用）</label>
         <input class="finput" id="intlTicker" placeholder="例：AAPL, NVDA, テンセント, 0700" oninput="renderChips()" autocomplete="off" spellcheck="false">
       </div>
       <button class="big-btn blue" onclick="copyIntlPrompt()">
-        <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTにPDF URL取得を依頼</div><div class="bsub">取得したURLを下の入力欄に貼り付け</div></div><span class="barr">📋</span>
+        <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTにPDF URL取得を依頼</div><div class="bsub">返ってきたURLを下に貼り付け</div></div><span class="barr">📋</span>
       </button>
+      <div class="info gold" style="font-size:11px;margin-top:6px;line-height:1.6">⚠️ ChatGPTのURL情報は誤っている場合があります。企業の公式IRページから直接URLを取得するとより確実です。</div>
       <!-- 企業名 横並び表示 -->
-      <div id="chipArea" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:8px">入力中の企業 <span id="chipCount"></span></div>
-        <div class="company-chips" id="companyChips">
-          <span style="font-size:12px;color:var(--border)">企業名を入力すると横並びで表示されます</span>
-        </div>
+      <div id="chipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="chipCount"></span></div>
+        <div class="company-chips" id="companyChips"><span style="font-size:12px;color:var(--border)">企業名を入力すると表示されます</span></div>
       </div>
-    </div>
-    <!-- 共通：PDF URL入力 -->
-    <div style="margin-top:16px;padding-top:14px;border-top:2px solid var(--border)">
-      <div class="fg">
-        <label>📄 解析対象 PDF URL（STEP4で使用）</label>
-        <input class="finput" id="pdfUrl" placeholder="https://www.release.tdnet.info/inbs/14012026..." autocomplete="off" spellcheck="false">
+      <div class="fg" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <label>🌍 会社名（解析する1社）</label>
+        <input class="finput" id="companyName_intl" placeholder="例：Nike, Apple, テンセント" oninput="savePdfTarget('intl')" autocomplete="off" spellcheck="false">
       </div>
-      <div class="info gold" style="font-size:12px;margin-top:6px;line-height:1.7">
-        🇯🇵 日本：TDnetでPDFを開き、そのページURLをコピーして貼り付け<br>
-        🌍 海外：ChatGPTから取得したPDF URLを貼り付け<br>
-        URLを貼ればSTEP4でGeminiが直接読み込みます（ダウンロード不要）
+      <div class="fg" style="margin-top:8px">
+        <label>📄 PDF URL（ChatGPT / 公式IRから取得）</label>
+        <input class="finput" id="pdfUrl_intl" placeholder="https://..." oninput="savePdfTarget('intl')" autocomplete="off" spellcheck="false">
       </div>
+      <div class="info cyan" style="font-size:11px;margin-top:4px">URLを貼り付け後、STEP4で選択して解析します。自動保存されます。</div>
     </div>
   </div>
 </div>
@@ -249,13 +261,15 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info gold">ここで設定したURLはSTEP4のChatGPTプロンプトに自動で組み込まれます。</div>
+    <a class="big-btn gold" href="https://affiliate.rakuten.co.jp/?l-id=af_header_logo" target="_blank" rel="noopener">
+      <span class="bico">🛒</span><div class="btxt"><div class="blabel">楽天アフィリエイト管理ページ</div><div class="bsub">URLの確認・新規リンク発行はこちら</div></div><span class="barr">↗</span>
+    </a>
     <div class="toggle-row mt12">
       <span class="toggle-label">アフィリエイトリンクを投稿文に含める</span>
       <label class="toggle"><input type="checkbox" id="affEnabled" onchange="saveAff()"><span class="tslider"></span></label>
     </div>
     <div class="fg mt8"><label>アフィリエイトURL</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
-    <div class="info cyan mt12" style="font-size:12px">URLは入力後すぐに自動保存されます。</div>
+    <div class="info cyan mt8" style="font-size:12px">URLは入力後すぐに自動保存されます（ページを閉じても残ります）。</div>
   </div>
 </div>
 
@@ -267,13 +281,30 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div id="step4UrlIndicator" class="info gold" style="font-size:12px;line-height:1.6;margin-bottom:8px"></div>
-    <div class="info cyan" style="font-size:13px;line-height:2">
-      <strong>① STEP2でPDF URLを貼り付け済みか確認</strong><br>
-      <strong>② 下の「プロンプトをコピー」を押す</strong><br>
-      <strong>③ Geminiを開く</strong><br>
-      <strong>④ URLなしの場合 → 📎でDriveのPDFを添付</strong><br>
-      <strong>⑤ テキスト欄に貼り付けて送信 → 投稿文が生成される</strong>
+    <!-- 解析対象サマリー -->
+    <div class="sec-label" style="margin-bottom:8px">解析対象を選択（STEP2の入力から）</div>
+    <label class="s4-target-row" id="s4row_jp">
+      <input type="radio" name="pdfTarget" value="jp" id="use_jp" checked>
+      <div class="s4-target-body">
+        <div class="s4-target-flag">🇯🇵</div>
+        <div class="s4-target-info">
+          <div class="s4-target-name" id="s4name_jp">会社名未入力</div>
+          <div class="s4-target-url" id="s4url_jp">⚠️ URL未設定</div>
+        </div>
+      </div>
+    </label>
+    <label class="s4-target-row mt8" id="s4row_intl">
+      <input type="radio" name="pdfTarget" value="intl" id="use_intl">
+      <div class="s4-target-body">
+        <div class="s4-target-flag">🌍</div>
+        <div class="s4-target-info">
+          <div class="s4-target-name" id="s4name_intl">会社名未入力</div>
+          <div class="s4-target-url" id="s4url_intl">⚠️ URL未設定</div>
+        </div>
+      </div>
+    </label>
+    <div class="info cyan" style="font-size:12px;margin-top:8px;line-height:1.6">
+      URLが未設定の場合 → Geminiアプリで📎PDFを手動添付してください
     </div>
     <button class="big-btn cyan" onclick="copyPrompt()" style="margin-top:12px">
       <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー</div><div class="bsub">まずここを押してからGeminiを開く</div></div><span class="barr">📋</span>
@@ -293,7 +324,11 @@ a{color:var(--cyan);text-decoration:none}
 // ─────────────────────────────────────────
 const DRIVE_URL = 'https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0';
 const SBI_URL   = 'https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on&OutSide=on';
-const KEYS = { affiliate: 'kessan_affiliate_settings' };
+const KEYS = {
+  affiliate: 'kessan_affiliate_settings',
+  pdfJp:     'kessan_pdf_jp',
+  pdfIntl:   'kessan_pdf_intl',
+};
 
 // ─────────────────────────────────────────
 // STATE
@@ -442,16 +477,65 @@ ${companies}
 }
 
 // ─────────────────────────────────────────
-// STEP 3: PROMPT GENERATION
+// STEP 2: PDF TARGET SAVE / LOAD / SUMMARY
+// ─────────────────────────────────────────
+function savePdfTarget(type){
+  const url  = document.getElementById(`pdfUrl_${type}`)?.value.trim() || '';
+  const name = document.getElementById(`companyName_${type}`)?.value.trim() || '';
+  try{ localStorage.setItem(KEYS['pdf'+type.charAt(0).toUpperCase()+type.slice(1)], JSON.stringify({url, name})); }catch{}
+  updateStep4Summary();
+}
+
+function loadPdfTargets(){
+  ['jp','intl'].forEach(type => {
+    try{
+      const key = KEYS['pdf'+type.charAt(0).toUpperCase()+type.slice(1)];
+      const d = JSON.parse(localStorage.getItem(key)||'null');
+      if(d){
+        const urlEl  = document.getElementById(`pdfUrl_${type}`);
+        const nameEl = document.getElementById(`companyName_${type}`);
+        if(urlEl)  urlEl.value  = d.url  || '';
+        if(nameEl) nameEl.value = d.name || '';
+      }
+    }catch{}
+  });
+  updateStep4Summary();
+}
+
+function updateStep4Summary(){
+  ['jp','intl'].forEach(type => {
+    const url  = document.getElementById(`pdfUrl_${type}`)?.value.trim() || '';
+    const name = document.getElementById(`companyName_${type}`)?.value.trim() || '';
+    const nameEl = document.getElementById(`s4name_${type}`);
+    const urlEl  = document.getElementById(`s4url_${type}`);
+    const radio  = document.getElementById(`use_${type}`);
+    if(nameEl) nameEl.textContent = name || '（会社名未入力）';
+    if(urlEl){
+      if(url){
+        urlEl.textContent = '✅ URL設定済み — ' + url.slice(0,40) + (url.length>40?'…':'');
+        urlEl.style.color = 'var(--green)';
+      } else {
+        urlEl.textContent = '⚠️ URL未設定（Geminiで📎手動添付が必要）';
+        urlEl.style.color = 'rgba(255,255,255,0.5)';
+      }
+    }
+    if(radio) radio.disabled = false;
+  });
+}
+
+// ─────────────────────────────────────────
+// STEP 4: PROMPT GENERATION
 // ─────────────────────────────────────────
 function buildPrompt(){
+  const selected = document.querySelector('input[name="pdfTarget"]:checked')?.value || 'jp';
+  const url  = document.getElementById(`pdfUrl_${selected}`)?.value.trim() || '';
+  const name = document.getElementById(`companyName_${selected}`)?.value.trim() || '';
   const affUrl = getAffUrl();
-  const pdfUrl = document.getElementById('pdfUrl')?.value.trim() || '';
   const affInstruction = affUrl
     ? `\n【アフィリエイトリンク（PR表記必須）】\nX投稿文の末尾にスペースがあれば以下を追記してください：\nPR: ${affUrl}` : '';
-  const docSection = pdfUrl
-    ? `【解析対象】\n以下のURLの決算短信PDFを読み込んで解析してください：\n${pdfUrl}`
-    : `【解析対象】\nこのプロンプトと一緒に添付されたPDFファイル（決算短信・決算説明資料）を解析してください。`;
+  const docSection = url
+    ? `【解析対象】\n会社名：${name || '（会社名不明）'}\nURL：${url}\n上記URLの決算短信PDFを読み込んで解析してください。`
+    : `【解析対象】\n会社名：${name || '（会社名不明）'}\nこのプロンプトと一緒に添付されたPDFファイル（決算短信・決算説明資料）を解析してください。`;
 
   return `あなたは「プロの財務アナリスト兼SNSマーケター」として、指定された決算資料を解析し、以下のコンテンツを作成してください。
 
@@ -484,19 +568,6 @@ ${docSection}`;
 }
 function copyPrompt(){ copyText(buildPrompt()); }
 
-function updateStep4Indicator(){
-  const el = document.getElementById('step4UrlIndicator');
-  if(!el) return;
-  const url = document.getElementById('pdfUrl')?.value.trim() || '';
-  if(url){
-    el.textContent = '✅ PDF URL設定済み — プロンプトにURLが自動で組み込まれます（ダウンロード不要）';
-    el.style.display = '';
-  } else {
-    el.textContent = '⚠️ PDF URL未設定 — GeminiアプリでPDFを📎添付してから送信してください';
-    el.style.display = '';
-  }
-}
-
 // ─────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────
@@ -504,9 +575,7 @@ function updateStep4Indicator(){
   try{ aff = JSON.parse(localStorage.getItem(KEYS.affiliate)||'null') || aff; if(!Array.isArray(aff.urls))aff.urls=['','','']; }catch{}
   initHeader();
   loadAffUI();
-  // pdfUrl 入力監視
-  document.getElementById('pdfUrl')?.addEventListener('input', updateStep4Indicator);
-  updateStep4Indicator();
+  loadPdfTargets();
 })();
 </script>
 </body>
