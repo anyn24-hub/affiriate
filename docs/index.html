@@ -258,22 +258,30 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info gold" style="font-size:12px;line-height:1.7;margin-bottom:4px">
-      💡 Geminiアプリにコピペするだけ。APIや連携設定は不要。<br>
-      結果はGemini画面に表示されます（このアプリには戻りません）。
+    <div class="info gold" style="font-size:12px;line-height:1.7">
+      💡 Geminiアプリにコピペするだけ。連携設定は不要。結果はGemini画面に表示されます。
     </div>
-    <div class="info cyan" style="font-size:13px;line-height:2;margin-top:8px">
+    <!-- PDF URL入力（TDnet公開URLを直接渡す方法） -->
+    <div class="fg" style="margin-top:12px">
+      <label>📄 TDnet PDF URL（STEP2で取得・貼り付けると自動でプロンプトに組み込まれます）</label>
+      <input class="finput" id="pdfUrl" placeholder="https://www.release.tdnet.info/inbs/140120..." autocomplete="off" spellcheck="false">
+    </div>
+    <div class="info cyan" style="font-size:12px;margin-top:6px;line-height:1.6">
+      <strong>URLあり</strong>：GeminiがPDFを直接読み込みます（ダウンロード不要）<br>
+      <strong>URLなし</strong>：GeminiアプリでDriveのPDFを📎添付してから貼り付け
+    </div>
+    <div class="info cyan" style="font-size:13px;line-height:2;margin-top:10px">
       <strong>① 下の「プロンプトをコピー」を押す</strong><br>
-      <strong>② Geminiアプリ or gemini.google.com を開く</strong><br>
-      <strong>③ 📎添付ボタン → DriveのPDFを選ぶ</strong><br>
+      <strong>② Geminiを開く</strong><br>
+      <strong>③ URLなしの場合 → 📎でDriveのPDFを添付</strong><br>
       <strong>④ テキスト欄に貼り付けて送信</strong><br>
-      <strong>⑤ Gemini画面にX投稿文・画像指示が表示される</strong>
+      <strong>⑤ Gemini画面にX投稿文・画像指示が生成される</strong>
     </div>
     <button class="big-btn cyan" onclick="copyPrompt()" style="margin-top:12px">
       <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー</div><div class="bsub">まずここを押してからGeminiを開く</div></div><span class="barr">📋</span>
     </button>
     <a class="big-btn green mt12" href="https://gemini.google.com/" target="_blank" rel="noopener">
-      <span class="bico">✨</span><div class="btxt"><div class="blabel">② Geminiを開く → PDFを添付して貼り付け</div><div class="bsub">📎でDriveのPDFを選択 → プロンプト貼り付け → 送信</div></div><span class="barr">↗</span>
+      <span class="bico">✨</span><div class="btxt"><div class="blabel">② Geminiを開いて貼り付け・送信</div><div class="bsub">URLあり→そのまま送信 / URLなし→📎添付後送信</div></div><span class="barr">↗</span>
     </a>
   </div>
 </div>
@@ -355,30 +363,29 @@ function copyAiPrompt(){
   const today = new Date();
   const pad = n => String(n).padStart(2,'0');
   const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-  const irBankUrl = `https://irbank.net/market/kessan?y=${todayStr}`;
 
-  const prompt = `以下のIRBank 決算発表スケジュールページにアクセスし、掲載されている決算発表企業を全件抽出してください。
+  const prompt = `今日は${todayStr}です。以下のSBI証券 決算発表スケジュールページにアクセスし、本日の決算発表企業を抽出してください。
 
 URL：
-${irBankUrl}
+${SBI_URL}
 
 出力形式（この形式のみで回答してください）：
 | 国 | 証券コード | 企業名 | 発表日 |
 |---|---|---|---|
 | 日本 | XXXX | ○○○○株式会社 | ${todayStr} |
-（ページに掲載されている全社を同形式で続ける）
+（発見した全社を同形式で続ける）
 
 条件：
 ・日本・米国・中国・香港すべて対象
-・上記URLのページに掲載されている企業を1社も漏らさず全件出力すること
-・必ず10社以上出力すること（本日分が10社未満の場合は前日・前々日にさかのぼって補足）
+・必ず10社以上出力すること（ページに表示されている全社を漏らさず記載）
+・本日の発表が10社未満の場合は前日・前々日にさかのぼって補足し、合計最低10社を出力
 ・さかのぼった場合は発表日を正確に記載
-・上記「XXXX / ○○○○」はフォーマット説明用の仮例。実際のデータを入れること
+・例示の「XXXX / ○○○○」は形式説明用。実際のデータを入れること
 ・表以外の説明文は不要
 
 【重要】1社・数社のみの出力は不可。ページに掲載されている企業を全件・最低10社以上出力すること。
 
-最後に抽出した全企業のコードをコンマ区切りで1行で出力してください（例：7203, 6758, AAPL, NVDA, 0700, ...）`;
+最後に抽出した全企業の社名をコンマ区切りで1行で出力してください（例：トヨタ自動車, ソニーグループ, Apple, TSMC, ...）`;
 
   copyText(prompt);
 }
@@ -441,10 +448,14 @@ ${companies}
 // ─────────────────────────────────────────
 function buildPrompt(){
   const affUrl = getAffUrl();
+  const pdfUrl = document.getElementById('pdfUrl')?.value.trim() || '';
   const affInstruction = affUrl
     ? `\n【アフィリエイトリンク（PR表記必須）】\nX投稿文の末尾にスペースがあれば以下を追記してください：\nPR: ${affUrl}` : '';
+  const docSection = pdfUrl
+    ? `【解析対象】\n以下のURLの決算短信PDFを読み込んで解析してください：\n${pdfUrl}`
+    : `【解析対象】\nこのプロンプトと一緒に添付されたPDFファイル（決算短信・決算説明資料）を解析してください。`;
 
-  return `あなたは「プロの財務アナリスト兼SNSマーケター」として、添付した決算資料（PDF）を解析し、以下のコンテンツを作成してください。
+  return `あなたは「プロの財務アナリスト兼SNSマーケター」として、指定された決算資料を解析し、以下のコンテンツを作成してください。
 
 【重要】スマホ操作優先のため、各項目を個別の「コードブロック」に分けて出力してください。
 
@@ -471,8 +482,7 @@ function buildPrompt(){
   ・スマホでも読める文字サイズ・余白を十分に確保
 ${affInstruction}
 
-【解析対象】
-このプロンプトと一緒に添付されたPDFファイル（決算短信・決算説明資料）を解析してください。`;
+${docSection}`;
 }
 function copyPrompt(){ copyText(buildPrompt()); }
 
