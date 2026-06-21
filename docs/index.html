@@ -258,25 +258,17 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info green" style="font-size:12px;margin-top:8px">
-      💡 <strong>Gemini ならPDFダウンロード不要</strong><br>
-      Google AI StudioでDriveと連携すると、DriveのPDFをそのまま読み込めます。<br>
-      ① Geminiを開く → ② Driveのファイルを選択 → ③ 下のプロンプトを貼り付けるだけ。
+    <div class="info cyan" style="font-size:13px;line-height:1.8">
+      <strong>① AI Studioを開く</strong><br>
+      <strong>② 画面下の「+」→「ファイルを追加」→「マイドライブ」→ PDFを選択</strong><br>
+      <strong>③ 下のボタンでプロンプトをコピー → テキスト欄に貼り付け → 送信</strong>
     </div>
     <a class="big-btn green" href="https://aistudio.google.com/" target="_blank" rel="noopener" style="margin-top:10px">
-      <span class="bico">✨</span><div class="btxt"><div class="blabel">Google AI Studio を開く</div><div class="bsub">Gemini 2.5 Pro — Drive連携でPDF直読み込み可</div></div><span class="barr">↗</span>
+      <span class="bico">✨</span><div class="btxt"><div class="blabel">Google AI Studio を開く</div><div class="bsub">Gemini 2.5 Pro — ファイル添付でPDFを直接解析</div></div><span class="barr">↗</span>
     </a>
-    <div class="fg" style="margin-top:12px">
-      <label>Drive共有リンク / PDF URL（任意）</label>
-      <input class="finput" id="pdfUrl" placeholder="https://drive.google.com/file/d/..." oninput="updatePromptPreview()" autocomplete="off">
-    </div>
-    <div class="info cyan" style="font-size:12px;margin-top:8px">
-      Drive連携済みなら入力不要。<br>未連携の場合：DriveでPDFを右クリック →「共有」→「リンクをコピー」して貼り付け。
-    </div>
-    <div class="sec-label" style="margin-top:14px">プロンプトプレビュー</div>
-    <div class="post-box" id="promptPreview"></div>
-    <button class="btn btn-primary btn-full mt12" onclick="copyPrompt()">📋 プロンプトをコピーしてGeminiへ</button>
-    <div class="info gold mt12" style="font-size:12px">コピー後はGeminiに貼り付けてください。Drive未連携の場合はURLも一緒に渡してください。</div>
+    <button class="big-btn cyan mt12" onclick="copyPrompt()">
+      <span class="bico">📋</span><div class="btxt"><div class="blabel">プロンプトをコピーしてGeminiへ</div><div class="bsub">PDFを添付してからこのプロンプトを貼り付け</div></div><span class="barr">📋</span>
+    </button>
   </div>
 </div>
 
@@ -340,7 +332,6 @@ function saveAff(){
   aff.enabled = document.getElementById('affEnabled').checked;
   aff.url     = document.getElementById('affUrl1').value.trim();
   try{ localStorage.setItem(KEYS.affiliate, JSON.stringify(aff)); }catch{}
-  updatePromptPreview();
 }
 function loadAffUI(){
   document.getElementById('affEnabled').checked = !!aff.enabled;
@@ -444,14 +435,10 @@ ${companies}
 // ─────────────────────────────────────────
 function buildPrompt(){
   const affUrl = getAffUrl();
-  const pdfUrl = document.getElementById('pdfUrl')?.value.trim() || '';
   const affInstruction = affUrl
     ? `\n【アフィリエイトリンク（PR表記必須）】\nX投稿文の末尾にスペースがあれば以下を追記してください：\nPR: ${affUrl}` : '';
-  const docSection = pdfUrl
-    ? `解析対象URL：\n${pdfUrl}`
-    : `解析対象：\n接続済みのGoogleドライブから最新の決算短信PDFを読み込んでください。\n（Drive未連携の場合は、PDFの共有リンクをこのプロンプトと一緒に渡してください）`;
 
-  return `あなたは「プロの財務アナリスト兼SNSマーケター」として、指定された決算資料を解析し、以下のコンテンツを作成してください。
+  return `あなたは「プロの財務アナリスト兼SNSマーケター」として、添付した決算資料（PDF）を解析し、以下のコンテンツを作成してください。
 
 【重要】スマホ操作優先のため、各項目を個別の「コードブロック」に分けて出力してください。
 
@@ -478,9 +465,9 @@ function buildPrompt(){
   ・スマホでも読める文字サイズ・余白を十分に確保
 ${affInstruction}
 
-${docSection}`;
+【解析対象】
+このプロンプトと一緒に添付されたPDFファイル（決算短信・決算説明資料）を解析してください。`;
 }
-function updatePromptPreview(){ document.getElementById('promptPreview').textContent = buildPrompt(); }
 function copyPrompt(){ copyText(buildPrompt()); }
 
 // ─────────────────────────────────────────
@@ -490,7 +477,6 @@ function copyPrompt(){ copyText(buildPrompt()); }
   try{ aff = JSON.parse(localStorage.getItem(KEYS.affiliate)||'null') || aff; if(!Array.isArray(aff.urls))aff.urls=['','','']; }catch{}
   initHeader();
   loadAffUI();
-  updatePromptPreview();
 })();
 </script>
 </body>
