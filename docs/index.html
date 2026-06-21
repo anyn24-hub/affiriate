@@ -202,31 +202,40 @@ a{color:var(--cyan);text-decoration:none}
     </div>
     <!-- 日本 -->
     <div class="rtab-body active" id="s2-jp">
-      <div class="info cyan">TDnet・EDINETで決算資料を検索してダウンロードし、Google Driveに保存してください。</div>
+      <div class="info cyan" style="font-size:12px">TDnetで対象企業を検索 → PDFを開く → URLをコピーして下の入力欄に貼り付け。</div>
       <ul class="res-list">
-        <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">決算短信・業績予想修正・配当・自社株買いの適時開示</div></div></a></li>
-        <li><a class="res-link" href="https://disclosure2.edinet-fsa.go.jp/" target="_blank" rel="noopener"><span class="res-ico">🏛</span><div><div>EDINETを開く</div><div class="res-desc">有価証券報告書・四半期報告書・半期報告書</div></div></a></li>
-        <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算短信・説明資料PDFをここに保存</div></div></a></li>
+        <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">企業名で検索 → 決算短信PDFを開く → URLをコピー</div></div></a></li>
+        <li><a class="res-link" href="https://disclosure2.edinet-fsa.go.jp/" target="_blank" rel="noopener"><span class="res-ico">🏛</span><div><div>EDINETを開く</div><div class="res-desc">有価証券報告書・四半期報告書</div></div></a></li>
       </ul>
     </div>
     <!-- 海外 -->
     <div class="rtab-body" id="s2-intl">
+      <div class="info cyan" style="font-size:12px;margin-top:8px">ChatGPTにPDF URLを取得してもらい、下の入力欄に貼り付け。</div>
       <div class="fg" style="margin-top:8px">
         <label>企業名 / ティッカー / 証券コード（カンマ区切りで複数可）</label>
         <input class="finput" id="intlTicker" placeholder="例：AAPL, NVDA, テンセント, 0700" oninput="renderChips()" autocomplete="off" spellcheck="false">
       </div>
       <button class="big-btn blue" onclick="copyIntlPrompt()">
-        <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算書URL抽出を依頼</div><div class="bsub">Annual Results のPDF直リンクURLのみを回答させる</div></div><span class="barr">📋</span>
+        <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTにPDF URL取得を依頼</div><div class="bsub">取得したURLを下の入力欄に貼り付け</div></div><span class="barr">📋</span>
       </button>
-      <ul class="res-list mt12">
-        <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算資料PDFをここに保存</div></div></a></li>
-      </ul>
-      <!-- 企業名 横並び表示 (末尾) -->
+      <!-- 企業名 横並び表示 -->
       <div id="chipArea" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:8px">入力中の企業 <span id="chipCount"></span></div>
         <div class="company-chips" id="companyChips">
           <span style="font-size:12px;color:var(--border)">企業名を入力すると横並びで表示されます</span>
         </div>
+      </div>
+    </div>
+    <!-- 共通：PDF URL入力 -->
+    <div style="margin-top:16px;padding-top:14px;border-top:2px solid var(--border)">
+      <div class="fg">
+        <label>📄 解析対象 PDF URL（STEP4で使用）</label>
+        <input class="finput" id="pdfUrl" placeholder="https://www.release.tdnet.info/inbs/14012026..." autocomplete="off" spellcheck="false">
+      </div>
+      <div class="info gold" style="font-size:12px;margin-top:6px;line-height:1.7">
+        🇯🇵 日本：TDnetでPDFを開き、そのページURLをコピーして貼り付け<br>
+        🌍 海外：ChatGPTから取得したPDF URLを貼り付け<br>
+        URLを貼ればSTEP4でGeminiが直接読み込みます（ダウンロード不要）
       </div>
     </div>
   </div>
@@ -258,24 +267,13 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info gold" style="font-size:12px;line-height:1.7">
-      💡 Geminiアプリにコピペするだけ。連携設定は不要。結果はGemini画面に表示されます。
-    </div>
-    <!-- PDF URL入力（TDnet公開URLを直接渡す方法） -->
-    <div class="fg" style="margin-top:12px">
-      <label>📄 TDnet PDF URL（STEP2で取得・貼り付けると自動でプロンプトに組み込まれます）</label>
-      <input class="finput" id="pdfUrl" placeholder="https://www.release.tdnet.info/inbs/140120..." autocomplete="off" spellcheck="false">
-    </div>
-    <div class="info cyan" style="font-size:12px;margin-top:6px;line-height:1.6">
-      <strong>URLあり</strong>：GeminiがPDFを直接読み込みます（ダウンロード不要）<br>
-      <strong>URLなし</strong>：GeminiアプリでDriveのPDFを📎添付してから貼り付け
-    </div>
-    <div class="info cyan" style="font-size:13px;line-height:2;margin-top:10px">
-      <strong>① 下の「プロンプトをコピー」を押す</strong><br>
-      <strong>② Geminiを開く</strong><br>
-      <strong>③ URLなしの場合 → 📎でDriveのPDFを添付</strong><br>
-      <strong>④ テキスト欄に貼り付けて送信</strong><br>
-      <strong>⑤ Gemini画面にX投稿文・画像指示が生成される</strong>
+    <div id="step4UrlIndicator" class="info gold" style="font-size:12px;line-height:1.6;margin-bottom:8px"></div>
+    <div class="info cyan" style="font-size:13px;line-height:2">
+      <strong>① STEP2でPDF URLを貼り付け済みか確認</strong><br>
+      <strong>② 下の「プロンプトをコピー」を押す</strong><br>
+      <strong>③ Geminiを開く</strong><br>
+      <strong>④ URLなしの場合 → 📎でDriveのPDFを添付</strong><br>
+      <strong>⑤ テキスト欄に貼り付けて送信 → 投稿文が生成される</strong>
     </div>
     <button class="big-btn cyan" onclick="copyPrompt()" style="margin-top:12px">
       <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー</div><div class="bsub">まずここを押してからGeminiを開く</div></div><span class="barr">📋</span>
@@ -364,7 +362,7 @@ function copyAiPrompt(){
   const pad = n => String(n).padStart(2,'0');
   const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
 
-  const prompt = `今日は${todayStr}です。以下のSBI証券 決算発表スケジュールページにアクセスし、本日の決算発表企業を抽出してください。
+  const prompt = `今日は${todayStr}です。以下のSBI証券 決算発表スケジュールページにアクセスし、決算発表企業を地域別に抽出してください。
 
 URL：
 ${SBI_URL}
@@ -373,19 +371,19 @@ ${SBI_URL}
 | 国 | 証券コード | 企業名 | 発表日 |
 |---|---|---|---|
 | 日本 | XXXX | ○○○○株式会社 | ${todayStr} |
-（発見した全社を同形式で続ける）
+（各地域5社ずつ、同形式で続ける）
 
-条件：
-・日本・米国・中国・香港すべて対象
-・必ず10社以上出力すること（ページに表示されている全社を漏らさず記載）
-・本日の発表が10社未満の場合は前日・前々日にさかのぼって補足し、合計最低10社を出力
-・さかのぼった場合は発表日を正確に記載
+【地域別ルール（厳守）】
+・日本：最低5社出力。本日が週末・祝日・市場休場日で発表がない場合は、直近の平日（金曜以前）にさかのぼって5社補足
+・米国：最低5社出力。本日の発表が5社未満の場合は直近の過去データにさかのぼって補足
+・中国/香港：最低5社出力。本日の発表が5社未満の場合は直近の過去データにさかのぼって補足
+・さかのぼった場合は発表日を正確に記載（${todayStr}のみとは限らない）
 ・例示の「XXXX / ○○○○」は形式説明用。実際のデータを入れること
 ・表以外の説明文は不要
 
-【重要】1社・数社のみの出力は不可。ページに掲載されている企業を全件・最低10社以上出力すること。
+【重要】日本・米国・中国/香港 それぞれ最低5社ずつ、合計15社以上出力すること。特定地域だけ集中して出力しないこと。
 
-最後に抽出した全企業の社名をコンマ区切りで1行で出力してください（例：トヨタ自動車, ソニーグループ, Apple, TSMC, ...）`;
+最後に抽出した全企業の社名をコンマ区切りで1行で出力してください（例：トヨタ自動車, ソニーグループ, Apple, TSMC, テンセント, ...）`;
 
   copyText(prompt);
 }
@@ -486,6 +484,19 @@ ${docSection}`;
 }
 function copyPrompt(){ copyText(buildPrompt()); }
 
+function updateStep4Indicator(){
+  const el = document.getElementById('step4UrlIndicator');
+  if(!el) return;
+  const url = document.getElementById('pdfUrl')?.value.trim() || '';
+  if(url){
+    el.textContent = '✅ PDF URL設定済み — プロンプトにURLが自動で組み込まれます（ダウンロード不要）';
+    el.style.display = '';
+  } else {
+    el.textContent = '⚠️ PDF URL未設定 — GeminiアプリでPDFを📎添付してから送信してください';
+    el.style.display = '';
+  }
+}
+
 // ─────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────
@@ -493,6 +504,9 @@ function copyPrompt(){ copyText(buildPrompt()); }
   try{ aff = JSON.parse(localStorage.getItem(KEYS.affiliate)||'null') || aff; if(!Array.isArray(aff.urls))aff.urls=['','','']; }catch{}
   initHeader();
   loadAffUI();
+  // pdfUrl 入力監視
+  document.getElementById('pdfUrl')?.addEventListener('input', updateStep4Indicator);
+  updateStep4Indicator();
 })();
 </script>
 </body>
