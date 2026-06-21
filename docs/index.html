@@ -259,8 +259,14 @@ a{color:var(--cyan);text-decoration:none}
     <a class="big-btn gold" href="https://affiliate.rakuten.co.jp/?l-id=af_header_logo" target="_blank" rel="noopener">
       <span class="bico">🛒</span><div class="btxt"><div class="blabel">楽天アフィリエイト管理ページ</div><div class="bsub">URLの確認・新規リンク発行はこちら</div></div><span class="barr">↗</span>
     </a>
-    <div class="fg mt12"><label>アフィリエイトURL（設定すると自動で投稿文に追記）</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
-    <div class="info cyan mt8" style="font-size:12px">URLは入力後すぐに自動保存されます（ページを閉じても残ります）。</div>
+    <div class="fg mt12">
+      <label>アフィリエイトURL（投稿文の末尾に自動追記）</label>
+      <div style="display:flex;gap:8px;margin-top:6px;align-items:stretch">
+        <input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." style="flex:1;margin:0">
+        <button class="btn btn-primary" onclick="saveAff()" style="flex-shrink:0;padding:0 18px;font-size:14px">保存</button>
+      </div>
+    </div>
+    <div class="info cyan mt8" style="font-size:12px">「保存」を押すまで反映されません。変更時は都度保存してください。</div>
   </div>
 </div>
 
@@ -350,6 +356,7 @@ function initHeader(){
 function saveAff(){
   aff.url = document.getElementById('affUrl1').value.trim();
   try{ localStorage.setItem(KEYS.affiliate, JSON.stringify(aff)); }catch{}
+  toast('アフィリエイトURLを保存しました ✓');
 }
 function loadAffUI(){
   document.getElementById('affUrl1').value = aff.url||aff.urls?.[0]||'';
@@ -361,46 +368,59 @@ function getAffUrl(){
 // ─────────────────────────────────────────
 // STEP 1: AI PROMPT
 // ─────────────────────────────────────────
-function getKessanDate(){
+function getMarketDates(){
   const pad = n => String(n).padStart(2,'0');
   const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const prevBiz = d => { const r=new Date(d); do{r.setDate(r.getDate()-1);}while(r.getDay()===0||r.getDay()===6); return r; };
+
+  // Japan: TSE 9:00-15:30 JST
   const jst = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
-  const h = jst.getHours(), m = jst.getMinutes(), dow = jst.getDay();
-  const isWeekday    = dow >= 1 && dow <= 5;
-  const afterClose   = h > 15 || (h === 15 && m >= 30); // TSE closes 15:30 JST
-  if(isWeekday && afterClose){
-    return { dateStr: fmt(jst), note: '本日（市場クローズ後のため当日分を対象）' };
-  }
-  // Before close or weekend → use previous business day
-  const prev = new Date(jst);
-  do { prev.setDate(prev.getDate()-1); } while(prev.getDay()===0 || prev.getDay()===6);
-  return { dateStr: fmt(prev), note: '直近営業日（現在まだ市場クローズ前または週末のため前営業日分を対象）' };
+  const jpOpen  = jst.getDay()>=1&&jst.getDay()<=5;
+  const jpClose = jst.getHours()>15||(jst.getHours()===15&&jst.getMinutes()>=30);
+  const jpDate  = (jpOpen&&jpClose) ? fmt(jst) : fmt(prevBiz(jst));
+  const jpNote  = (jpOpen&&jpClose) ? '本日分（15:30以降クローズ済み）' : '前営業日分（まだ市場開場中または週末）';
+
+  // US: NYSE/NASDAQ 9:30-16:00 ET (America/New_York)
+  const et = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const usOpen  = et.getDay()>=1&&et.getDay()<=5;
+  const usClose = et.getHours()>=16;
+  const usDate  = (usOpen&&usClose) ? fmt(et) : fmt(prevBiz(et));
+  const usNote  = (usOpen&&usClose) ? '本日分（16:00 ET以降クローズ済み）' : '前営業日分（まだ市場開場中または週末）';
+
+  // China/HK: HKEX 9:30-16:00 HKT
+  const hkt = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Hong_Kong'}));
+  const hkOpen  = hkt.getDay()>=1&&hkt.getDay()<=5;
+  const hkClose = hkt.getHours()>=16;
+  const hkDate  = (hkOpen&&hkClose) ? fmt(hkt) : fmt(prevBiz(hkt));
+  const hkNote  = (hkOpen&&hkClose) ? '本日分（16:00 HKT以降クローズ済み）' : '前営業日分（まだ市場開場中または週末）';
+
+  const todayJst = fmt(jst);
+  return { jpDate, jpNote, usDate, usNote, hkDate, hkNote, todayJst };
 }
 
 function copyAiPrompt(){
-  const { dateStr, note } = getKessanDate();
-  const pad = n => String(n).padStart(2,'0');
-  const todayStr = (()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'})); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; })();
+  const { jpDate, jpNote, usDate, usNote, hkDate, hkNote, todayJst } = getMarketDates();
 
-  const prompt = `今日は${todayStr}（JST）です。${note}。
-対象日：${dateStr}
-
+  const prompt = `現在日時（JST）：${todayJst}
 以下のSBI証券 決算発表スケジュールページにアクセスし、決算発表企業を地域別に抽出してください。
 
 URL：
 ${SBI_URL}
 
+【地域別 対象日と状況】
+・日本（東証）：対象日 ${jpDate}（${jpNote}）
+・米国（NYSE/NASDAQ）：対象日 ${usDate}（${usNote}）
+・中国/香港（HKEX）：対象日 ${hkDate}（${hkNote}）
+
 出力形式（この形式のみで回答してください）：
 | 国 | 証券コード | 企業名 | 発表日 |
 |---|---|---|---|
-| 日本 | XXXX | ○○○○株式会社 | ${dateStr} |
+| 日本 | XXXX | ○○○○株式会社 | ${jpDate} |
 （各地域5社ずつ、同形式で続ける）
 
 【地域別ルール（厳守）】
-・日本：対象日（${dateStr}）の発表企業を最低5社出力。発表が5社未満の場合は直近の過去データにさかのぼって補足
-・米国：対象日の発表企業を最低5社出力。不足の場合は直近の過去データにさかのぼって補足
-・中国/香港：対象日の発表企業を最低5社出力。不足の場合は直近の過去データにさかのぼって補足
-・さかのぼった場合は発表日を正確に記載
+・各地域の「対象日」の発表企業を最低5社出力すること
+・対象日の発表が5社未満の場合は直近の過去データにさかのぼって補足（発表日を正確に記載）
 ・例示の「XXXX / ○○○○」は形式説明用。実際のデータを入れること
 ・表以外の説明文は不要
 
@@ -506,41 +526,35 @@ function copyClaudePrompt(){
 ・買い煽り・断定的な株価予想・「買い」「売り」「爆益」等の表現禁止
 
 ━━━━━━━━━━━━━━━━━━━━━━
-② X用画像生成プロンプト（ChatGPTへ貼り付ける用）
+② ChatGPT用・画像生成プロンプトテキストの作成
 ━━━━━━━━━━━━━━━━━━━━━━
-以下の固定フォーマットで画像生成指示書を作成すること（各社のデータを当てはめる）：
+※このAIが画像を生成するのではありません。
+　ChatGPTに貼り付けて画像を生成させるための「テキスト形式の指示書」をコードブロック内に出力してください。
 
----
-以下の指示に従い、横長画像（アスペクト比16:9）を生成してください。
-X（Twitter）タイムライン最適化。1枚で全情報が完結するインフォグラフィック。
+作成するテキストの構成（以下の各項目をPDFデータで埋めてテキスト出力すること）：
 
-■全体デザイン
+【冒頭の固定文（そのまま書く）】
+アスペクト比16:9の横長インフォグラフィック。Xタイムライン最適化。1枚完結。
+
+【■全体デザイン】
 濃紺（#0D1B2A）×グラファイトグレー（#2E2E2E）基調
 
-■ヘッダー（最上部・全幅帯）
-・左：超大フォントで「{証券コード}　{企業名}」
-・右：「{決算期} {決算種別（通期/第X四半期等）} 決算」
-・サブ：「{事業内容15文字程度}」
+【■ヘッダー（最上部・全幅帯）】
+・左：超大フォントで「証券コード　企業名」
+・右：「決算期 決算種別 決算」
+・サブ：事業内容（15文字程度）
 
-■メイン（6つのカード型ボックス・3×2グリッド）
-カード①「売上高」 青系
-　{数値} ／ {前年比増減}% ／ 📊
-カード②「営業利益」 緑系（減益時は赤系）
-　{数値} ／ {前年比増減}% ／ 📈
-カード③「当期純利益」 緑系（減益時は赤系）
-　{数値} ／ {前年比増減}% ／ ✅
-カード④「{決算のキートピック（成長要因・セグメント等）}」 シアン系
-　（PDFから読み取った3つの注目ポイントを箇条書き） ／ {適切なアイコン}
-カード⑤「{財務健全性・配当・株主還元等}」 青系
-　（自己資本比率・配当情報などPDFの財務データ） ／ 🛡️
-カード⑥「{通期予想 or 来期予想}」 オレンジ系
-　{売上・営業利益の予想値と前年比増減率} ／ 🔮
+【■メイン（6カード・3×2グリッド）各カードにPDFの実データを記入】
+カード①「売上高」青系・📊：数値／前年比増減率
+カード②「営業利益」緑系（減益は赤）・📈：数値／前年比増減率
+カード③「当期純利益」緑系（減益は赤）・✅：数値／前年比増減率
+カード④「決算キートピック名」シアン系：PDFから3つの注目ポイントを箇条書き＋アイコン
+カード⑤「財務健全性・配当」青系・🛡️：自己資本比率・配当情報などPDFの財務データ
+カード⑥「通期/来期予想」オレンジ系・🔮：売上・営業利益の予想値と前年比増減率
 
-■フッター（最下部・全幅帯）
-左：✅インサイト
-「{3行程度の詳細インサイト：なぜ今注目か・数字の背景・今後の展望をPDFから読み取って記述}」
-右：「@kessan_class」白文字・小さめ
----
+【■フッター（最下部・全幅帯）】
+左：✅インサイト「なぜ今注目か・数字の背景・今後の展望を3行で記述（PDFから読み取る）」
+右：@kessan_class（白文字・小さめ）
 
 ━━━━━━━━━━━━━━━━━━━━━━
 【出力形式】スマホからコピーしやすいよう、会社ごとに以下の形式で出力：
@@ -549,9 +563,9 @@ X（Twitter）タイムライン最適化。1枚で全情報が完結するイ�
 \`\`\`
 （投稿文をここに）
 \`\`\`
-▼ X用画像生成プロンプト（ChatGPTに貼り付け）
+▼ ChatGPT用・画像生成プロンプト（そのままChatGPTに貼り付け）
 \`\`\`
-（画像生成指示書をここに）
+（画像生成指示書テキストをここに）
 \`\`\`
 ---（ここまで）---`;
   copyText(prompt);
