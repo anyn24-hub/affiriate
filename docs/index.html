@@ -259,11 +259,7 @@ a{color:var(--cyan);text-decoration:none}
     <a class="big-btn gold" href="https://affiliate.rakuten.co.jp/?l-id=af_header_logo" target="_blank" rel="noopener">
       <span class="bico">🛒</span><div class="btxt"><div class="blabel">楽天アフィリエイト管理ページ</div><div class="bsub">URLの確認・新規リンク発行はこちら</div></div><span class="barr">↗</span>
     </a>
-    <div class="toggle-row mt12">
-      <span class="toggle-label">アフィリエイトリンクを投稿文に含める</span>
-      <label class="toggle"><input type="checkbox" id="affEnabled" onchange="saveAff()"><span class="tslider"></span></label>
-    </div>
-    <div class="fg mt8"><label>アフィリエイトURL</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
+    <div class="fg mt12"><label>アフィリエイトURL（設定すると自動で投稿文に追記）</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
     <div class="info cyan mt8" style="font-size:12px">URLは入力後すぐに自動保存されます（ページを閉じても残ります）。</div>
   </div>
 </div>
@@ -352,28 +348,44 @@ function initHeader(){
 // STORAGE
 // ─────────────────────────────────────────
 function saveAff(){
-  aff.enabled = document.getElementById('affEnabled').checked;
-  aff.url     = document.getElementById('affUrl1').value.trim();
+  aff.url = document.getElementById('affUrl1').value.trim();
   try{ localStorage.setItem(KEYS.affiliate, JSON.stringify(aff)); }catch{}
 }
 function loadAffUI(){
-  document.getElementById('affEnabled').checked = !!aff.enabled;
   document.getElementById('affUrl1').value = aff.url||aff.urls?.[0]||'';
 }
 function getAffUrl(){
-  if(!aff.enabled) return '';
   return aff.url || aff.urls?.[0] || '';
 }
 
 // ─────────────────────────────────────────
 // STEP 1: AI PROMPT
 // ─────────────────────────────────────────
-function copyAiPrompt(){
-  const today = new Date();
+function getKessanDate(){
   const pad = n => String(n).padStart(2,'0');
-  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const jst = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
+  const h = jst.getHours(), m = jst.getMinutes(), dow = jst.getDay();
+  const isWeekday    = dow >= 1 && dow <= 5;
+  const afterClose   = h > 15 || (h === 15 && m >= 30); // TSE closes 15:30 JST
+  if(isWeekday && afterClose){
+    return { dateStr: fmt(jst), note: '本日（市場クローズ後のため当日分を対象）' };
+  }
+  // Before close or weekend → use previous business day
+  const prev = new Date(jst);
+  do { prev.setDate(prev.getDate()-1); } while(prev.getDay()===0 || prev.getDay()===6);
+  return { dateStr: fmt(prev), note: '直近営業日（現在まだ市場クローズ前または週末のため前営業日分を対象）' };
+}
 
-  const prompt = `今日は${todayStr}です。以下のSBI証券 決算発表スケジュールページにアクセスし、決算発表企業を地域別に抽出してください。
+function copyAiPrompt(){
+  const { dateStr, note } = getKessanDate();
+  const pad = n => String(n).padStart(2,'0');
+  const todayStr = (()=>{ const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'})); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; })();
+
+  const prompt = `今日は${todayStr}（JST）です。${note}。
+対象日：${dateStr}
+
+以下のSBI証券 決算発表スケジュールページにアクセスし、決算発表企業を地域別に抽出してください。
 
 URL：
 ${SBI_URL}
@@ -381,18 +393,18 @@ ${SBI_URL}
 出力形式（この形式のみで回答してください）：
 | 国 | 証券コード | 企業名 | 発表日 |
 |---|---|---|---|
-| 日本 | XXXX | ○○○○株式会社 | ${todayStr} |
+| 日本 | XXXX | ○○○○株式会社 | ${dateStr} |
 （各地域5社ずつ、同形式で続ける）
 
 【地域別ルール（厳守）】
-・日本：最低5社出力。本日が週末・祝日・市場休場日で発表がない場合は、直近の平日（金曜以前）にさかのぼって5社補足
-・米国：最低5社出力。本日の発表が5社未満の場合は直近の過去データにさかのぼって補足
-・中国/香港：最低5社出力。本日の発表が5社未満の場合は直近の過去データにさかのぼって補足
-・さかのぼった場合は発表日を正確に記載（${todayStr}のみとは限らない）
+・日本：対象日（${dateStr}）の発表企業を最低5社出力。発表が5社未満の場合は直近の過去データにさかのぼって補足
+・米国：対象日の発表企業を最低5社出力。不足の場合は直近の過去データにさかのぼって補足
+・中国/香港：対象日の発表企業を最低5社出力。不足の場合は直近の過去データにさかのぼって補足
+・さかのぼった場合は発表日を正確に記載
 ・例示の「XXXX / ○○○○」は形式説明用。実際のデータを入れること
 ・表以外の説明文は不要
 
-【重要】日本・米国・中国/香港 それぞれ最低5社ずつ、合計15社以上出力すること。特定地域だけ集中して出力しないこと。
+【重要】日本・米国・中国/香港 それぞれ最低5社ずつ、合計15社以上出力すること。
 
 最後に抽出した全企業の社名をコンマ区切りで1行で出力してください（例：トヨタ自動車, ソニーグループ, Apple, TSMC, テンセント, ...）`;
 
@@ -457,60 +469,89 @@ ${companies}
 // ─────────────────────────────────────────
 function copyClaudePrompt(){
   const affUrl = getAffUrl();
-  const affLine = affUrl ? `\nX投稿文の末尾に追記（PR表記必須）：PR: ${affUrl}` : '';
+  const affLine = affUrl ? `\n・X投稿文の末尾（@kessan_classの直前）に必ず以下を1行追記すること（PR表記必須）：\n　PR: ${affUrl}` : '';
   const prompt = `Driveの「資料」フォルダ（フォルダID: 18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0）にある決算短信PDFを全て読み込み、@kessan_class向けの投稿素材を生成してください。
 
 【重要】処理前にフォルダ内の全PDFファイル名と件数を一覧表示すること。1件でも漏れがないよう全件処理してください。
 
-各PDFについて以下を生成してください：
+各PDFについて「① X用投稿文」と「② X用画像生成プロンプト（ChatGPT貼り付け用）」の2点のみを生成してください。
 
 ━━━━━━━━━━━━━━━━━━━━━━
-① X用投稿文（文字数制限 厳守）
+① X用投稿文（文字数 厳守）
 ━━━━━━━━━━━━━━━━━━━━━━
 【Xの文字数カウントルール】
 ・日本語・全角文字：2ポイント／文字
-・英数字・記号：1ポイント／文字
+・英数字・記号・スペース：1ポイント／文字
 ・絵文字（📈✅等）：2ポイント
 ・改行：1ポイント
-・上記の合計が 200ポイント以内 に収まること（280limitに対し余裕を持たせる）
+・合計 200ポイント以内 に収めること
 
-【雰囲気テンプレート（このスタイルを必ず踏襲すること）】
+【スタイルテンプレート（必ずこの雰囲気で作成）】
 ---
 【決算速報】会社名 決算期
 
 売上高 ▶XX億円(＋XX%)✅
-営業利益▶XX億円(黒字転換 or ＋XX%)📈
-純利益 ▶XX億円(黒字転換 or ＋XX%)📈
+営業利益▶XX億円(＋XX% or 黒字転換)📈
+純利益 ▶XX億円(＋XX% or 黒字転換)📈
 
-（1行で収まるインサイト：事業の強みや黒字化の要因など）
+事業の強み・黒字化要因などを1行で凝縮${affLine}
 
 @kessan_class
 ---
 
 【ルール】
 ・指標は売上高・営業利益・純利益の3行のみ（経常利益は省略）
-・説明文は1行・40ポイント以内に凝縮
-・企業名・証券コード・数値はPDF原文のまま使用（翻訳・変換禁止）${affLine}
+・説明文は1行・40ポイント以内
+・企業名・証券コード・数値はPDF原文のまま（翻訳・変換禁止）
 ・買い煽り・断定的な株価予想・「買い」「売り」「爆益」等の表現禁止
 
 ━━━━━━━━━━━━━━━━━━━━━━
-② X用画像生成指示書（日本語・ChatGPTへ貼り付ける用）
+② X用画像生成プロンプト（ChatGPTへ貼り付ける用）
 ━━━━━━━━━━━━━━━━━━━━━━
-サイズ：16:9（横長）※Xタイムラインに最適化
-デザイン（濃紺・グラファイトグレー基調）：
-・ヘッダー：「証券コード＋企業名」を非常に大きく配置
-・メイン：売上・利益などの数値を6つのカードボックスで表示（増：青 / 減：赤）
-・フッター：✅注目ポイント ＋ @kessan_class
+以下の固定フォーマットで画像生成指示書を作成すること（各社のデータを当てはめる）：
 
+---
+以下の指示に従い、横長画像（アスペクト比16:9）を生成してください。
+X（Twitter）タイムライン最適化。1枚で全情報が完結するインフォグラフィック。
+
+■全体デザイン
+濃紺（#0D1B2A）×グラファイトグレー（#2E2E2E）基調
+
+■ヘッダー（最上部・全幅帯）
+・左：超大フォントで「{証券コード}　{企業名}」
+・右：「{決算期} {決算種別（通期/第X四半期等）} 決算」
+・サブ：「{事業内容15文字程度}」
+
+■メイン（6つのカード型ボックス・3×2グリッド）
+カード①「売上高」 青系
+　{数値} ／ {前年比増減}% ／ 📊
+カード②「営業利益」 緑系（減益時は赤系）
+　{数値} ／ {前年比増減}% ／ 📈
+カード③「当期純利益」 緑系（減益時は赤系）
+　{数値} ／ {前年比増減}% ／ ✅
+カード④「{決算のキートピック（成長要因・セグメント等）}」 シアン系
+　（PDFから読み取った3つの注目ポイントを箇条書き） ／ {適切なアイコン}
+カード⑤「{財務健全性・配当・株主還元等}」 青系
+　（自己資本比率・配当情報などPDFの財務データ） ／ 🛡️
+カード⑥「{通期予想 or 来期予想}」 オレンジ系
+　{売上・営業利益の予想値と前年比増減率} ／ 🔮
+
+■フッター（最下部・全幅帯）
+左：✅インサイト
+「{3行程度の詳細インサイト：なぜ今注目か・数字の背景・今後の展望をPDFから読み取って記述}」
+右：「@kessan_class」白文字・小さめ
+---
+
+━━━━━━━━━━━━━━━━━━━━━━
 【出力形式】スマホからコピーしやすいよう、会社ごとに以下の形式で出力：
 ---【会社名（証券コード）】---
-▼ X用投稿文（推定ポイント数も記載）
+▼ X用投稿文（推定ポイント数：XX pt）
 \`\`\`
-（ここに投稿文）
+（投稿文をここに）
 \`\`\`
-▼ 画像生成指示書
+▼ X用画像生成プロンプト（ChatGPTに貼り付け）
 \`\`\`
-（ここに指示書）
+（画像生成指示書をここに）
 \`\`\`
 ---（ここまで）---`;
   copyText(prompt);
