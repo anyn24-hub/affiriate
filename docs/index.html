@@ -152,15 +152,17 @@ a{color:var(--cyan);text-decoration:none}
 .divider{border:none;border-top:1px solid var(--border);margin:12px 0}
 .sec-label{font-size:12px;font-weight:800;color:var(--muted);margin-top:14px;margin-bottom:6px}
 .empty-state{text-align:center;color:var(--muted);font-size:13px;padding:20px 0}
-/* STEP4 target selector */
-.s4-target-row{display:flex;align-items:flex-start;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:border-color .2s}
-.s4-target-row:has(input:checked){border-color:var(--cyan);background:rgba(0,212,255,.06)}
-.s4-target-row input[type=radio]{margin-top:4px;accent-color:var(--cyan);flex-shrink:0}
-.s4-target-body{display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0}
-.s4-target-flag{font-size:22px;flex-shrink:0}
-.s4-target-info{flex:1;min-width:0}
-.s4-target-name{font-size:15px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.s4-target-url{font-size:11px;margin-top:3px;word-break:break-all;line-height:1.5}
+/* URL list inputs */
+.url-list{display:flex;flex-direction:column;gap:6px}
+.url-row{display:flex;align-items:center;gap:8px}
+.url-num{font-size:12px;font-weight:800;color:var(--muted);min-width:18px;text-align:right;flex-shrink:0}
+.url-row .finput{flex:1;font-size:12px;padding:8px 10px}
+/* STEP4 summary */
+.s4-group{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.s4-group-hd{font-size:13px;font-weight:800;color:#fff;margin-bottom:6px}
+.s4-url-item{font-size:11px;line-height:1.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s4-url-item.set{color:var(--green)}
+.s4-url-item.unset{color:rgba(255,255,255,.3)}
 </style>
 </head>
 <body>
@@ -213,17 +215,15 @@ a{color:var(--cyan);text-decoration:none}
     <div class="rtab-body active" id="s2-jp">
       <ul class="res-list">
         <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">企業名で検索 → 決算短信PDF → URLをコピー</div></div></a></li>
-        <li><a class="res-link" href="https://disclosure2.edinet-fsa.go.jp/" target="_blank" rel="noopener"><span class="res-ico">🏛</span><div><div>EDINETを開く</div><div class="res-desc">有価証券報告書・四半期報告書</div></div></a></li>
       </ul>
-      <div class="fg" style="margin-top:12px">
-        <label>🇯🇵 会社名</label>
-        <input class="finput" id="companyName_jp" placeholder="例：トヨタ自動車" oninput="savePdfTarget('jp')" autocomplete="off" spellcheck="false">
+      <div class="info cyan" style="font-size:11px;margin-top:8px">各社のTDnet PDFを開き → URLをコピー → 貼り付け（最大5社・自動保存）</div>
+      <div class="url-list" style="margin-top:10px">
+        <div class="url-row"><span class="url-num">1</span><input class="finput" id="pdfUrl_jp_0" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
+        <div class="url-row"><span class="url-num">2</span><input class="finput" id="pdfUrl_jp_1" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
+        <div class="url-row"><span class="url-num">3</span><input class="finput" id="pdfUrl_jp_2" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
+        <div class="url-row"><span class="url-num">4</span><input class="finput" id="pdfUrl_jp_3" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
+        <div class="url-row"><span class="url-num">5</span><input class="finput" id="pdfUrl_jp_4" placeholder="https://www.release.tdnet.info/inbs/..." oninput="savePdfUrls('jp')" autocomplete="off" spellcheck="false"></div>
       </div>
-      <div class="fg" style="margin-top:8px">
-        <label>📄 TDnet PDF URL</label>
-        <input class="finput" id="pdfUrl_jp" placeholder="https://www.release.tdnet.info/inbs/140120..." oninput="savePdfTarget('jp')" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="info cyan" style="font-size:11px;margin-top:4px">TDnetでPDFを開き → URLバーのURLをコピー → 貼り付け。自動保存されます。</div>
     </div>
     <!-- 海外 -->
     <div class="rtab-body" id="s2-intl">
@@ -232,23 +232,21 @@ a{color:var(--cyan);text-decoration:none}
         <input class="finput" id="intlTicker" placeholder="例：AAPL, NVDA, テンセント, 0700" oninput="renderChips()" autocomplete="off" spellcheck="false">
       </div>
       <button class="big-btn blue" onclick="copyIntlPrompt()">
-        <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTにPDF URL取得を依頼</div><div class="bsub">返ってきたURLを下に貼り付け</div></div><span class="barr">📋</span>
+        <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTにPDF URL取得を依頼</div><div class="bsub">取得したURLを下に貼り付け</div></div><span class="barr">📋</span>
       </button>
-      <div class="info gold" style="font-size:11px;margin-top:6px;line-height:1.6">⚠️ ChatGPTのURL情報は誤っている場合があります。企業の公式IRページから直接URLを取得するとより確実です。</div>
-      <!-- 企業名 横並び表示 -->
+      <div class="info gold" style="font-size:11px;margin-top:6px;line-height:1.6">⚠️ ChatGPTのURLが誤っている場合があります。公式IRページから直接URLを取得するとより確実です。</div>
       <div id="chipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="chipCount"></span></div>
         <div class="company-chips" id="companyChips"><span style="font-size:12px;color:var(--border)">企業名を入力すると表示されます</span></div>
       </div>
-      <div class="fg" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <label>🌍 会社名（解析する1社）</label>
-        <input class="finput" id="companyName_intl" placeholder="例：Nike, Apple, テンセント" oninput="savePdfTarget('intl')" autocomplete="off" spellcheck="false">
+      <div class="info cyan" style="font-size:11px;margin-top:10px">PDF URLを貼り付け（最大5社・自動保存）</div>
+      <div class="url-list" style="margin-top:8px">
+        <div class="url-row"><span class="url-num">1</span><input class="finput" id="pdfUrl_intl_0" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
+        <div class="url-row"><span class="url-num">2</span><input class="finput" id="pdfUrl_intl_1" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
+        <div class="url-row"><span class="url-num">3</span><input class="finput" id="pdfUrl_intl_2" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
+        <div class="url-row"><span class="url-num">4</span><input class="finput" id="pdfUrl_intl_3" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
+        <div class="url-row"><span class="url-num">5</span><input class="finput" id="pdfUrl_intl_4" placeholder="https://..." oninput="savePdfUrls('intl')" autocomplete="off" spellcheck="false"></div>
       </div>
-      <div class="fg" style="margin-top:8px">
-        <label>📄 PDF URL（ChatGPT / 公式IRから取得）</label>
-        <input class="finput" id="pdfUrl_intl" placeholder="https://..." oninput="savePdfTarget('intl')" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="info cyan" style="font-size:11px;margin-top:4px">URLを貼り付け後、STEP4で選択して解析します。自動保存されます。</div>
     </div>
   </div>
 </div>
@@ -281,33 +279,13 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <!-- 解析対象サマリー -->
-    <div class="sec-label" style="margin-bottom:8px">解析対象を選択（STEP2の入力から）</div>
-    <label class="s4-target-row" id="s4row_jp">
-      <input type="radio" name="pdfTarget" value="jp" id="use_jp" checked>
-      <div class="s4-target-body">
-        <div class="s4-target-flag">🇯🇵</div>
-        <div class="s4-target-info">
-          <div class="s4-target-name" id="s4name_jp">会社名未入力</div>
-          <div class="s4-target-url" id="s4url_jp">⚠️ URL未設定</div>
-        </div>
-      </div>
-    </label>
-    <label class="s4-target-row mt8" id="s4row_intl">
-      <input type="radio" name="pdfTarget" value="intl" id="use_intl">
-      <div class="s4-target-body">
-        <div class="s4-target-flag">🌍</div>
-        <div class="s4-target-info">
-          <div class="s4-target-name" id="s4name_intl">会社名未入力</div>
-          <div class="s4-target-url" id="s4url_intl">⚠️ URL未設定</div>
-        </div>
-      </div>
-    </label>
+    <div class="sec-label" style="margin-bottom:6px">STEP2の入力状況</div>
+    <div id="s4summary"></div>
     <div class="info cyan" style="font-size:12px;margin-top:8px;line-height:1.6">
-      URLが未設定の場合 → Geminiアプリで📎PDFを手動添付してください
+      URLが設定されている全社を一括で解析するプロンプトが生成されます。<br>URLなしの場合はGeminiで📎手動添付してください。
     </div>
     <button class="big-btn cyan" onclick="copyPrompt()" style="margin-top:12px">
-      <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー</div><div class="bsub">まずここを押してからGeminiを開く</div></div><span class="barr">📋</span>
+      <span class="bico">📋</span><div class="btxt"><div class="blabel">① プロンプトをコピー（全社一括）</div><div class="bsub">日本＋海外をまとめて解析 / まずここを押す</div></div><span class="barr">📋</span>
     </button>
     <a class="big-btn green mt12" href="https://gemini.google.com/" target="_blank" rel="noopener">
       <span class="bico">✨</span><div class="btxt"><div class="blabel">② Geminiを開いて貼り付け・送信</div><div class="bsub">URLあり→そのまま送信 / URLなし→📎添付後送信</div></div><span class="barr">↗</span>
@@ -325,9 +303,9 @@ a{color:var(--cyan);text-decoration:none}
 const DRIVE_URL = 'https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0';
 const SBI_URL   = 'https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on&OutSide=on';
 const KEYS = {
-  affiliate: 'kessan_affiliate_settings',
-  pdfJp:     'kessan_pdf_jp',
-  pdfIntl:   'kessan_pdf_intl',
+  affiliate:   'kessan_affiliate_settings',
+  pdfJpUrls:   'kessan_pdf_jp_urls',
+  pdfIntlUrls: 'kessan_pdf_intl_urls',
 };
 
 // ─────────────────────────────────────────
@@ -477,69 +455,85 @@ ${companies}
 }
 
 // ─────────────────────────────────────────
-// STEP 2: PDF TARGET SAVE / LOAD / SUMMARY
+// STEP 2: URL SAVE / LOAD / SUMMARY
 // ─────────────────────────────────────────
-function savePdfTarget(type){
-  const url  = document.getElementById(`pdfUrl_${type}`)?.value.trim() || '';
-  const name = document.getElementById(`companyName_${type}`)?.value.trim() || '';
-  try{ localStorage.setItem(KEYS['pdf'+type.charAt(0).toUpperCase()+type.slice(1)], JSON.stringify({url, name})); }catch{}
+function getPdfUrls(type){
+  return Array.from({length:5},(_,i)=>document.getElementById(`pdfUrl_${type}_${i}`)?.value.trim()||'');
+}
+
+function savePdfUrls(type){
+  try{ localStorage.setItem(KEYS['pdf'+(type==='jp'?'Jp':'Intl')+'Urls'], JSON.stringify(getPdfUrls(type))); }catch{}
   updateStep4Summary();
 }
 
-function loadPdfTargets(){
-  ['jp','intl'].forEach(type => {
+function loadPdfUrls(){
+  ['jp','intl'].forEach(type=>{
     try{
-      const key = KEYS['pdf'+type.charAt(0).toUpperCase()+type.slice(1)];
-      const d = JSON.parse(localStorage.getItem(key)||'null');
-      if(d){
-        const urlEl  = document.getElementById(`pdfUrl_${type}`);
-        const nameEl = document.getElementById(`companyName_${type}`);
-        if(urlEl)  urlEl.value  = d.url  || '';
-        if(nameEl) nameEl.value = d.name || '';
-      }
+      const key  = KEYS['pdf'+(type==='jp'?'Jp':'Intl')+'Urls'];
+      const urls = JSON.parse(localStorage.getItem(key)||'null');
+      if(Array.isArray(urls)) urls.forEach((u,i)=>{
+        const el = document.getElementById(`pdfUrl_${type}_${i}`);
+        if(el) el.value = u||'';
+      });
     }catch{}
   });
   updateStep4Summary();
 }
 
 function updateStep4Summary(){
-  ['jp','intl'].forEach(type => {
-    const url  = document.getElementById(`pdfUrl_${type}`)?.value.trim() || '';
-    const name = document.getElementById(`companyName_${type}`)?.value.trim() || '';
-    const nameEl = document.getElementById(`s4name_${type}`);
-    const urlEl  = document.getElementById(`s4url_${type}`);
-    const radio  = document.getElementById(`use_${type}`);
-    if(nameEl) nameEl.textContent = name || '（会社名未入力）';
-    if(urlEl){
-      if(url){
-        urlEl.textContent = '✅ URL設定済み — ' + url.slice(0,40) + (url.length>40?'…':'');
-        urlEl.style.color = 'var(--green)';
+  const el = document.getElementById('s4summary');
+  if(!el) return;
+  let html = '';
+  const groups = [
+    {type:'jp',   flag:'🇯🇵', label:'日本'},
+    {type:'intl', flag:'🌍',  label:'米国・中国・香港'},
+  ];
+  groups.forEach(({type,flag,label})=>{
+    const urls = getPdfUrls(type);
+    const setCount = urls.filter(u=>u).length;
+    html += `<div class="s4-group">
+      <div class="s4-group-hd">${flag} ${label} <span style="font-weight:400;font-size:11px;color:${setCount?'var(--green)':'rgba(255,255,255,.4)'}">(${setCount}/5 設定済み)</span></div>`;
+    urls.forEach((u,i)=>{
+      if(u){
+        const short = u.length>55?u.slice(0,55)+'…':u;
+        html += `<div class="s4-url-item set">✅ ${i+1}. ${short}</div>`;
       } else {
-        urlEl.textContent = '⚠️ URL未設定（Geminiで📎手動添付が必要）';
-        urlEl.style.color = 'rgba(255,255,255,0.5)';
+        html += `<div class="s4-url-item unset">— ${i+1}. 未設定</div>`;
       }
-    }
-    if(radio) radio.disabled = false;
+    });
+    html += '</div>';
   });
+  el.innerHTML = html;
 }
 
 // ─────────────────────────────────────────
 // STEP 4: PROMPT GENERATION
 // ─────────────────────────────────────────
 function buildPrompt(){
-  const selected = document.querySelector('input[name="pdfTarget"]:checked')?.value || 'jp';
-  const url  = document.getElementById(`pdfUrl_${selected}`)?.value.trim() || '';
-  const name = document.getElementById(`companyName_${selected}`)?.value.trim() || '';
   const affUrl = getAffUrl();
   const affInstruction = affUrl
     ? `\n【アフィリエイトリンク（PR表記必須）】\nX投稿文の末尾にスペースがあれば以下を追記してください：\nPR: ${affUrl}` : '';
-  const docSection = url
-    ? `【解析対象】\n会社名：${name || '（会社名不明）'}\nURL：${url}\n上記URLの決算短信PDFを読み込んで解析してください。`
-    : `【解析対象】\n会社名：${name || '（会社名不明）'}\nこのプロンプトと一緒に添付されたPDFファイル（決算短信・決算説明資料）を解析してください。`;
 
-  return `あなたは「プロの財務アナリスト兼SNSマーケター」として、指定された決算資料を解析し、以下のコンテンツを作成してください。
+  const jpUrls   = getPdfUrls('jp').filter(u=>u);
+  const intlUrls = getPdfUrls('intl').filter(u=>u);
 
-【重要】スマホ操作優先のため、各項目を個別の「コードブロック」に分けて出力してください。
+  let docSection = '';
+  if(jpUrls.length){
+    docSection += `【解析対象 - 日本】\n` + jpUrls.map((u,i)=>`${i+1}. ${u}`).join('\n') + '\n\n';
+  }
+  if(intlUrls.length){
+    docSection += `【解析対象 - 海外（米国・中国・香港）】\n` + intlUrls.map((u,i)=>`${i+1}. ${u}`).join('\n') + '\n\n';
+  }
+  if(!docSection){
+    docSection = `【解析対象】\nこのプロンプトと一緒に添付されたPDFファイルを解析してください（URLが未設定のため手動添付が必要です）。\n\n`;
+  }
+
+  const total = jpUrls.length + intlUrls.length;
+  return `あなたは「プロの財務アナリスト兼SNSマーケター」として、以下${total}社の決算資料をまとめて解析し、各社のコンテンツを作成してください。
+
+【重要】
+・各社ごとに「## ── 【企業N】──」という見出しを付けて出力してください
+・各項目を個別の「コードブロック」に分けて出力してください（スマホ操作優先）
 
 【SNS投稿ルール（厳守）】
 ・すべての投稿文と画像指示書に @kessan_class を含める
@@ -548,7 +542,7 @@ function buildPrompt(){
 ・事実ベースで売上・利益・利益率・EPS・配当・通期見通し・セグメント動向を中心にする
 ・投資助言ではなく、決算内容の要約・分析として表現する
 
-【作成内容】
+【各社の作成内容】
 1 X用投稿文（140字以内・厳守）
   ・数字インパクト重視、絵文字でフック
   ・企業名→数値→一言インサイト→@kessan_class の構成
@@ -564,7 +558,7 @@ function buildPrompt(){
   ・スマホでも読める文字サイズ・余白を十分に確保
 ${affInstruction}
 
-${docSection}`;
+${docSection}上記各URLのPDFを読み込み、各社ごとに独立したセクションで出力してください。`;
 }
 function copyPrompt(){ copyText(buildPrompt()); }
 
@@ -575,7 +569,7 @@ function copyPrompt(){ copyText(buildPrompt()); }
   try{ aff = JSON.parse(localStorage.getItem(KEYS.affiliate)||'null') || aff; if(!Array.isArray(aff.urls))aff.urls=['','','']; }catch{}
   initHeader();
   loadAffUI();
-  loadPdfTargets();
+  loadPdfUrls();
 })();
 </script>
 </body>
