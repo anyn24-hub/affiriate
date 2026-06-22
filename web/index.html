@@ -107,40 +107,6 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 </div>
 <div class="page">
 
-<!-- 設定バナー（未設定時のみ表示） -->
-<div id="setupBanner" class="setup-banner" style="display:none">
-  <h3>⚠️ アプリIDを設定してください（自動取得に必要）</h3>
-  <p>楽天アプリIDは<strong>無料</strong>で2分で取得できます：</p>
-  <ol>
-    <li><a href="https://webservice.rakuten.co.jp/" target="_blank">webservice.rakuten.co.jp</a> を開く</li>
-    <li>「新規アプリ登録」→ アプリ名（何でもOK）を入力</li>
-    <li><strong>「アプリID/デベロッパーID」</strong>をコピー（40文字前後）</li>
-    <li>下の⚙️設定に貼り付けて保存</li>
-  </ol>
-  <p style="margin-top:8px;color:var(--muted);font-size:12px">※ アフィリエイトIDとは別物です。アフィリエイトIDは任意です。</p>
-  <div class="btn-row" style="margin-top:10px"><button class="btn btn-red btn-sm" style="background:var(--red);color:#fff" onclick="document.getElementById('sec0').classList.add('open');this.closest('.setup-banner').style.display='none'">⚙️ 設定を開く</button></div>
-</div>
-
-<!-- ⚙️設定 -->
-<div class="sec" id="sec0">
-  <div class="sec-hd" onclick="tog('sec0')">
-    <span class="badge bx">⚙️</span>
-    <span class="sec-title">楽天ID設定（初回のみ）</span>
-    <span class="chevron">▼</span>
-  </div>
-  <div class="sec-body">
-    <div class="fg" style="margin-top:8px">
-      <label>アプリID（applicationId）— webservice.rakuten.co.jp で無料取得</label>
-      <input class="finput" id="cfgAppId" type="text" placeholder="40文字前後の英数字" autocomplete="off" autocorrect="off" autocapitalize="off">
-    </div>
-    <div class="fg">
-      <label>アフィリエイトID（任意）— affiliate.rakuten.co.jp の設定から取得</label>
-      <input class="finput" id="cfgAffId" placeholder="1.xxxxxxxx.xxxxxxxx.xxxxxxxx" autocomplete="off" autocorrect="off" autocapitalize="off">
-    </div>
-    <div class="btn-row"><button class="btn btn-purple btn-full" onclick="saveConfig()">💾 保存</button></div>
-    <div id="cfgStatus" class="info ipurple mt8" style="display:none"></div>
-  </div>
-</div>
 
 <!-- STEP 1 -->
 <div class="sec open" id="sec1">
@@ -299,7 +265,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 <div id="toast"></div>
 
 <script>
-const RAKUTEN_API = 'https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601';
+const RAKUTEN_API = '/api/search';
 const MANUAL_CATS = ['高料率①','高料率②'];
 const CAT_KW = {
   'スイーツ':  '訳あり スイーツ 送料無料',
@@ -368,7 +334,6 @@ const NG_WORDS=['食べた','使ってみた','美味しかった','最高だっ
 const NG_REPLACE={'食べた':'気になる','使ってみた':'レビューを見て気になった','美味しかった':'気になる','最高だった':'良さそう','リピ確定':'候補に入れたい','絶対おすすめ':'候補に入れたい','効果あり':'続けやすそう','痩せる':'体を整えたい人向け','治る':'続けやすそう','肌が変わる':'清潔感を整えたい人向け','若返る':'整えたい人向け','疲労回復':'リラックスタイムに良さそう','睡眠改善':'おやすみ前に良さそう','改善する':'続けやすそう','治療':'ケア','効く':'良さそう','爆売れ':'人気','買うべき':'候補に入れたい','必須':'役立ちそう','間違いない':'良さそう','絶対':'ぜひ','確実':'きっと','必ず':'ぜひ'};
 const BONUS=['訳あり','送料無料','個包装','お試し','セット','まとめ買い','ギフト'];
 
-let cfg={appId:'',affId:''};
 let selectedEvt='通常';
 let results=[];
 let selectedIdx=[];
@@ -383,27 +348,6 @@ function pad2(n){return String(n).padStart(2,'0');}
 function todayStr(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;}
 function xchars(t){return [...t.replace(/https?:\/\/\S+/g,m=>'?'.repeat(23))].reduce((a,c)=>a+(c.codePointAt(0)>0x7f?2:1),0);}
 
-// ─── CONFIG ─────────────────────────────────────────────
-function saveConfig(){
-  const rawId = document.getElementById('cfgAppId').value;
-  cfg.appId = rawId.trim().replace(/[\s　]/g,'');
-  cfg.affId = document.getElementById('cfgAffId').value.trim().replace(/[\s　]/g,'');
-  try{localStorage.setItem('ohenai_cfg8',JSON.stringify(cfg));}catch{}
-  const st=document.getElementById('cfgStatus');
-  st.style.display='block';
-  st.textContent=`アプリID: ${cfg.appId.length}文字で保存しました ✓`;
-  toast(`保存しました（${cfg.appId.length}文字）`);
-  if(cfg.appId) document.getElementById('setupBanner').style.display='none';
-}
-function loadConfig(){
-  try{const s=localStorage.getItem('ohenai_cfg8');if(s)cfg=JSON.parse(s);}catch{}
-  document.getElementById('cfgAppId').value=cfg.appId||'';
-  document.getElementById('cfgAffId').value=cfg.affId||'';
-  if(!cfg.appId){
-    document.getElementById('setupBanner').style.display='block';
-    document.getElementById('sec0').classList.add('open');
-  }
-}
 
 // ─── CATEGORY ────────────────────────────────────────────
 function isManual(cat){return MANUAL_CATS.includes(cat);}
@@ -444,12 +388,6 @@ function scBadge(s){return s>=80?{l:'S',c:'ss'}:s>=60?{l:'A',c:'sa'}:s>=40?{l:'B
 
 // ─── FETCH ──────────────────────────────────────────────
 async function fetchProducts(){
-  if(!cfg.appId){
-    document.getElementById('setupBanner').style.display='block';
-    document.getElementById('sec0').classList.add('open');
-    toast('アプリIDを設定してください',true);
-    return;
-  }
   const kw=document.getElementById('kwInput').value.trim();
   if(!kw){toast('キーワードを入力してください',true);return;}
   const btn=document.getElementById('fetchBtn');
@@ -458,8 +396,7 @@ async function fetchProducts(){
   document.getElementById('selHint').style.display='none';
   selectedIdx=[];results=[];
   try{
-    const p=new URLSearchParams({applicationId:cfg.appId,keyword:kw,hits:20,sort:'-reviewCount',format:'json'});
-    if(cfg.affId)p.set('affiliateId',cfg.affId);
+    const p=new URLSearchParams({kw,hits:20});
     const res=await fetch(`${RAKUTEN_API}?${p}`);
     if(!res.ok){
       const txt=await res.text().catch(()=>'');
@@ -473,7 +410,7 @@ async function fetchProducts(){
     results=items.map(it=>({...it,_score:score(it)})).sort((a,b)=>b._score-a._score).slice(0,8);
     renderProducts();
   }catch(e){
-    document.getElementById('productArea').innerHTML=`<div class="empty" style="color:var(--red)">❌ ${escH(e.message)}<br><span style="font-size:12px;color:var(--muted)">アプリID(${cfg.appId.length}文字)を⚙️設定で確認してください</span></div>`;
+    document.getElementById('productArea').innerHTML=`<div class="empty" style="color:var(--red)">❌ ${escH(e.message)}</div>`;
   }finally{btn.innerHTML='取得';btn.disabled=false;}
 }
 
@@ -561,7 +498,6 @@ function clearKpi(){if(!confirm('消去しますか？'))return;kpiLog=[];try{lo
   const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
   const wd=['日','月','火','水','木','金','土'][d.getDay()];
   document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;
-  loadConfig();
   try{const s=localStorage.getItem('ohenai_kpi8');if(s)kpiLog=JSON.parse(s);}catch{}
   try{const s=localStorage.getItem('ohenai_saved8');if(s)savedUrls=JSON.parse(s);}catch{}
   renderKpi();renderSaved();onCatChange();
