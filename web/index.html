@@ -408,10 +408,11 @@ function xchars(t){return [...t.replace(/https?:\/\/\S+/g,m=>'?'.repeat(23))].re
 
 // ═══ CONFIG ═══════════════════════════════════════════════════
 function saveConfig(){
-  cfg.appId=document.getElementById('cfgAppId').value.trim();
-  cfg.affId=document.getElementById('cfgAffId').value.trim();
+  cfg.appId=document.getElementById('cfgAppId').value.trim().replace(/\s/g,'');
+  cfg.affId=document.getElementById('cfgAffId').value.trim().replace(/\s/g,'');
   try{localStorage.setItem('ohenai_cfg6',JSON.stringify(cfg));}catch{}
-  toast('保存しました ✓');
+  console.log('Config saved. appId length:',cfg.appId.length,'first4:',cfg.appId.substring(0,4));
+  toast('保存しました ✓（アプリID: '+cfg.appId.length+'文字）');
   document.getElementById('sec0').classList.remove('open');
   document.getElementById('setupBanner').style.display='none';
 }
@@ -482,14 +483,21 @@ async function fetchProducts(){
     const p=new URLSearchParams({applicationId:cfg.appId,keyword:kw,hits:20,sort:'-reviewCount',format:'json'});
     if(cfg.affId)p.set('affiliateId',cfg.affId);
     const res=await fetch(`${API}?${p}`);
-    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error_description||`HTTP ${res.status}`);}
+    if(!res.ok){
+      const txt=await res.text().catch(()=>'');
+      let errMsg=`HTTP ${res.status}`;
+      try{const ej=JSON.parse(txt);errMsg=ej.error_description||ej.error||errMsg;}catch{}
+      console.error('Rakuten API error',res.status,txt);
+      throw new Error(errMsg);
+    }
     const data=await res.json();
     const items=(data.Items||[]).map(i=>i.Item);
     if(!items.length){document.getElementById('productArea').innerHTML='<div class="empty">商品が見つかりませんでした。キーワードを変えてみてください。</div>';return;}
     results=items.map(it=>({...it,_score:score(it)})).sort((a,b)=>b._score-a._score).slice(0,8);
     renderProducts();
   }catch(e){
-    document.getElementById('productArea').innerHTML=`<div class="empty" style="color:var(--red)">❌ ${escH(e.message)}<br><span style="font-size:12px;color:var(--muted)">アプリIDを確認してください</span></div>`;
+    const appIdPreview=cfg.appId?cfg.appId.substring(0,4)+'…('+cfg.appId.length+'文字)':'（未設定）';
+    document.getElementById('productArea').innerHTML=`<div class="empty" style="color:var(--red)">❌ ${escH(e.message)}<br><span style="font-size:12px;color:var(--muted)">アプリID: ${escH(appIdPreview)}<br>⚙️設定でアプリIDを確認・再保存してください</span></div>`;
   }finally{btn.innerHTML='取得';btn.disabled=false;}
 }
 
