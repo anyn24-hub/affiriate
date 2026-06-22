@@ -1,0 +1,76 @@
+2026-06-22 20:20:21,988 [INFO] main: Output directory: output/2026-06-22
+2026-06-22 20:20:21,988 [INFO] main: ============================================================
+2026-06-22 20:20:21,988 [INFO] main: STEP 1: 銘柄抽出
+2026-06-22 20:20:21,988 [INFO] main: ============================================================
+2026-06-22 20:20:21,988 [INFO] pipeline.stock_extractor: [1/10] 2026-06-22 を試行中...
+2026-06-22 20:20:22,573 [INFO] pipeline.stock_extractor: kabutan: 200 (https://s.kabutan.jp/warnings/news_schedule/?market=all&date=20260622)
+2026-06-22 20:20:22,595 [INFO] pipeline.stock_extractor: kabutan row[0]: 銘柄 株価 決算期 今期 予想 時価総額 (億円) PER PBR 利回り 流動性 表記
+2026-06-22 20:20:22,595 [INFO] pipeline.stock_extractor: kabutan row[1]: サンリオ 8136 東P 945.5 4Q 22.0 倍 8.33 倍 1.40 %
+2026-06-22 20:20:22,595 [INFO] pipeline.stock_extractor: kabutan row[2]: 略称 市場
+2026-06-22 20:20:22,595 [INFO] pipeline.stock_extractor: kabutan row[3]: 東P 東証プライム
+2026-06-22 20:20:22,595 [INFO] pipeline.stock_extractor: kabutan row[4]: 東S 東証スタンダード
+2026-06-22 20:20:22,595 [INFO] pipeline.stock_extractor: kabutan 全tr行数: 22
+2026-06-22 20:20:22,597 [INFO] pipeline.stock_extractor: kabutan: 1社取得
+2026-06-22 20:20:22,598 [INFO] pipeline.stock_extractor: みんかぶで取引日確定: 2026-06-22
+2026-06-22 20:20:22,598 [INFO] pipeline.stock_extractor: Groq APIで整形中...
+2026-06-22 20:20:23,086 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:20:23,100 [INFO] pipeline.stock_extractor: Parsed 1 in A, 0 in B, 0 in C.
+2026-06-22 20:20:23,100 [INFO] main: 銘柄抽出完了: 1社 → output/2026-06-22/stocks.json
+2026-06-22 20:20:23,100 [INFO] main: ============================================================
+2026-06-22 20:20:23,100 [INFO] main: STEP 3: 投稿文・画像指示書生成
+2026-06-22 20:20:23,100 [INFO] main: ============================================================
+2026-06-22 20:20:24,150 [WARNING] affiliate_links: 楽天API取得エラー: 400 Client Error: 400 for url: https://app.rakuten.co.jp/services/api/BooksBook/Search/20170404?applicationId=53ffe77a-e8a3-4b5c-bee7-ca3bd2744dca&affiliateId=5335e187.bd9b90cd.5335e188.d302f85f&keyword=%E8%B2%A1%E5%8B%99%E8%AB%B8%E8%A1%A8&booksGenreId=001&hits=20&sort=sales&format=json。フォールバックURLを使用します。
+2026-06-22 20:20:24,151 [INFO] main: アフィリエイトリンク: https://books.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8
+2026-06-22 20:20:24,195 [INFO] googleapiclient.discovery_cache: file_cache is only supported with oauth2client<4.0.0
+2026-06-22 20:20:26,433 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: eco tech (37175文字)
+2026-06-22 20:20:27,204 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: good fellow helthcare (41077文字)
+2026-06-22 20:20:28,543 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: ite (30814文字)
+2026-06-22 20:20:31,537 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: カフェドコラル (90454文字)
+2026-06-22 20:20:32,568 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: チャイナインベストメント (5272文字)
+2026-06-22 20:20:33,716 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: smith wesson.pdf (22806文字)
+2026-06-22 20:20:35,684 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: korn ferry.pdf (40610文字)
+2026-06-22 20:20:36,528 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: oriental edia group.pdf (42023文字)
+2026-06-22 20:20:37,399 [INFO] pipeline.content_generator: PDF取得・テキスト抽出完了: Jabil.pdf (19716文字)
+2026-06-22 20:20:37,399 [INFO] pipeline.content_generator: 9件のPDFを処理します。
+2026-06-22 20:20:37,418 [INFO] pipeline.content_generator: コンテンツ生成中: eco tech
+2026-06-22 20:20:39,602 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:20:39,603 [INFO] pipeline.content_generator: コンテンツ生成中: good fellow helthcare
+2026-06-22 20:20:41,805 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:20:41,806 [INFO] pipeline.content_generator: コンテンツ生成中: ite
+2026-06-22 20:20:41,888 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:20:41,888 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 6.000000 seconds
+2026-06-22 20:20:47,993 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:20:47,994 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 10.000000 seconds
+2026-06-22 20:20:59,854 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:20:59,855 [INFO] pipeline.content_generator: コンテンツ生成中: カフェドコラル
+2026-06-22 20:20:59,918 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:20:59,918 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 3.000000 seconds
+2026-06-22 20:21:02,986 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:21:02,987 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 10.000000 seconds
+2026-06-22 20:21:15,016 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:21:15,017 [INFO] pipeline.content_generator: コンテンツ生成中: チャイナインベストメント
+2026-06-22 20:21:15,087 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:21:15,087 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 41.000000 seconds
+2026-06-22 20:21:56,216 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:21:56,216 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 6.000000 seconds
+2026-06-22 20:22:05,002 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:22:05,003 [INFO] pipeline.content_generator: コンテンツ生成中: smith wesson.pdf
+2026-06-22 20:22:05,065 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:22:05,066 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 23.000000 seconds
+2026-06-22 20:22:30,224 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:22:30,225 [INFO] pipeline.content_generator: コンテンツ生成中: korn ferry.pdf
+2026-06-22 20:22:30,303 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:22:30,304 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 19.000000 seconds
+2026-06-22 20:22:49,396 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:22:49,396 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 6.000000 seconds
+2026-06-22 20:22:57,428 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:22:57,429 [INFO] pipeline.content_generator: コンテンツ生成中: oriental edia group.pdf
+2026-06-22 20:22:57,504 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:22:57,505 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 18.000000 seconds
+2026-06-22 20:23:17,537 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:23:17,538 [INFO] pipeline.content_generator: コンテンツ生成中: Jabil.pdf
+2026-06-22 20:23:17,605 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+2026-06-22 20:23:17,606 [INFO] groq._base_client: Retrying request to /openai/v1/chat/completions in 2.000000 seconds
+2026-06-22 20:23:21,057 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-22 20:23:21,057 [INFO] pipeline.content_generator: 9社分のコンテンツを生成しました。
+2026-06-22 20:23:21,058 [INFO] main: 投稿文生成完了: 9社
