@@ -444,10 +444,11 @@ function countXchars(text){
 // CONFIG
 // ═══════════════════════════════════════════════════════════════
 function saveConfig(){
-  cfg.appId = document.getElementById('cfgAppId').value.trim();
-  cfg.affId = document.getElementById('cfgAffId').value.trim();
+  cfg.appId = document.getElementById('cfgAppId').value.trim().replace(/\s/g,'');
+  cfg.affId = document.getElementById('cfgAffId').value.trim().replace(/\s/g,'');
   try{ localStorage.setItem('ohenai_cfg2', JSON.stringify(cfg)); }catch{}
-  toast('設定を保存しました ✓');
+  console.log('Config saved. appId length:',cfg.appId.length,'first4:',cfg.appId.substring(0,4));
+  toast('保存しました ✓（アプリID: '+cfg.appId.length+'文字）');
   document.getElementById('sec0').classList.remove('open');
 }
 function loadConfig(){
@@ -561,7 +562,6 @@ async function searchProducts(){
   try{
     const params = new URLSearchParams({
       applicationId: cfg.appId,
-      affiliateId:   cfg.affId||'',
       keyword: kw,
       hits: 30,
       sort: '-reviewCount',
@@ -569,8 +569,15 @@ async function searchProducts(){
       maxPrice: 10000,
       format: 'json',
     });
+    if(cfg.affId) params.set('affiliateId', cfg.affId);
     const res = await fetch(`${RAKUTEN_API}?${params}`);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    if(!res.ok){
+      const txt=await res.text().catch(()=>'');
+      let msg=`HTTP ${res.status}`;
+      try{const ej=JSON.parse(txt);msg=ej.error_description||ej.error||msg;}catch{}
+      console.error('Rakuten API error',res.status,txt);
+      throw new Error(msg);
+    }
     const data = await res.json();
     const items = (data.Items||[]).map(i=>i.Item);
     if(!items.length){ document.getElementById('productArea').innerHTML='<div class="empty">商品が見つかりませんでした</div>'; return; }
