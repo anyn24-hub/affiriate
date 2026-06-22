@@ -13,12 +13,16 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:17px;-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;min-height:100vh;padding-bottom:90px;max-width:700px;margin:0 auto}
+
+/* header */
 .hdr{background:linear-gradient(135deg,#0a0a12,#16101e);border-bottom:1px solid rgba(168,85,247,.35);padding:14px 20px 12px;position:sticky;top:0;z-index:100}
 .hdr-inner{display:flex;justify-content:space-between;align-items:center}
 .hdr-title{font-size:19px;font-weight:900;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .hdr-sub{font-size:11px;color:var(--muted);margin-top:2px}
 .hdr-date{font-size:13px;color:var(--cyan);font-weight:700}
 .page{padding:14px 16px}
+
+/* sections */
 .sec{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
 .sec-hd{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none;-webkit-user-select:none}
 .sec-hd:active{background:rgba(255,255,255,.03)}
@@ -31,12 +35,16 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .sec.open .chevron{transform:rotate(180deg)}
 .sec-body{display:none;padding:0 18px 20px;border-top:1px solid var(--border)}
 .sec.open .sec-body{display:block}
+
+/* forms */
 .fg{margin-top:14px}
 .fg label{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:6px;display:block}
 .finput,.fsel{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:15px;padding:12px 14px;outline:none;-webkit-appearance:none}
 .finput:focus,.fsel:focus{border-color:var(--purple)}
 .fsel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M0 0l6 7 6-7z' fill='%23aaa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
 .finput.sm{font-size:13px;padding:10px 12px}
+
+/* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 18px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .15s,transform .1s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 .btn:active{opacity:.7;transform:scale(.97)}
 .btn-full{width:100%}.btn-pink{background:var(--pink);color:#fff}.btn-purple{background:var(--purple);color:#fff}
@@ -44,9 +52,19 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .btn-ghost{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)}
 .btn-sm{padding:9px 14px;font-size:13px;border-radius:8px}
 .btn-row{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
+
+/* api setup banner */
+.setup-banner{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.4);border-radius:12px;padding:16px;margin-top:14px}
+.setup-banner-title{font-size:14px;font-weight:900;color:var(--red);margin-bottom:8px}
+.setup-banner p{font-size:13px;color:rgba(240,240,245,.8);line-height:1.6;margin-bottom:10px}
+.setup-banner a{color:var(--pink);font-weight:700}
+
+/* event chips */
 .evt-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
 .evt-chip{padding:11px 13px;font-size:13px;font-weight:700;border:1px solid var(--border);border-radius:11px;cursor:pointer;background:var(--card2);color:var(--muted);text-align:center;-webkit-tap-highlight-color:transparent;transition:all .15s;line-height:1.4}
 .evt-chip.active{border-color:var(--pink);color:var(--pink);background:rgba(255,107,157,.1)}
+
+/* product cards */
 .plist{display:flex;flex-direction:column;gap:9px;margin-top:12px}
 .pcard{background:var(--card2);border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s}
 .pcard.sel{border-color:var(--purple);background:rgba(168,85,247,.08)}
@@ -59,10 +77,14 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .score-badge{font-size:11px;font-weight:900;padding:3px 9px;border-radius:100px}
 .ss{background:var(--pink);color:#fff}.sa{background:var(--purple);color:#fff}
 .sb{background:var(--cyan);color:#000}.sc{background:rgba(255,255,255,.15);color:rgba(255,255,255,.6)}
+
+/* manual slots */
 .prod-slot{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:15px;margin-top:12px}
 .prod-slot-hd{display:flex;align-items:center;gap:9px;margin-bottom:10px}
 .prod-num{width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-size:12px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 .prod-slot-name{font-size:14px;font-weight:800}
+
+/* post */
 .out-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-break:break-all;min-height:150px;outline:none;color:var(--text)}
 .out-box[contenteditable=true]:focus{border-color:var(--purple)}
 .char-row{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
@@ -72,26 +94,32 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .ng-box.show{display:block}
 .ng-ok{background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.25);color:var(--green)}
 .ng-warn{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red)}
+
+/* info */
 .info{border-radius:9px;padding:12px 14px;font-size:13px;line-height:1.7;margin-top:12px}
 .ipurple{background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.25);color:rgba(240,240,245,.85)}
 .igold{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);color:rgba(240,240,245,.85)}
+
+/* sel hint */
 .sel-hint{font-size:13px;font-weight:700;margin-top:10px;padding:9px 12px;border-radius:9px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.2);display:none}
-.setup-banner{background:rgba(248,113,113,.1);border:2px solid rgba(248,113,113,.5);border-radius:12px;padding:16px;margin-bottom:14px}
-.setup-banner h3{font-size:15px;font-weight:900;color:var(--red);margin-bottom:8px}
-.setup-banner p{font-size:13px;line-height:1.7;color:rgba(240,240,245,.85);margin-bottom:6px}
-.setup-banner a{color:var(--pink);font-weight:700;text-decoration:none}
-.setup-banner ol{padding-left:18px;font-size:13px;line-height:2}
+
+/* kpi table */
 .tbl-wrap{margin-top:12px;overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:480px}
 .tbl th{background:rgba(255,255,255,.06);color:var(--muted);font-weight:700;padding:8px 9px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
 .tbl td{padding:8px 9px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.8);vertical-align:top}
 .tbl tr:last-child td{border-bottom:none}
+
+/* spinner */
 .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:11px 24px;border-radius:100px;font-size:14px;font-weight:800;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;white-space:nowrap}
 #toast.show{opacity:1}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:18px 0}
 .mt8{margin-top:8px}.mt12{margin-top:12px}
+
+/* saved */
 .saved-item{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:9px}
 .saved-name{font-size:14px;font-weight:700;margin-bottom:5px}
 .saved-url{font-size:11px;color:var(--muted);word-break:break-all;margin-bottom:8px}
@@ -107,6 +135,33 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 </div>
 <div class="page">
 
+<!-- API設定 -->
+<div class="sec" id="sec0">
+  <div class="sec-hd" onclick="tog('sec0')">
+    <span class="badge bx">⚙️</span>
+    <span class="sec-title">楽天アプリID設定（初回のみ）</span>
+    <span class="chevron">▼</span>
+  </div>
+  <div class="sec-body">
+    <div id="setupBanner" class="setup-banner" style="display:none">
+      <div class="setup-banner-title">⚠️ アプリIDが未設定です（自動取得に必要）</div>
+      <p>楽天アプリIDは<strong>無料</strong>で取得できます。<br>
+      ① <a href="https://webservice.rakuten.co.jp/" target="_blank">webservice.rakuten.co.jp</a> にアクセス<br>
+      ② 「新規アプリ登録」→ アプリ名（何でもOK）を入力して登録<br>
+      ③ 表示された「アプリID/デベロッパーID」をコピーして下に貼り付け</p>
+    </div>
+    <div class="fg" style="margin-top:10px">
+      <label>楽天アプリID（applicationId）※アフィリエイトIDではなくアプリID</label>
+      <input class="finput" id="cfgAppId" type="password" placeholder="例: 1234567890123456789" autocomplete="off">
+    </div>
+    <div class="fg">
+      <label>楽天アフィリエイトID（任意・URLに自動付与したい場合）</label>
+      <input class="finput" id="cfgAffId" placeholder="例: 1.abcdef12.12345678.abcdef12" autocomplete="off">
+    </div>
+    <div class="btn-row"><button class="btn btn-purple btn-full" onclick="saveConfig()">💾 保存して自動取得を有効にする</button></div>
+    <div class="info ipurple mt8">アプリIDを保存すると、スイーツ/ガジェット/美容/ゆる健康カテゴリで楽天売れ筋商品を自動取得できます。アフィリエイトIDは任意です（未入力でもOK）。</div>
+  </div>
+</div>
 
 <!-- STEP 1 -->
 <div class="sec open" id="sec1">
@@ -139,14 +194,14 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       <label>イベント訴求モード</label>
       <div class="evt-grid">
         <div class="evt-chip active" data-evt="通常" onclick="selectEvt(this)">📦 通常</div>
-        <div class="evt-chip" data-evt="お買い物マラソン" onclick="selectEvt(this)">🏃 マラソン</div>
-        <div class="evt-chip" data-evt="楽天スーパーSALE" onclick="selectEvt(this)">⚡ スーパーSALE</div>
-        <div class="evt-chip" data-evt="5と0のつく日" onclick="selectEvt(this)">5️⃣ 5と0の日</div>
+        <div class="evt-chip" data-evt="お買い物マラソン" onclick="selectEvt(this)">🏃 お買い物マラソン</div>
+        <div class="evt-chip" data-evt="楽天スーパーSALE" onclick="selectEvt(this)">⚡ 楽天スーパーSALE</div>
+        <div class="evt-chip" data-evt="5と0のつく日" onclick="selectEvt(this)">5️⃣ 5と0のつく日</div>
         <div class="evt-chip" data-evt="買い回り" onclick="selectEvt(this)">🛒 買い回り</div>
         <div class="evt-chip" data-evt="季節ギフト" onclick="selectEvt(this)">🎁 季節ギフト</div>
-        <div class="evt-chip" data-evt="訳あり・自宅用" onclick="selectEvt(this)">🏠 訳あり</div>
+        <div class="evt-chip" data-evt="訳あり・自宅用" onclick="selectEvt(this)">🏠 訳あり・自宅用</div>
       </div>
-      <div id="evtDesc" class="info ipurple mt8" style="font-size:12px"></div>
+      <div id="evtDesc" class="info ipurple mt8" style="font-size:12px">通常: シンプルな商品紹介フォーマットで生成します。</div>
     </div>
   </div>
 </div>
@@ -265,7 +320,8 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 <div id="toast"></div>
 
 <script>
-const RAKUTEN_API = '/api/search';
+// ═══ CONSTANTS ════════════════════════════════════════════════
+const API = 'https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601';
 const MANUAL_CATS = ['高料率①','高料率②'];
 const CAT_KW = {
   'スイーツ':  '訳あり スイーツ 送料無料',
@@ -332,14 +388,16 @@ const INTRO = {
 const EVT_DESC={'通常':'通常: シンプルな商品紹介フォーマットで生成します。','お買い物マラソン':'お買い物マラソン: 買い回り訴求フレーズを挿入します。','楽天スーパーSALE':'楽天スーパーSALE: SALE期間の緊急感を挿入します。','5と0のつく日':'5と0のつく日: ポイント倍率アップ訴求フォーマットです。','買い回り':'買い回り: 複数ショップ購入を誘導する訴求を挿入します。','季節ギフト':'季節ギフト: ギフト用途を強調したフォーマットです。','訳あり・自宅用':'訳あり・自宅用: コスパ重視・自分へのご褒美フレーズです。'};
 const NG_WORDS=['食べた','使ってみた','美味しかった','最高だった','リピ確定','絶対おすすめ','効果あり','痩せる','治る','肌が変わる','若返る','疲労回復','睡眠改善','血糖値','改善する','治療','効く','爆売れ','買うべき','必須','間違いない','絶対','確実','必ず'];
 const NG_REPLACE={'食べた':'気になる','使ってみた':'レビューを見て気になった','美味しかった':'気になる','最高だった':'良さそう','リピ確定':'候補に入れたい','絶対おすすめ':'候補に入れたい','効果あり':'続けやすそう','痩せる':'体を整えたい人向け','治る':'続けやすそう','肌が変わる':'清潔感を整えたい人向け','若返る':'整えたい人向け','疲労回復':'リラックスタイムに良さそう','睡眠改善':'おやすみ前に良さそう','改善する':'続けやすそう','治療':'ケア','効く':'良さそう','爆売れ':'人気','買うべき':'候補に入れたい','必須':'役立ちそう','間違いない':'良さそう','絶対':'ぜひ','確実':'きっと','必ず':'ぜひ'};
-const BONUS=['訳あり','送料無料','個包装','お試し','セット','まとめ買い','ギフト'];
 
+// ═══ STATE ════════════════════════════════════════════════════
+let cfg={appId:'',affId:''};
 let selectedEvt='通常';
 let results=[];
 let selectedIdx=[];
 let kpiLog=[];
 let savedUrls=[];
 
+// ═══ UTILS ════════════════════════════════════════════════════
 function tog(id){document.getElementById(id).classList.toggle('open');}
 function toast(msg,bad=false){const el=document.getElementById('toast');el.textContent=msg;el.style.background=bad?'var(--red)':'var(--green)';el.style.color=bad?'#fff':'#000';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 function cp(t){navigator.clipboard.writeText(t).then(()=>toast('コピーしました ✓')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('コピーしました ✓');});}
@@ -348,8 +406,26 @@ function pad2(n){return String(n).padStart(2,'0');}
 function todayStr(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;}
 function xchars(t){return [...t.replace(/https?:\/\/\S+/g,m=>'?'.repeat(23))].reduce((a,c)=>a+(c.codePointAt(0)>0x7f?2:1),0);}
 
+// ═══ CONFIG ═══════════════════════════════════════════════════
+function saveConfig(){
+  cfg.appId=document.getElementById('cfgAppId').value.trim();
+  cfg.affId=document.getElementById('cfgAffId').value.trim();
+  try{localStorage.setItem('ohenai_cfg6',JSON.stringify(cfg));}catch{}
+  toast('保存しました ✓');
+  document.getElementById('sec0').classList.remove('open');
+  document.getElementById('setupBanner').style.display='none';
+}
+function loadConfig(){
+  try{const s=localStorage.getItem('ohenai_cfg6');if(s)cfg=JSON.parse(s);}catch{}
+  document.getElementById('cfgAppId').value=cfg.appId||'';
+  document.getElementById('cfgAffId').value=cfg.affId||'';
+  if(!cfg.appId){
+    document.getElementById('setupBanner').style.display='block';
+    document.getElementById('sec0').classList.add('open');
+  }
+}
 
-// ─── CATEGORY ────────────────────────────────────────────
+// ═══ CATEGORY ════════════════════════════════════════════════
 function isManual(cat){return MANUAL_CATS.includes(cat);}
 function onCatChange(){
   const cat=document.getElementById('catSel').value;
@@ -370,7 +446,8 @@ function selectEvt(el){
   document.getElementById('evtDesc').textContent=EVT_DESC[selectedEvt]||'';
 }
 
-// ─── SCORE ──────────────────────────────────────────────
+// ═══ SCORE ════════════════════════════════════════════════════
+const BONUS=['訳あり','送料無料','個包装','お試し','セット','まとめ買い','ギフト'];
 function score(it){
   let s=0;
   const price=parseInt(it.itemPrice||0);
@@ -386,8 +463,14 @@ function score(it){
 }
 function scBadge(s){return s>=80?{l:'S',c:'ss'}:s>=60?{l:'A',c:'sa'}:s>=40?{l:'B',c:'sb'}:{l:'C',c:'sc'};}
 
-// ─── FETCH ──────────────────────────────────────────────
+// ═══ FETCH ════════════════════════════════════════════════════
 async function fetchProducts(){
+  if(!cfg.appId){
+    toast('アプリIDを設定してください（⚙️ 設定を開く）',true);
+    document.getElementById('sec0').classList.add('open');
+    document.getElementById('setupBanner').style.display='block';
+    return;
+  }
   const kw=document.getElementById('kwInput').value.trim();
   if(!kw){toast('キーワードを入力してください',true);return;}
   const btn=document.getElementById('fetchBtn');
@@ -396,21 +479,17 @@ async function fetchProducts(){
   document.getElementById('selHint').style.display='none';
   selectedIdx=[];results=[];
   try{
-    const p=new URLSearchParams({kw,hits:20});
-    const res=await fetch(`${RAKUTEN_API}?${p}`);
-    if(!res.ok){
-      const txt=await res.text().catch(()=>'');
-      let msg=`HTTP ${res.status}`;
-      try{const j=JSON.parse(txt);msg=j.error_description||j.error||msg;}catch{}
-      throw new Error(msg);
-    }
+    const p=new URLSearchParams({applicationId:cfg.appId,keyword:kw,hits:20,sort:'-reviewCount',format:'json'});
+    if(cfg.affId)p.set('affiliateId',cfg.affId);
+    const res=await fetch(`${API}?${p}`);
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error_description||`HTTP ${res.status}`);}
     const data=await res.json();
     const items=(data.Items||[]).map(i=>i.Item);
     if(!items.length){document.getElementById('productArea').innerHTML='<div class="empty">商品が見つかりませんでした。キーワードを変えてみてください。</div>';return;}
     results=items.map(it=>({...it,_score:score(it)})).sort((a,b)=>b._score-a._score).slice(0,8);
     renderProducts();
   }catch(e){
-    document.getElementById('productArea').innerHTML=`<div class="empty" style="color:var(--red)">❌ ${escH(e.message)}</div>`;
+    document.getElementById('productArea').innerHTML=`<div class="empty" style="color:var(--red)">❌ ${escH(e.message)}<br><span style="font-size:12px;color:var(--muted)">アプリIDを確認してください</span></div>`;
   }finally{btn.innerHTML='取得';btn.disabled=false;}
 }
 
@@ -450,7 +529,7 @@ function updateSelHint(){
   el.style.color=cnt===3?'var(--green)':'var(--purple)';
 }
 
-// ─── GENERATE ─────────────────────────────────────────
+// ═══ GENERATE ════════════════════════════════════════════════
 function generatePost(){
   const cat=document.getElementById('catSel').value;
   const extra=document.getElementById('extraNote').value.trim();
@@ -478,30 +557,32 @@ function generatePost(){
   updateCounter(post);runNGCheck(post);
 }
 
+// ═══ NG ══════════════════════════════════════════════════════
 function autoNG(t){let r=t;Object.entries(NG_REPLACE).forEach(([b,g])=>{r=r.replace(new RegExp(b,'g'),g);});return r;}
 function runNGCheck(text){const found=NG_WORDS.filter(w=>text.includes(w));const box=document.getElementById('ngBox');if(found.length){box.className='ng-box show ng-warn';box.innerHTML=`🚫 NGワード: ${found.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`;}else{box.className='ng-box show ng-ok';box.textContent='✅ NGワードなし';}}
 function onPostInput(){const t=document.getElementById('postBox').textContent||'';updateCounter(t);runNGCheck(t);}
 function updateCounter(t){const c=xchars(t);const el=document.getElementById('charCount');el.textContent=`${c} / 280文字`;el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');}
 function copyPost(){const t=document.getElementById('postBox').textContent||'';const c=xchars(t);if(c>280){toast(`${c}文字です。280文字以内に収めてください`,true);return;}const ng=NG_WORDS.filter(w=>t.includes(w));if(ng.length){if(!confirm(`NGワード「${ng[0]}」が含まれています。このままコピーしますか？`))return;}cp(t);}
 
-function saveUrl(){const name=document.getElementById('svName').value.trim(),url=document.getElementById('svUrl').value.trim();if(!name||!url){toast('商品名とURLを両方入力してください',true);return;}savedUrls.push({name,url});try{localStorage.setItem('ohenai_saved8',JSON.stringify(savedUrls));}catch{}document.getElementById('svName').value='';document.getElementById('svUrl').value='';renderSaved();toast('保存しました ✓');}
-function pasteSlot(sl,name,url){if(isManual(document.getElementById('catSel').value)){document.getElementById(`name${sl}`).value=name;document.getElementById(`url${sl}`).value=url;document.getElementById('sec2').classList.add('open');toast(`商品${sl}に貼り付けました ✓`);}else{toast('自動取得カテゴリでは手動URL保存を使えません',true);}}
-function delSaved(i){savedUrls.splice(i,1);try{localStorage.setItem('ohenai_saved8',JSON.stringify(savedUrls));}catch{}renderSaved();}
+// ═══ SAVED ═══════════════════════════════════════════════════
+function saveUrl(){const name=document.getElementById('svName').value.trim(),url=document.getElementById('svUrl').value.trim();if(!name||!url){toast('商品名とURLを両方入力してください',true);return;}savedUrls.push({name,url});try{localStorage.setItem('ohenai_saved6',JSON.stringify(savedUrls));}catch{}document.getElementById('svName').value='';document.getElementById('svUrl').value='';renderSaved();toast('保存しました ✓');}
+function pasteSlot(sl,name,url){if(isManual(document.getElementById('catSel').value)){document.getElementById(`name${sl}`).value=name;document.getElementById(`url${sl}`).value=url;document.getElementById('sec2').classList.add('open');toast(`商品${sl}に貼り付けました ✓`);}else{toast('自動取得カテゴリでは保存URLは使用できません',true);}}
+function delSaved(i){savedUrls.splice(i,1);try{localStorage.setItem('ohenai_saved6',JSON.stringify(savedUrls));}catch{}renderSaved();}
 function renderSaved(){document.getElementById('savedList').innerHTML=savedUrls.length?savedUrls.map((s,i)=>`<div class="saved-item"><div class="saved-name">${escH(s.name)}</div><div class="saved-url">${escH(s.url.slice(0,55))}…</div><div class="saved-actions">${[1,2,3].map(sl=>`<button class="btn btn-ghost btn-sm" onclick="pasteSlot(${sl},'${s.name.replace(/'/g,"\\'")}','${s.url.replace(/'/g,"\\'")}')">→ 商品${sl}</button>`).join('')}<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="delSaved(${i})">削除</button></div></div>`).join(''):'<div class="empty" style="padding:10px 0">保存済みURLはまだありません</div>';}
 
-function logKpi(){const t=document.getElementById('postBox').textContent||'';const cat=document.getElementById('catSel').value,time=document.getElementById('timeSel').value;const names=isManual(cat)?[1,2,3].map(i=>(document.getElementById(`name${i}`).value||'').trim()).filter(Boolean).join(' / '):selectedIdx.map(si=>(results[si]?.itemName||'').slice(0,15)).join(' / ');kpiLog.push({date:todayStr(),time,platform:'X',category:cat,event:selectedEvt,products:names,chars:xchars(t),post_url:'',impressions:'',clicks:'',conversions:'',sales:'',reward:'',memo:''});try{localStorage.setItem('ohenai_kpi8',JSON.stringify(kpiLog));}catch{}renderKpi();toast('KPIに記録しました ✓');}
+// ═══ KPI ═════════════════════════════════════════════════════
+function logKpi(){const t=document.getElementById('postBox').textContent||'';const cat=document.getElementById('catSel').value,time=document.getElementById('timeSel').value;const names=isManual(cat)?[1,2,3].map(i=>(document.getElementById(`name${i}`).value||'').trim()).filter(Boolean).join(' / '):selectedIdx.map(si=>(results[si]?.itemName||'').slice(0,15)).join(' / ');kpiLog.push({date:todayStr(),time,platform:'X',category:cat,event:selectedEvt,products:names,chars:xchars(t),post_url:'',impressions:'',clicks:'',conversions:'',sales:'',reward:'',memo:''});try{localStorage.setItem('ohenai_kpi6',JSON.stringify(kpiLog));}catch{}renderKpi();toast('KPIに記録しました ✓');}
 function renderKpi(){if(!kpiLog.length){document.getElementById('kpiArea').innerHTML='<div class="empty">記録がまだありません</div>';return;}const rows=kpiLog.map(r=>`<tr><td>${escH(r.date)}</td><td>${escH(r.time)}</td><td>${escH(r.platform)}</td><td>${escH(r.category)}</td><td>${escH(r.event)}</td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.products)}</td><td>${r.chars}</td></tr>`).join('');document.getElementById('kpiArea').innerHTML=`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>日付</th><th>時間</th><th>投稿先</th><th>カテゴリ</th><th>イベント</th><th>商品</th><th>文字数</th></tr></thead><tbody>${rows}</tbody></table></div><div style="font-size:12px;color:var(--muted);margin-top:7px">${kpiLog.length}件記録済み</div>`;}
 function exportCsv(){if(!kpiLog.length){toast('記録がありません',true);return;}const h='日付,時間,投稿先,カテゴリ,イベント訴求モード,商品,文字数,投稿URL,インプレッション,クリック数,成果件数,売上金額,報酬金額,メモ\n';const rows=kpiLog.map(r=>[r.date,r.time,r.platform,r.category,r.event,`"${(r.products||'').replace(/"/g,'""')}"`,r.chars,r.post_url||'',r.impressions||'',r.clicks||'',r.conversions||'',r.sales||'',r.reward||'',r.memo||''].join(',')).join('\n');const blob=new Blob(['﻿'+h+rows],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`ohenai_kpi_${todayStr()}.csv`;a.click();URL.revokeObjectURL(url);}
-function clearKpi(){if(!confirm('消去しますか？'))return;kpiLog=[];try{localStorage.removeItem('ohenai_kpi8');}catch{}renderKpi();toast('消去しました');}
+function clearKpi(){if(!confirm('消去しますか？'))return;kpiLog=[];try{localStorage.removeItem('ohenai_kpi6');}catch{}renderKpi();toast('消去しました');}
 
+// ═══ INIT ════════════════════════════════════════════════════
+function initHeader(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));const wd=['日','月','火','水','木','金','土'][d.getDay()];document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;}
 (function init(){
-  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
-  const wd=['日','月','火','水','木','金','土'][d.getDay()];
-  document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;
-  try{const s=localStorage.getItem('ohenai_kpi8');if(s)kpiLog=JSON.parse(s);}catch{}
-  try{const s=localStorage.getItem('ohenai_saved8');if(s)savedUrls=JSON.parse(s);}catch{}
+  loadConfig();initHeader();
+  try{const s=localStorage.getItem('ohenai_kpi6');if(s)kpiLog=JSON.parse(s);}catch{}
+  try{const s=localStorage.getItem('ohenai_saved6');if(s)savedUrls=JSON.parse(s);}catch{}
   renderKpi();renderSaved();onCatChange();
-  document.getElementById('evtDesc').textContent=EVT_DESC['通常'];
 })();
 </script>
 </body>
