@@ -443,44 +443,22 @@ async function fetchRanking(){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 取得中...';
   status.textContent='';
   try{
-    const rankUrl=`https://ranking.rakuten.co.jp/daily/${genre}/`;
-    const proxyUrl=`https://api.allorigins.win/get?url=${encodeURIComponent(rankUrl)}`;
-    const r=await fetch(proxyUrl,{cache:'no-store'});
-    if(!r.ok)throw new Error(`プロキシエラー HTTP ${r.status}`);
+    const p=new URLSearchParams({genre});
+    const r=await fetch(`/api/search?${p}`);
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||`HTTP ${r.status}`);}
     const data=await r.json();
-    const html=data.contents||'';
-    if(!html)throw new Error('コンテンツが空です');
-
-    // ブラウザのDOMParserで解析
-    const doc=new DOMParser().parseFromString(html,'text/html');
-    const seen=new Set();
-    const products=[];
-    for(const a of doc.querySelectorAll('a[href*="item.rakuten.co.jp"]')){
-      const href=(a.href||a.getAttribute('href')||'').split('?')[0].replace(/\/$/,'');
-      if(!href||seen.has(href))continue;
-      seen.add(href);
-      // タイトルを探す: title属性→近くの要素→テキスト
-      const title=(a.getAttribute('title')||
-        a.querySelector('[class*="name"],[class*="title"],h3,h2,p')?.textContent||
-        a.textContent||'').replace(/\s+/g,' ').trim();
-      if(title.length<4)continue;
-      products.push({title:title.slice(0,45),url:href+'/'});
-      if(products.length>=3)break;
-    }
-    if(!products.length)throw new Error('商品が見つかりませんでした。URLを手動で貼り付けてください。');
-
-    for(let i=0;i<products.length;i++){
-      const n=i+1,p=products[i];
-      document.getElementById(`name${n}`).value=p.title;
-      document.getElementById(`rawUrl${n}`).value=p.url;
-      const affUrl=affId
-        ?`https://hb.afl.rakuten.co.jp/ichiba/${affId}/?pc=${encodeURIComponent(p.url)}&link_type=text`
-        :p.url;
-      document.getElementById(`url${n}`).value=affUrl;
+    const items=(data.Items||[]).map(i=>i.Item).filter(i=>i.itemName&&i.itemName.length>3);
+    if(!items.length)throw new Error('商品が見つかりませんでした。URLを手動で貼り付けてください。');
+    const top=items.slice(0,3);
+    for(let i=0;i<top.length;i++){
+      const n=i+1,it=top[i];
+      document.getElementById(`name${n}`).value=it.itemName||'';
+      document.getElementById(`rawUrl${n}`).value=it.itemUrl||'';
+      document.getElementById(`url${n}`).value=it.affiliateUrl||it.itemUrl||'';
       const st=document.getElementById(`st${n}`);
       st.textContent='✓ 自動取得';st.style.color='var(--green)';
     }
-    status.textContent=`✅ ${products.length}商品を取得しました`;
+    status.textContent=`✅ ${top.length}商品を取得しました`;
     status.style.color='var(--green)';
     document.getElementById('sec3').classList.add('open');
   }catch(e){
