@@ -184,46 +184,53 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 <div class="sec open" id="sec2">
   <div class="sec-hd" onclick="tog('sec2')">
     <span class="badge bpu">STEP 2</span>
-    <span class="sec-title" id="step2Title">🔍 商品を自動取得して3点選ぶ</span>
+    <span class="sec-title" id="step2Title">🔗 楽天商品URLを貼り付けて3点選ぶ</span>
     <span class="chevron">▼</span>
   </div>
   <div class="sec-body">
+    <!-- ランキングリンク（カテゴリで変わる） -->
+    <a id="rankingLink" style="display:flex;align-items:center;gap:12px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.3);border-radius:12px;padding:15px;text-decoration:none;color:var(--text);margin-top:4px" href="https://ranking.rakuten.co.jp/" target="_blank" rel="noopener">
+      <span style="font-size:24px">🏆</span>
+      <div style="flex:1"><div style="font-size:15px;font-weight:800" id="rankingLinkTitle">楽天ランキングを開く</div><div style="font-size:12px;color:var(--muted);margin-top:3px">商品を選んでURLをコピー → 下に貼り付け</div></div>
+      <span style="color:var(--muted);font-size:16px">↗</span>
+    </a>
 
-    <!-- 自動取得エリア -->
-    <div id="autoArea">
+    <!-- 商品スロット ×3 -->
+    <div class="prod-slot">
+      <div class="prod-slot-hd"><span class="prod-num">①</span><span class="prod-slot-name">商品1</span><span id="st1" style="font-size:11px;margin-left:8px"></span></div>
       <div class="fg" style="margin-top:0">
-        <label>絞り込みキーワード（任意）</label>
-        <div style="display:flex;gap:9px">
-          <input class="finput" id="kwInput" placeholder="例: 送料無料 訳あり" style="flex:1;margin:0" onkeydown="if(event.key==='Enter')fetchProducts()">
-          <button class="btn btn-pink" id="fetchBtn" onclick="fetchProducts()">取得</button>
+        <label>楽天商品URL（貼り付け）</label>
+        <div style="display:flex;gap:8px">
+          <input class="finput" id="rawUrl1" placeholder="https://item.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url" style="flex:1;margin:0">
+          <button class="btn btn-ghost btn-sm" onclick="fetchTitle(1)">取得</button>
         </div>
       </div>
-      <div id="selHint" class="sel-hint"></div>
-      <div id="productArea"><div class="empty">「取得」ボタンを押すと売れ筋商品を自動表示します</div></div>
+      <div class="fg"><label>商品名（自動入力・編集可）</label><input class="finput" id="name1" placeholder="URLを取得すると自動入力されます" autocomplete="off"></div>
+      <input type="hidden" id="url1">
     </div>
-
-    <!-- 手動エリア（高料率のみ） -->
-    <div id="manualArea" style="display:none">
-      <a style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:15px;text-decoration:none;color:var(--text);margin-top:12px" href="https://affiliate.rakuten.co.jp/top/" target="_blank" rel="noopener">
-        <span style="font-size:24px">🛒</span>
-        <div style="flex:1"><div style="font-size:15px;font-weight:800">楽天アフィリエイト管理画面</div><div style="font-size:12px;color:var(--muted);margin-top:3px">「高料率」タブ → 商品URLをコピー → 下に貼り付け</div></div>
-        <span style="color:var(--muted);font-size:16px">↗</span>
-      </a>
-      <div class="prod-slot">
-        <div class="prod-slot-hd"><span class="prod-num">①</span><span class="prod-slot-name">商品1</span></div>
-        <div class="fg" style="margin-top:0"><label>商品名</label><input class="finput" id="name1" placeholder="例: 〇〇セット 個包装 ギフト" autocomplete="off"></div>
-        <div class="fg"><label>アフィリエイトURL</label><input class="finput sm" id="url1" placeholder="https://hb.afl.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url"></div>
+    <div class="prod-slot">
+      <div class="prod-slot-hd"><span class="prod-num">②</span><span class="prod-slot-name">商品2</span><span id="st2" style="font-size:11px;margin-left:8px"></span></div>
+      <div class="fg" style="margin-top:0">
+        <label>楽天商品URL（貼り付け）</label>
+        <div style="display:flex;gap:8px">
+          <input class="finput" id="rawUrl2" placeholder="https://item.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url" style="flex:1;margin:0">
+          <button class="btn btn-ghost btn-sm" onclick="fetchTitle(2)">取得</button>
+        </div>
       </div>
-      <div class="prod-slot">
-        <div class="prod-slot-hd"><span class="prod-num">②</span><span class="prod-slot-name">商品2</span></div>
-        <div class="fg" style="margin-top:0"><label>商品名</label><input class="finput" id="name2" placeholder="商品名を入力" autocomplete="off"></div>
-        <div class="fg"><label>アフィリエイトURL</label><input class="finput sm" id="url2" placeholder="https://hb.afl.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url"></div>
+      <div class="fg"><label>商品名（自動入力・編集可）</label><input class="finput" id="name2" placeholder="商品名を入力（または自動取得）" autocomplete="off"></div>
+      <input type="hidden" id="url2">
+    </div>
+    <div class="prod-slot">
+      <div class="prod-slot-hd"><span class="prod-num">③</span><span class="prod-slot-name">商品3</span><span id="st3" style="font-size:11px;margin-left:8px"></span></div>
+      <div class="fg" style="margin-top:0">
+        <label>楽天商品URL（貼り付け）</label>
+        <div style="display:flex;gap:8px">
+          <input class="finput" id="rawUrl3" placeholder="https://item.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url" style="flex:1;margin:0">
+          <button class="btn btn-ghost btn-sm" onclick="fetchTitle(3)">取得</button>
+        </div>
       </div>
-      <div class="prod-slot">
-        <div class="prod-slot-hd"><span class="prod-num">③</span><span class="prod-slot-name">商品3</span></div>
-        <div class="fg" style="margin-top:0"><label>商品名</label><input class="finput" id="name3" placeholder="商品名を入力" autocomplete="off"></div>
-        <div class="fg"><label>アフィリエイトURL</label><input class="finput sm" id="url3" placeholder="https://hb.afl.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url"></div>
-      </div>
+      <div class="fg"><label>商品名（自動入力・編集可）</label><input class="finput" id="name3" placeholder="商品名を入力（または自動取得）" autocomplete="off"></div>
+      <input type="hidden" id="url3">
     </div>
   </div>
 </div>
@@ -296,7 +303,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 <script>
 // ═══ CONSTANTS ════════════════════════════════════════════════
 const API = '/api/search';
-const MANUAL_CATS = ['高料率①','高料率②'];
+const MANUAL_CATS = ['スイーツ','ガジェット','美容','ゆる健康','高料率①','高料率②'];
 const CAT_KW = {
   'スイーツ':  'スイーツ',
   'ガジェット':'ガジェット',
@@ -392,18 +399,41 @@ function loadConfig(){}
 
 // ═══ CATEGORY ════════════════════════════════════════════════
 function isManual(cat){return MANUAL_CATS.includes(cat);}
+const CAT_RANKING = {
+  'スイーツ':  {url:'https://ranking.rakuten.co.jp/daily/410899/', label:'スイーツランキングを開く'},
+  'ガジェット':{url:'https://ranking.rakuten.co.jp/daily/215783/', label:'ガジェット・家電ランキングを開く'},
+  '美容':      {url:'https://ranking.rakuten.co.jp/daily/216131/', label:'コスメ・美容ランキングを開く'},
+  'ゆる健康':  {url:'https://ranking.rakuten.co.jp/daily/100533/', label:'健康ランキングを開く'},
+  '高料率①':  {url:'https://affiliate.rakuten.co.jp/top/', label:'楽天アフィリエイト管理画面を開く'},
+  '高料率②':  {url:'https://affiliate.rakuten.co.jp/top/', label:'楽天アフィリエイト管理画面を開く'},
+};
 function onCatChange(){
   const cat=document.getElementById('catSel').value;
-  const manual=isManual(cat);
-  document.getElementById('autoArea').style.display=manual?'none':'block';
-  document.getElementById('manualArea').style.display=manual?'block':'none';
-  document.getElementById('step2Title').textContent=manual?'🔗 楽天アフィリエイトURLを貼り付ける':'🔍 商品を自動取得して3点選ぶ';
   const tm={'ガジェット':'06:00','高料率①':'09:00','スイーツ':'12:00','高料率②':'15:00','美容':'18:00','ゆる健康':'21:00'};
   if(tm[cat]){const sel=document.getElementById('timeSel');for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===tm[cat]){sel.selectedIndex=i;break;}}}
-  if(!manual)document.getElementById('kwInput').value='';
+  const rk=CAT_RANKING[cat]||{url:'https://ranking.rakuten.co.jp/',label:'楽天ランキングを開く'};
+  document.getElementById('rankingLink').href=rk.url;
+  document.getElementById('rankingLinkTitle').textContent=rk.label;
   results=[];selectedIdx=[];
-  if(!manual)document.getElementById('productArea').innerHTML='<div class="empty">「取得」ボタンを押すと売れ筋商品を自動表示します</div>';
-  document.getElementById('selHint').style.display='none';
+}
+
+// ═══ FETCH TITLE ════════════════════════════════════════════
+async function fetchTitle(n){
+  const rawUrl=(document.getElementById(`rawUrl${n}`).value||'').trim();
+  if(!rawUrl){toast('URLを入力してください',true);return;}
+  const st=document.getElementById(`st${n}`);
+  st.textContent='取得中...';st.style.color='var(--muted)';
+  try{
+    const r=await fetch(`/api/product?url=${encodeURIComponent(rawUrl)}`);
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    document.getElementById(`name${n}`).value=d.title||'';
+    document.getElementById(`url${n}`).value=d.affiliateUrl||rawUrl;
+    st.textContent='✓ 取得完了';st.style.color='var(--green)';
+  }catch(e){
+    st.textContent='❌ '+e.message;st.style.color='var(--red)';
+    document.getElementById(`url${n}`).value=rawUrl;
+  }
 }
 function selectEvt(el){
   document.querySelectorAll('.evt-chip').forEach(c=>c.classList.remove('active'));
@@ -525,7 +555,7 @@ function copyPost(){const t=document.getElementById('postBox').textContent||'';c
 
 // ═══ SAVED ═══════════════════════════════════════════════════
 function saveUrl(){const name=document.getElementById('svName').value.trim(),url=document.getElementById('svUrl').value.trim();if(!name||!url){toast('商品名とURLを両方入力してください',true);return;}savedUrls.push({name,url});try{localStorage.setItem('ohenai_saved6',JSON.stringify(savedUrls));}catch{}document.getElementById('svName').value='';document.getElementById('svUrl').value='';renderSaved();toast('保存しました ✓');}
-function pasteSlot(sl,name,url){if(isManual(document.getElementById('catSel').value)){document.getElementById(`name${sl}`).value=name;document.getElementById(`url${sl}`).value=url;document.getElementById('sec2').classList.add('open');toast(`商品${sl}に貼り付けました ✓`);}else{toast('自動取得カテゴリでは保存URLは使用できません',true);}}
+function pasteSlot(sl,name,url){document.getElementById(`name${sl}`).value=name;document.getElementById(`url${sl}`).value=url;document.getElementById(`rawUrl${sl}`).value=url;document.getElementById('sec2').classList.add('open');toast(`商品${sl}に貼り付けました ✓`);}
 function delSaved(i){savedUrls.splice(i,1);try{localStorage.setItem('ohenai_saved6',JSON.stringify(savedUrls));}catch{}renderSaved();}
 function renderSaved(){document.getElementById('savedList').innerHTML=savedUrls.length?savedUrls.map((s,i)=>`<div class="saved-item"><div class="saved-name">${escH(s.name)}</div><div class="saved-url">${escH(s.url.slice(0,55))}…</div><div class="saved-actions">${[1,2,3].map(sl=>`<button class="btn btn-ghost btn-sm" onclick="pasteSlot(${sl},'${s.name.replace(/'/g,"\\'")}','${s.url.replace(/'/g,"\\'")}')">→ 商品${sl}</button>`).join('')}<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="delSaved(${i})">削除</button></div></div>`).join(''):'<div class="empty" style="padding:10px 0">保存済みURLはまだありません</div>';}
 
