@@ -18,7 +18,13 @@ export default async function handler(req, res) {
   for (const url of urls) {
     try {
       const r = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' },
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+          'Accept-Language': 'ja,en;q=0.9',
+          'Referer': 'https://ranking.rakuten.co.jp/',
+          'Cache-Control': 'no-cache',
+        },
       });
       if (r.ok) { xml = await r.text(); break; }
       lastErr = `HTTP ${r.status} from ${url}`;
