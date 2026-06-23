@@ -268,7 +268,15 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <button class="btn btn-ghost btn-sm" onclick="generatePost()">🔄 再生成</button>
       </div>
       <div class="btn-row"><button class="btn btn-ghost btn-full" onclick="logKpi()">📊 KPIに記録する</button></div>
-    </div>
+      <!-- 画像生成 -->
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像を生成</div>
+        <canvas id="ogCanvas" style="width:100%;border-radius:12px;display:block"></canvas>
+        <div class="btn-row mt8">
+          <button class="btn btn-cyan btn-full" onclick="generateImage()">🖼️ 画像を生成</button>
+          <button class="btn btn-ghost btn-sm" id="dlBtn" onclick="downloadImage()" style="display:none">💾 保存</button>
+        </div>
+      </div>
   </div>
 </div>
 
@@ -615,6 +623,122 @@ function saveUrl(){const name=document.getElementById('svName').value.trim(),url
 function pasteSlot(sl,name,url){document.getElementById(`name${sl}`).value=name;document.getElementById(`url${sl}`).value=url;document.getElementById(`rawUrl${sl}`).value=url;document.getElementById('sec2').classList.add('open');toast(`商品${sl}に貼り付けました ✓`);}
 function delSaved(i){savedUrls.splice(i,1);try{localStorage.setItem('ohenai_saved6',JSON.stringify(savedUrls));}catch{}renderSaved();}
 function renderSaved(){document.getElementById('savedList').innerHTML=savedUrls.length?savedUrls.map((s,i)=>`<div class="saved-item"><div class="saved-name">${escH(s.name)}</div><div class="saved-url">${escH(s.url.slice(0,55))}…</div><div class="saved-actions">${[1,2,3].map(sl=>`<button class="btn btn-ghost btn-sm" onclick="pasteSlot(${sl},'${s.name.replace(/'/g,"\\'")}','${s.url.replace(/'/g,"\\'")}')">→ 商品${sl}</button>`).join('')}<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="delSaved(${i})">削除</button></div></div>`).join(''):'<div class="empty" style="padding:10px 0">保存済みURLはまだありません</div>';}
+
+// ═══ IMAGE GENERATION ════════════════════════════════════════
+const CAT_EMOJI={'スイーツ':'🍰','ガジェット':'📱','美容':'💄','ゆる健康':'🌿','高料率①':'💰','高料率②':'💎'};
+function generateImage(){
+  const cat=document.getElementById('catSel').value;
+  const evt=selectedEvt||'通常';
+  const prods=[1,2,3].map(i=>({
+    name:(document.getElementById(`name${i}`).value||'').trim(),
+    url:(document.getElementById(`url${i}`).value||document.getElementById(`rawUrl${i}`).value||'').trim()
+  })).filter(p=>p.name);
+
+  const W=1080,H=1080;
+  const canvas=document.getElementById('ogCanvas');
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+
+  // 背景グラデーション
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#0f0f14');bg.addColorStop(1,'#1a0a2e');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // デコ円
+  ctx.save();ctx.globalAlpha=0.12;
+  const c1=ctx.createRadialGradient(W*0.8,H*0.15,0,W*0.8,H*0.15,W*0.5);
+  c1.addColorStop(0,'#a855f7');c1.addColorStop(1,'transparent');
+  ctx.fillStyle=c1;ctx.fillRect(0,0,W,H);
+  const c2=ctx.createRadialGradient(W*0.2,H*0.85,0,W*0.2,H*0.85,W*0.45);
+  c2.addColorStop(0,'#ff6b9d');c2.addColorStop(1,'transparent');
+  ctx.fillStyle=c2;ctx.fillRect(0,0,W,H);
+  ctx.restore();
+
+  // ブランド名
+  ctx.font='bold 36px sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.4)';
+  ctx.textAlign='left';
+  ctx.fillText('@おとな偏愛Lab',64,72);
+
+  // カテゴリ＋イベント
+  const emoji=CAT_EMOJI[cat]||'🛍️';
+  const evtLabel=evt==='通常'?'':`【${evt}】`;
+  ctx.font='bold 52px sans-serif';
+  ctx.fillStyle='#ff6b9d';
+  ctx.fillText(`${emoji} ${cat} ${evtLabel}`,64,160);
+
+  // 区切り線
+  const grad=ctx.createLinearGradient(64,0,W-64,0);
+  grad.addColorStop(0,'#a855f7');grad.addColorStop(1,'#ff6b9d');
+  ctx.strokeStyle=grad;ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(64,190);ctx.lineTo(W-64,190);ctx.stroke();
+
+  // イントロ文（投稿文の1行目）
+  const postText=(document.getElementById('postBox')?.innerText||'').trim();
+  const intro=postText.split('\n')[0]||'';
+  ctx.font='400 38px sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.textAlign='left';
+  wrapText(ctx,intro,64,260,W-128,54);
+
+  // 商品リスト
+  const nums=['①','②','③'];
+  prods.forEach((p,i)=>{
+    const y=420+i*185;
+    // カード背景
+    ctx.save();ctx.globalAlpha=0.18;
+    ctx.fillStyle='#ffffff';
+    roundRect(ctx,64,y-54,W-128,160,20);ctx.fill();
+    ctx.restore();
+    // 番号バッジ
+    const bgrad=ctx.createLinearGradient(64,y-54,180,y-54);
+    bgrad.addColorStop(0,'#a855f7');bgrad.addColorStop(1,'#ff6b9d');
+    ctx.fillStyle=bgrad;
+    roundRect(ctx,64,y-54,116,60,12);ctx.fill();
+    ctx.font='bold 40px sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';
+    ctx.fillText(nums[i],122,y-10);
+    // 商品名
+    ctx.font='bold 40px sans-serif';ctx.fillStyle='#f0f0f5';ctx.textAlign='left';
+    ctx.fillText(p.name.slice(0,20)+(p.name.length>20?'…':''),200,y-10);
+    // URL
+    if(p.url){
+      ctx.font='28px sans-serif';ctx.fillStyle='rgba(255,107,157,0.8)';
+      const shortUrl=p.url.replace(/https?:\/\//,'').slice(0,38)+'…';
+      ctx.fillText(shortUrl,200,y+50);
+    }
+  });
+
+  // 下部タグ
+  ctx.font='bold 34px sans-serif';ctx.fillStyle='rgba(168,85,247,0.9)';ctx.textAlign='center';
+  ctx.fillText('#PR  #楽天市場  #ad',W/2,H-80);
+
+  document.getElementById('dlBtn').style.display='';
+  toast('画像を生成しました ✓');
+}
+function wrapText(ctx,text,x,y,maxW,lineH){
+  const words=text.split('');let line='';
+  for(let i=0;i<words.length;i++){
+    const test=line+words[i];
+    if(ctx.measureText(test).width>maxW&&line){ctx.fillText(line,x,y);line=words[i];y+=lineH;}
+    else line=test;
+  }
+  if(line)ctx.fillText(line,x,y);
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function downloadImage(){
+  const canvas=document.getElementById('ogCanvas');
+  const a=document.createElement('a');
+  a.download=`ohenai_${Date.now()}.png`;
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+  toast('画像を保存しました ✓');
+}
 
 // ═══ KPI ═════════════════════════════════════════════════════
 function logKpi(){const t=document.getElementById('postBox').textContent||'';const cat=document.getElementById('catSel').value,time=document.getElementById('timeSel').value;const names=isManual(cat)?[1,2,3].map(i=>(document.getElementById(`name${i}`).value||'').trim()).filter(Boolean).join(' / '):selectedIdx.map(si=>(results[si]?.itemName||'').slice(0,15)).join(' / ');kpiLog.push({date:todayStr(),time,platform:'X',category:cat,event:selectedEvt,products:names,chars:xchars(t),post_url:'',impressions:'',clicks:'',conversions:'',sales:'',reward:'',memo:''});try{localStorage.setItem('ohenai_kpi6',JSON.stringify(kpiLog));}catch{}renderKpi();toast('KPIに記録しました ✓');}
