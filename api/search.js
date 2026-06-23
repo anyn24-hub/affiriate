@@ -6,13 +6,12 @@ export default async function handler(req, res) {
   const affId = process.env.RAKUTEN_AFF_ID || '';
   const { genre = '', kw = '' } = req.query;
 
-  if (!appId) {
-    return res.status(200).json({
-      Items: [],
-      count: 0,
-      _noKey: true,
-    });
-  }
+  // UUID形式のappIdは楽天APIで動作しないため自動取得を無効化
+  return res.status(200).json({
+    Items: [],
+    count: 0,
+    _noKey: true,
+  });
 
   const GENRE_KW = {
     '410899': 'スイーツ',
