@@ -88,6 +88,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       Items: items.slice(0, 20).map(item => ({ Item: item })),
       count: items.length,
+      _debug: items.length === 0 ? html.slice(0, 500) : undefined,
     });
   } catch (e) {
     return res.status(500).json({ error: e.message });
