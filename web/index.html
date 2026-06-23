@@ -447,6 +447,11 @@ async function fetchRanking(){
     const r=await fetch(`/api/search?${p}`);
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||`HTTP ${r.status}`);}
     const data=await r.json();
+    if(data._noKey){
+      status.innerHTML='⚠️ 楽天APIキー未設定のため自動取得できません。<br>下のスロットにURLを手動で貼り付けてください。';
+      status.style.color='var(--gold)';
+      return;
+    }
     const items=(data.Items||[]).map(i=>i.Item).filter(i=>i.itemName&&i.itemName.length>3);
     if(!items.length)throw new Error('商品が見つかりませんでした。URLを手動で貼り付けてください。');
     const top=items.slice(0,3);
