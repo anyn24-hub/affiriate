@@ -436,8 +436,14 @@ function onCatChange(){
 
 // ═══ AFF ID ══════════════════════════════════════════════════
 let affId = '';
+let appId = '';
 async function loadAffId(){
-  try{const r=await fetch('/api/config');const d=await r.json();affId=d.affId||'';}catch{}
+  try{
+    const r=await fetch('/api/config');
+    const d=await r.json();
+    affId=d.affId||'';
+    appId=d.appId||'';
+  }catch{}
 }
 
 // ═══ RANKING AUTO-FETCH ══════════════════════════════════════
@@ -451,12 +457,19 @@ async function fetchRanking(){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 取得中...';
   status.textContent='';
   try{
-    const p=new URLSearchParams({genre});
-    const r=await fetch(`/api/search?${p}`);
-    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||`HTTP ${r.status}`);}
-    const data=await r.json();
-    if(data._noKey){
-      status.innerHTML='⚠️ 楽天APIキー未設定のため自動取得できません。<br>下のスロットにURLを手動で貼り付けてください。';
+    const GENRE_KW={'410899':'スイーツ','215783':'ガジェット','216131':'コスメ 美容','100533':'健康食品'};
+    const kw=GENRE_KW[genre]||'ランキング';
+
+    let data;
+    if(appId){
+      // ブラウザから楽天APIを直接呼ぶ
+      const p=new URLSearchParams({applicationId:appId,keyword:kw,hits:20,sort:'-reviewCount',format:'json',genreId:genre});
+      if(affId)p.set('affiliateId',affId);
+      const r=await fetch(`https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?${p}`);
+      data=await r.json();
+      if(!r.ok)throw new Error(data.error_description||`HTTP ${r.status}`);
+    } else {
+      status.innerHTML='⚠️ APIキー未設定。URLを手動で貼り付けてください。';
       status.style.color='var(--gold)';
       return;
     }
