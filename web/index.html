@@ -457,6 +457,9 @@ async function fetchRanking(){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 取得中...';
   status.textContent='';
   try{
+    // appIdが未ロードの場合は再取得
+    if(!appId){await loadAffId();}
+
     const GENRE_KW={'410899':'スイーツ','215783':'ガジェット','216131':'コスメ 美容','100533':'健康食品'};
     const kw=GENRE_KW[genre]||'ランキング';
 
