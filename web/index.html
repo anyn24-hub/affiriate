@@ -414,10 +414,10 @@ function loadConfig(){}
 // ═══ CATEGORY ════════════════════════════════════════════════
 function isManual(cat){return MANUAL_CATS.includes(cat);}
 const CAT_RANKING = {
-  'スイーツ':  {url:'https://search.rakuten.co.jp/search/mall/%E3%82%B9%E3%82%A4%E3%83%BC%E3%83%84/?s=6&p=1', label:'スイーツ 売れている順で開く'},
-  'ガジェット':{url:'https://search.rakuten.co.jp/search/mall/%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88/?s=6&p=1', label:'ガジェット 売れている順で開く'},
-  '美容':      {url:'https://search.rakuten.co.jp/search/mall/%E5%8C%96%E7%B2%A7%E6%B0%B4/?s=6&p=1', label:'化粧水・コスメ 売れている順で開く'},
-  'ゆる健康':  {url:'https://search.rakuten.co.jp/search/mall/%E3%82%B5%E3%83%97%E3%83%AA/?s=6&p=1', label:'サプリ・健康食品 売れている順で開く'},
+  'スイーツ':  {url:'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B9%E3%82%A4%E3%83%BC%E3%83%84', label:'スイーツ ランキングを開く'},
+  'ガジェット':{url:'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88', label:'ガジェット ランキングを開く'},
+  '美容':      {url:'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B3%E3%82%B9%E3%83%A1', label:'コスメ・美容 ランキングを開く'},
+  'ゆる健康':  {url:'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B5%E3%83%97%E3%83%AA', label:'サプリ・健康 ランキングを開く'},
   '高料率①':  {url:'https://affiliate.rakuten.co.jp/top/', label:'楽天アフィリエイト管理画面を開く'},
   '高料率②':  {url:'https://affiliate.rakuten.co.jp/top/', label:'楽天アフィリエイト管理画面を開く'},
 };
