@@ -48,17 +48,24 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 @media(min-width:560px){.schedule-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}}
 .slot{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--card2);border:2px solid var(--border);border-radius:11px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
 .slot.sel{border-color:var(--purple);background:rgba(168,85,247,.1)}
+.slot.loading{border-color:var(--cyan);background:rgba(34,211,238,.07)}
 .slot:active{opacity:.7}
 .slot-time{font-size:14px;font-weight:900;color:var(--cyan);min-width:50px;font-variant-numeric:tabular-nums}
 .slot-cat{font-size:15px;font-weight:800;flex:1}
 .slot-dot{width:18px;height:18px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;position:relative}
-.slot.sel .slot-dot{background:var(--purple);border-color:var(--purple)}
-.slot.sel .slot-dot::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#fff}
+.slot.sel .slot-dot,.slot.loading .slot-dot{background:var(--purple);border-color:var(--purple)}
+.slot.sel .slot-dot::after,.slot.loading .slot-dot::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;border-radius:50%;background:#fff}
 
 .evt-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px}
 @media(min-width:480px){.evt-grid{grid-template-columns:repeat(4,1fr)}}
 .evt-chip{padding:10px 7px;font-size:12px;font-weight:700;border:1px solid var(--border);border-radius:10px;cursor:pointer;background:var(--card2);color:var(--muted);text-align:center;-webkit-tap-highlight-color:transparent;transition:all .15s;line-height:1.3;font-family:inherit}
 .evt-chip.active{border-color:var(--pink);color:var(--pink);background:rgba(255,107,157,.1)}
+
+.auto-status-bar{border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px}
+.asb-loading{background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.3);color:var(--cyan)}
+.asb-ok{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3);color:var(--green)}
+.asb-warn{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);color:var(--gold)}
+.asb-err{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);color:var(--red)}
 
 .fg{margin-top:12px}
 .fg label{font-size:12px;color:var(--muted);font-weight:700;margin-bottom:5px;display:block}
@@ -99,7 +106,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .divider{border:none;border-top:1px solid var(--border);margin:18px 0}
 .sec-label{font-size:13px;font-weight:800;color:var(--purple);margin-bottom:8px}
 
-.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:11px 24px;border-radius:100px;font-size:14px;font-weight:800;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;white-space:nowrap}
@@ -137,8 +144,11 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
   </div>
 </div>
 
-<!-- STEP 2: 全カテゴリ共通 -->
-<div class="sec open" id="sec2" style="display:none">
+<!-- Auto status bar (shown between STEP1 and STEP2/3 during/after auto-fetch) -->
+<div id="autoStatusBar" style="display:none"></div>
+
+<!-- STEP 2: URL入力（高料率 or フォールバック） -->
+<div class="sec" id="sec2" style="display:none">
   <div class="sec-hd" onclick="tog('sec2')">
     <span class="badge bpu">STEP 2</span>
     <span class="sec-title" id="sec2Title">🔗 商品URLを入力</span>
@@ -153,11 +163,10 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       </div>
       <span style="color:var(--muted);font-size:16px">↗</span>
     </a>
-    <div id="autoArea" style="display:none;margin-top:10px">
-      <button class="btn btn-pink btn-full" id="autoBtn" onclick="tryAuto()">✨ ランキングから自動取得を試みる</button>
-      <div id="autoStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
-    </div>
     <div id="prodSlots"></div>
+    <div class="mt12">
+      <button class="btn btn-purple btn-full" onclick="generate()">✨ この商品で投稿文を生成</button>
+    </div>
   </div>
 </div>
 
@@ -187,7 +196,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       <div class="sec-label">🖼️ 投稿用画像</div>
       <canvas id="cv" style="width:100%;border-radius:12px;display:block;margin-bottom:10px"></canvas>
       <div class="btn-row">
-        <button class="btn btn-pink btn-full" onclick="genImg()">🖼️ 画像を生成</button>
+        <button class="btn btn-pink btn-full" onclick="genImg()">🖼️ 画像を再生成</button>
         <button class="btn btn-ghost btn-sm" id="dlBtn" onclick="dlImg()" style="display:none">💾 保存</button>
       </div>
     </div>
@@ -206,7 +215,10 @@ const SCHED={
 };
 const EVTS=['通常','お買い物マラソン','楽天スーパーSALE','5と0のつく日','買い回り','季節ギフト','訳あり・自宅用'];
 const ED={'通常':'シンプルな商品紹介','お買い物マラソン':'マラソン中の買い回り訴求','楽天スーパーSALE':'SALE期間の緊急感を強調','5と0のつく日':'ポイント倍率アップ訴求','買い回り':'複数ショップ購入を誘導','季節ギフト':'ギフト用途を強調','訳あり・自宅用':'コスパ重視・自分へのご褒美'};
+// genreId for Rakuten API
 const CG={'スイーツ':'410899','ガジェット':'100044','美容':'216131','ゆる健康':'100533'};
+// keyword for each category
+const CK={'スイーツ':'スイーツ','ガジェット':'便利グッズ ガジェット','美容':'コスメ スキンケア','ゆる健康':'サプり 健康食品'};
 const CR={'スイーツ':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B9%E3%82%A4%E3%83%BC%E3%83%84','ガジェット':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88','美容':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B3%E3%82%B9%E3%83%A1','ゆる健康':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B5%E3%83%97%E3%83%AA','高料率①':'https://affiliate.rakuten.co.jp/top/','高料率②':'https://affiliate.rakuten.co.jp/top/'};
 const CT={'スイーツ':'#楽天スイーツ #おやつ #スイーツ好き','ガジェット':'#ガジェット好き #便利グッズ','美容':'#楽天美容 #コスメ #スキンケア','ゆる健康':'#ゆる活 #健康習慣','高料率①':'#楽天セール #ポイ活','高料率②':'#楽天セール #ポイ活'};
 const INTRO={
@@ -215,7 +227,7 @@ const INTRO={
   '美容':{'通常':'毎日使いやすい、楽天の美容・ケアアイテム3選。','お買い物マラソン':'マラソン中にまとめ買いしておきたい美容・ケアアイテム3選。','楽天スーパーSALE':'スーパーSALE中に補充しておきたい美容消耗品3選。','5と0のつく日':'5と0のつく日にまとめ買いしたい美容消耗品3選。','買い回り':'買い回りついでに補充したい美容・ケアの消耗品3選。','季節ギフト':'ちょっとしたギフトにも使える美容アイテム3選。','訳あり・自宅用':'自宅用にコスパ重視で選んだ美容・ケアアイテム3選。'},
   'ゆる健康':{'通常':'無理なく続けられる、楽天の健康アイテム3選。','お買い物マラソン':'マラソン中にまとめて補充しておきたいゆる健康アイテム3選。','楽天スーパーSALE':'スーパーSALE中に補充しておきたいゆる健康アイテム3選。','5と0のつく日':'5と0のつく日に見ておきたい、無理なく続けやすい健康アイテム3選。','買い回り':'買い回りついでに補充したいゆる健康アイテム3選。','季節ギフト':'おやすみ前のリラックスタイムにも使えるゆる健康ギフト3選。','訳あり・自宅用':'コスパと継続しやすさで選んだゆる健康アイテム3選。'},
   '高料率①':{'通常':'価格・レビュー・用途を見て選んだ高料率アイテム3選。','お買い物マラソン':'マラソン中に見ておきたい高料率×買いやすい価格帯の候補3選。','楽天スーパーSALE':'スーパーSALE×高料率で狙いたいアイテム3選。','5と0のつく日':'5と0のつく日に狙いたい高料率アイテム3選。','買い回り':'買い回り候補に入れたい高料率×低単価アイテム3選。','季節ギフト':'ギフトにも使える高料率アイテム3選。','訳あり・自宅用':'自宅用にコスパ重視で選んだ高料率アイテム3選。'},
-  '高料率②':{'通常':'価格・レビュー・用途を見て選んだ高料率アイテム3選。','お買い物マラソン':'マラソン中に見ておきたい高料率×買いやすい価格帯の候補3選。','楽天スーパーSALE':'スーパーSALE×高料率で狙いたいアイテム3選。','5と0のつく日':'5と0のつく日に狙いたい高料率アイテム3選。','買い回り':'買い回り候補に入れたい高料率×低単価アイテム3選。','季節ギフト':'ギフトにも使える高料率アイテム3選。','訳あり・自宅用':'自宅用にコスパ重視で選んだ高料率アイテム3選。'},
+  '高料率②':{'通常':'価格・レビュー・用途を見て選んだ高料率アイテム3選。','お買い物マラソン':'マラソン中に見ておきたい高料率×買いやすい価格帯の候補3選。','楽天スーパーSALE':'スーパーSALE×高料率で狙いたいアイテム3選。','5と0のつく日':'5と0のつく日に狙いたい高料率アイテム3選。','買い回り':'買い回り候補に入れたい高料率×低午価アイテム3選。','季節ギフト':'ギフトにも使える高料率アイテム3選。','訳あり・自宅用':'自宅用にコスパ重視で選んだ高料率アイテム3選。'},
 };
 const NGW=['食べた','使ってみた','美味しかった','最高だった','リピ確定','絶対おすすめ','効果あり','痩せる','治る','肌が変わる','若返る','疲労回復','睡眠改善','血糖値','改善する','治療','効く','爆売れ','買うべき','必須','間違いない','絶対','確実','必ず'];
 const NGR={'食べた':'気になる','使ってみた':'レビューを見て気になった','美味しかった':'気になる','最高だった':'良さそう','リピ確定':'候補に入れたい','絶対おすすめ':'候補に入れたい','効果あり':'続けやすそう','痩せる':'体を整えたい人向け','治る':'続けやすそう','肌が変わる':'清潔感を整えたい人向け','若返る':'整えたい人向け','疲労回復':'リラックスタイムに良さそう','睡眠改善':'おやすみ前に良さそう','改善する':'続けやすそう','治療':'ケア','効く':'良さそう','爆売れ':'人気','買うべき':'候補に入れたい','必須':'役立ちそう','間違いない':'良さそう','絶対':'ぜひ','確実':'きっと','必ず':'ぜひ'};
@@ -229,6 +241,14 @@ function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function xchars(t){return [...t.replace(/https?:\/\/\S+/g,_=>'?'.repeat(23))].reduce((a,c)=>a+(c.codePointAt(0)>0x7f?2:1),0);}
 function isHR(c){return HR.includes(c);}
 
+function setStatusBar(cls,html){
+  const el=document.getElementById('autoStatusBar');
+  if(!cls){el.style.display='none';return;}
+  el.className='auto-status-bar '+cls;
+  el.innerHTML=html;
+  el.style.display='flex';
+}
+
 function setDay(d){
   day=d;
   document.getElementById('tabWd').classList.toggle('active',d==='wd');
@@ -237,12 +257,14 @@ function setDay(d){
   renderSched();
   document.getElementById('sec2').style.display='none';
   document.getElementById('postArea').style.display='none';
+  setStatusBar(null,'');
 }
 
 function renderSched(){
   document.getElementById('scheduleList').innerHTML=SCHED[day].map((s,i)=>{
     const em=CE[s.c]||'🛍️';
-    return `<div class="slot${i===selIdx?' sel':''}" onclick="selSlot(${i})">
+    const extra=i===selIdx?' sel':'';
+    return `<div class="slot${extra}" id="slot_${i}" onclick="selSlot(${i})">
       <div class="slot-time">${s.t}</div>
       <div class="slot-cat">${em} ${s.c}</div>
       <div class="slot-dot"></div>
@@ -250,24 +272,127 @@ function renderSched(){
   }).join('');
 }
 
-function selSlot(i){
+async function selSlot(i){
+  if(selIdx===i)return;
   selIdx=i;
   const s=SCHED[day][i];
   selCat=s.c;
   renderSched();
   prods=[];
   document.getElementById('postArea').style.display='none';
+  document.getElementById('sec3').classList.add('open');
+
   const hr=isHR(selCat);
   const rUrl=CR[selCat]||'https://ranking.rakuten.co.jp/';
-  const rTitle=hr?'楽天アフィリエイト管理画面を開く':`${CE[selCat]||''} ${selCat}ランキングを開く`;
+  const rTitle=hr?'📊 楽天アフィリエイト管理画面を開く':`🏆 ${CE[selCat]||''} ${selCat}のランキングを開く`;
   document.getElementById('rankLink').href=rUrl;
   document.getElementById('rankLinkTitle').textContent=rTitle;
-  document.getElementById('sec2Title').textContent=hr?'🔗 商品URLを入力（高料率）':'🔗 商品URLを入力';
-  document.getElementById('autoArea').style.display=hr?'none':'block';
-  document.getElementById('autoStatus').textContent='';
+  document.getElementById('sec2Title').textContent=hr?'🔗 商品URLを入力（高料率）':'🔗 商品URLを入力（手動修正用）';
   renderProdSlots();
-  document.getElementById('sec2').style.display='';
-  document.getElementById('sec2').classList.add('open');
+
+  if(hr){
+    // 高料率: 手動入力へ
+    setStatusBar('asb-warn','💰 高料率は自分で商品を選んでURLを貼り付けてください');
+    document.getElementById('sec2').style.display='';
+    document.getElementById('sec2').classList.add('open');
+    const genBtn=document.getElementById('genBtn');
+    genBtn.disabled=false;
+    genBtn.innerHTML='✨ 生成する';
+    return;
+  }
+
+  // 非高料率: 自動取得開始
+  setStatusBar('asb-loading','<span class="spinner"></span>🔄 ランキング上位を取得中...');
+  document.getElementById('sec2').style.display='none';
+  const genBtn=document.getElementById('genBtn');
+  genBtn.disabled=true;
+  genBtn.innerHTML='<span class="spinner"></span>自動取得中...';
+
+  if(!appId) await loadCfg();
+
+  const fetched=await fetchProductsAuto();
+
+  if(fetched.length>=3){
+    // 全部3商品取得成功 → 自動生成
+    prods=fetched.slice(0,3);
+    fetched.forEach((p,idx)=>{
+      const n=idx+1;
+      const nm=document.getElementById(`nm${n}`);
+      const ru=document.getElementById(`ru${n}`);
+      const ul=document.getElementById(`ul${n}`);
+      const st=document.getElementById(`st${n}`);
+      if(nm)nm.value=p.name;
+      if(ru)ru.value=p.rawUrl;
+      if(ul)ul.value=p.url;
+      if(st){st.textContent='✓ 自動';st.style.color='var(--green)';}
+    });
+    setStatusBar('asb-ok',`✅ ランキング上位3商品を取得しました — 投稿文・画像を自動生成中...`);
+    buildPost(prods.map(p=>({name:p.name,url:p.url})));
+    genImg();
+    document.getElementById('postArea').style.display='block';
+    setStatusBar('asb-ok',`✅ 自動生成完了！「修正する」から内容を編集できます`);
+    // STEP2を折りたたみで表示（修正用）
+    document.getElementById('sec2').style.display='';
+    document.getElementById('sec2').classList.remove('open');
+    genBtn.disabled=false;
+    genBtn.innerHTML='🔄 再生成';
+  } else if(fetched.length>0){
+    // 一部取得
+    fetched.forEach((p,idx)=>{
+      const n=idx+1;
+      const nm=document.getElementById(`nm${n}`);
+      const ru=document.getElementById(`ru${n}`);
+      const ul=document.getElementById(`ul${n}`);
+      const st=document.getElementById(`st${n}`);
+      if(nm)nm.value=p.name;
+      if(ru)ru.value=p.rawUrl;
+      if(ul)ul.value=p.url;
+      if(st){st.textContent='✓ 自動';st.style.color='var(--green)';}
+    });
+    setStatusBar('asb-warn',`⚠️ ${fetched.length}商品のみ取得。残りはSTEP2で手動入力してください`);
+    document.getElementById('sec2').style.display='';
+    document.getElementById('sec2').classList.add('open');
+    genBtn.disabled=false;
+    genBtn.innerHTML='✨ 生成する';
+  } else {
+    // 取得失敗
+    const apiNote=appId?'(楽天APIキー要確認)':'《設定》Rakuten App IDが未設定です';
+    setStatusBar('asb-err',`❌ 自動取得できませんでした ${apiNote}。STEP2に手動でURLを貼り付けてください`);
+    document.getElementById('sec2').style.display='';
+    document.getElementById('sec2').classList.add('open');
+    genBtn.disabled=false;
+    genBtn.innerHTML='✨ 生成する';
+  }
+}
+
+async function fetchProductsAuto(){
+  const genre=CG[selCat];
+  if(!genre)return[];
+  if(!appId)return[];
+  try{
+    const kw=CK[selCat]||selCat;
+    const p=new URLSearchParams({
+      applicationId:appId,
+      keyword:kw,
+      hits:20,
+      sort:'standard',
+      format:'json',
+      genreId:genre
+    });
+    if(affId)p.set('affiliateId',affId);
+    const r=await fetch(`https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?${p}`);
+    const d=await r.json();
+    if(!r.ok||!d.Items||!d.Items.length)return[];
+    return d.Items
+      .map(i=>i.Item)
+      .filter(i=>i.itemName&&i.itemName.length>3)
+      .slice(0,3)
+      .map(it=>({
+        name:it.itemName.replace(/[【-｠!-/]/g,' ').replace(/\s+/g,' ').trim().slice(0,40),
+        url:it.affiliateUrl||it.itemUrl,
+        rawUrl:it.itemUrl
+      }));
+  }catch{return[];}
 }
 
 function renderProdSlots(){
@@ -276,18 +401,13 @@ function renderProdSlots(){
       <div class="prod-slot-hd"><span class="prod-num">${['①','②','③'][n-1]}</span><span class="prod-slot-name">商品${n}</span><span class="prod-st" id="st${n}"></span></div>
       <div class="fg" style="margin-top:0"><label>楽天商品URL</label>
         <div style="display:flex;gap:7px">
-          <input class="finput" id="ru${n}" placeholder="https://item.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url" style="flex:1;margin:0" oninput="onUrlInput()">
+          <input class="finput" id="ru${n}" placeholder="https://item.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url" style="flex:1;margin:0">
           <button class="btn btn-ghost btn-sm" onclick="fetchT(${n})">取得</button>
         </div>
       </div>
       <div class="fg"><label>商品名</label><input class="finput" id="nm${n}" placeholder="取得すると自動入力" autocomplete="off"></div>
       <input type="hidden" id="ul${n}">
     </div>`).join('');
-}
-
-function onUrlInput(){
-  const all=[1,2,3].every(n=>(document.getElementById(`ru${n}`)?.value||'').trim());
-  document.getElementById('genBtn').style.borderColor=all?'var(--green)':'';
 }
 
 function renderEvts(){
@@ -318,47 +438,15 @@ async function fetchT(n){
   }
 }
 
-async function tryAuto(){
-  if(!selCat||isHR(selCat))return;
-  const btn=document.getElementById('autoBtn'),status=document.getElementById('autoStatus');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 取得中...';
-  status.textContent='';
-  const genre=CG[selCat];
-  let ok=false;
-  if(genre&&appId){
-    try{
-      const kwMap={'410899':'スイーツ','100044':'ガジェット','216131':'コスメ 美容','100533':'健康食品'};
-      const p=new URLSearchParams({applicationId:appId,keyword:kwMap[genre]||selCat,hits:20,sort:'-reviewCount',format:'json',genreId:genre});
-      if(affId)p.set('affiliateId',affId);
-      const r=await fetch(`https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?${p}`);
-      const d=await r.json();
-      if(r.ok&&d.Items?.length){
-        const items=d.Items.map(i=>i.Item).filter(i=>i.itemName).slice(0,3);
-        items.forEach((it,i)=>{
-          const n=i+1;
-          document.getElementById(`nm${n}`).value=it.itemName.slice(0,40);
-          document.getElementById(`ru${n}`).value=it.itemUrl;
-          document.getElementById(`ul${n}`).value=it.affiliateUrl||it.itemUrl;
-          const st=document.getElementById(`st${n}`);
-          st.textContent='✓ 自動';st.style.color='var(--green)';
-        });
-        status.textContent=`✅ ${items.length}商品を自動取得しました`;
-        ok=true;
-      }
-    }catch{}
-  }
-  if(!ok){
-    status.innerHTML=`⚠️ API取得できませんでした。<a href="${CR[selCat]||'https://ranking.rakuten.co.jp/'}" target="_blank" style="color:var(--pink)">ランキングを開く ↗</a>でURLをコピーして貼り付けてください。`;
-  }
-  btn.disabled=false;btn.innerHTML='✨ ランキングから自動取得を試みる';
-}
-
 async function generate(){
   if(!selCat){toast('STEP1で投稿時間を選んでください',true);return;}
   const btn=document.getElementById('genBtn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 生成中...';
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>生成中...';
   try{
-    prods=[1,2,3].map(i=>({name:(document.getElementById(`nm${i}`)?.value||'').trim(),url:(document.getElementById(`ul${i}`)?.value||document.getElementById(`ru${i}`)?.value||'').trim()})).filter(p=>p.name||p.url);
+    prods=[1,2,3].map(i=>({
+      name:(document.getElementById(`nm${i}`)?.value||'').trim(),
+      url:(document.getElementById(`ul${i}`)?.value||document.getElementById(`ru${i}`)?.value||'').trim()
+    })).filter(p=>p.name||p.url);
     if(!prods.length){toast('商品名またはURLを入力してください（STEP2）',true);return;}
     buildPost(prods);
     genImg();
@@ -366,7 +454,7 @@ async function generate(){
     document.getElementById('sec3').classList.add('open');
     document.getElementById('postArea').scrollIntoView({behavior:'smooth',block:'start'});
   }finally{
-    btn.disabled=false;btn.innerHTML='✨ 生成する';
+    btn.disabled=false;btn.innerHTML='🔄 再生成';
   }
 }
 
@@ -404,20 +492,22 @@ function genImg(){
   const gL=c.createLinearGradient(64,0,W-64,0);gL.addColorStop(0,'#a855f7');gL.addColorStop(1,'#ff6b9d');
   c.strokeStyle=gL;c.lineWidth=3;c.beginPath();c.moveTo(64,178);c.lineTo(W-64,178);c.stroke();
   const pt=(document.getElementById('postBox')?.textContent||'').trim();
-  wrapT(c,(pt.split('\n')[0]||''),64,248,W-128,50);
-  ['①','②','③'].forEach((num,i)=>{
-    const p=prods[i];if(!p)return;
-    const y=400+i*195;
-    c.save();c.globalAlpha=.18;c.fillStyle='#fff';rr(c,64,y-54,W-128,165,20);c.fill();c.restore();
+  c.font='bold 38px sans-serif';c.fillStyle='#f0f0f5';c.textAlign='left';
+  wrapT(c,(pt.split('\n')[0]||''),64,248,W-128,52);
+  prods.slice(0,3).forEach((p,i)=>{
+    if(!p)return;
+    const y=380+i*200;
+    c.save();c.globalAlpha=.18;c.fillStyle='#fff';rr(c,64,y-54,W-128,170,20);c.fill();c.restore();
     const bg2=c.createLinearGradient(64,y-54,200,y-54);bg2.addColorStop(0,'#a855f7');bg2.addColorStop(1,'#ff6b9d');
     c.fillStyle=bg2;rr(c,64,y-54,120,62,12);c.fill();
-    c.font='bold 40px sans-serif';c.fillStyle='#fff';c.textAlign='center';c.fillText(num,124,y-8);
-    c.font='bold 38px sans-serif';c.fillStyle='#f0f0f5';c.textAlign='left';
-    c.fillText((p.name||'').slice(0,20)+((p.name||'').length>20?'…':''),200,y-8);
-    if(p.url){c.font='26px sans-serif';c.fillStyle='rgba(255,107,157,.8)';c.fillText(p.url.replace(/https?:\/\//,'').slice(0,40)+'…',200,y+52);}
+    c.font='bold 40px sans-serif';c.fillStyle='#fff';c.textAlign='center';c.fillText(['①','②','③'][i],124,y-8);
+    c.font='bold 36px sans-serif';c.fillStyle='#f0f0f5';c.textAlign='left';
+    const nm=(p.name||'').slice(0,22)+((p.name||'').length>22?'…':'');
+    c.fillText(nm,200,y-8);
+    if(p.url){c.font='24px sans-serif';c.fillStyle='rgba(255,107,157,.8)';c.fillText(p.url.replace(/https?:\/\//,'').slice(0,42)+'…',200,y+48);}
   });
-  c.font='bold 32px sans-serif';c.fillStyle='rgba(168,85,247,.9)';c.textAlign='center';
-  c.fillText('#PR  #楽天市場  #ad',W/2,H-72);
+  c.font='bold 30px sans-serif';c.fillStyle='rgba(168,85,247,.9)';c.textAlign='center';
+  c.fillText('#PR  #楽天市場  #ad',W/2,H-60);
   document.getElementById('dlBtn').style.display='';
 }
 function wrapT(c,t,x,y,mW,lH){const w=t.split('');let l='';for(let i=0;i<w.length;i++){const ts=l+w[i];if(c.measureText(ts).width>mW&&l){c.fillText(l,x,y);l=w[i];y+=lH;}else l=ts;}if(l)c.fillText(l,x,y);}
