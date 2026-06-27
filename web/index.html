@@ -32,8 +32,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .sec-hd:active{background:rgba(255,255,255,.03)}
 .badge{font-size:11px;font-weight:900;padding:4px 11px;border-radius:100px;flex-shrink:0}
 .bp{background:var(--pink);color:#fff}.bpu{background:var(--purple);color:#fff}
-.bc{background:var(--cyan);color:#000}.bgo{background:var(--gold);color:#000}
-.bx{background:rgba(255,255,255,.08);color:var(--muted)}
+.bc{background:var(--cyan);color:#000}
 .sec-title{font-size:15px;font-weight:800;flex:1}
 .chevron{color:var(--muted);font-size:14px;transition:transform .2s}
 .sec.open .chevron{transform:rotate(180deg)}
@@ -66,6 +65,13 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .finput{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:14px;padding:11px 13px;outline:none;-webkit-appearance:none}
 .finput:focus{border-color:var(--purple)}
 
+.rank-link{display:flex;align-items:center;gap:12px;background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.25);border-radius:12px;padding:14px;text-decoration:none;color:var(--text);margin-top:4px;transition:background .15s}
+.rank-link:active{background:rgba(168,85,247,.15)}
+.rank-link-icon{font-size:22px}
+.rank-link-body{flex:1}
+.rank-link-title{font-size:14px;font-weight:800;margin-bottom:2px}
+.rank-link-sub{font-size:11px;color:var(--muted)}
+
 .prod-slot{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:10px}
 .prod-slot-hd{display:flex;align-items:center;gap:9px;margin-bottom:10px}
 .prod-num{width:24px;height:24px;border-radius:50%;background:var(--purple);color:#fff;font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -74,7 +80,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 18px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .15s,transform .1s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 .btn:active{opacity:.7;transform:scale(.97)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .btn-full{width:100%}.btn-pink{background:var(--pink);color:#fff}.btn-purple{background:var(--purple);color:#fff}
 .btn-green{background:var(--green);color:#000}.btn-ghost{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)}
 .btn-sm{padding:9px 14px;font-size:13px;border-radius:8px}
@@ -90,11 +96,6 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .ng-ok{background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.25);color:var(--green)}
 .ng-warn{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red)}
 
-.info{border-radius:9px;padding:11px 13px;font-size:12px;line-height:1.7;margin-top:10px}
-.ipurple{background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.25);color:rgba(240,240,245,.85)}
-.igold{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.25);color:rgba(240,240,245,.85)}
-.ired{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);color:rgba(240,240,245,.85)}
-
 .divider{border:none;border-top:1px solid var(--border);margin:18px 0}
 .sec-label{font-size:13px;font-weight:800;color:var(--purple);margin-bottom:8px}
 
@@ -103,7 +104,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:11px 24px;border-radius:100px;font-size:14px;font-weight:800;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;white-space:nowrap}
 #toast.show{opacity:1}
-.mt10{margin-top:10px}.mt14{margin-top:14px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt14{margin-top:14px}
 </style>
 </head>
 <body>
@@ -132,20 +133,34 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">イベント訴求モード</div>
       <div class="evt-grid" id="evtGrid"></div>
     </div>
-    <div id="evtDesc" class="info ipurple mt10" style="font-size:12px"></div>
+    <div id="evtDesc" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
   </div>
 </div>
 
-<!-- STEP 2: 高料率のみ -->
+<!-- STEP 2: 全カテゴリ共通 -->
 <div class="sec open" id="sec2" style="display:none">
   <div class="sec-hd" onclick="tog('sec2')">
     <span class="badge bpu">STEP 2</span>
-    <span class="sec-title">🔗 商品URLを入力（高料率）</span>
+    <span class="sec-title" id="sec2Title">🔗 商品URLを入力</span>
     <span class="chevron">▼</span>
   </div>
   <div class="sec-body">
+    <!-- ランキング/アフィリエイトリンク -->
+    <a id="rankLink" class="rank-link" href="https://ranking.rakuten.co.jp/" target="_blank" rel="noopener">
+      <span class="rank-link-icon">🏆</span>
+      <div class="rank-link-body">
+        <div class="rank-link-title" id="rankLinkTitle">楽天ランキングを開く</div>
+        <div class="rank-link-sub">商品を選んでURLをコピー → 下に貼り付け</div>
+      </div>
+      <span style="color:var(--muted);font-size:16px">↗</span>
+    </a>
+    <!-- 自動取得ボタン（非高料率のみ） -->
+    <div id="autoArea" style="display:none;margin-top:10px">
+      <button class="btn btn-pink btn-full" id="autoBtn" onclick="tryAuto()">✨ ランキングから自動取得を試みる</button>
+      <div id="autoStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
+    </div>
+    <!-- 商品スロット -->
     <div id="prodSlots"></div>
-    <div class="info ipurple mt10" style="font-size:12px">楽天アフィリエイト管理画面で商品を選び、URLを貼り付けて「取得」を押してください。<br><a href="https://affiliate.rakuten.co.jp/top/" target="_blank" rel="noopener" style="color:var(--pink);font-weight:700">→ 楽天アフィリエイト管理画面 ↗</a></div>
   </div>
 </div>
 
@@ -158,11 +173,10 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
   </div>
   <div class="sec-body">
     <button class="btn btn-purple btn-full" onclick="generate()" id="genBtn">✨ 生成する</button>
-    <div id="genStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:8px"></div>
     <div id="postArea" style="display:none">
       <hr class="divider">
       <div class="sec-label">📝 投稿文</div>
-      <div class="out-box" id="postBox" contenteditable="true" oninput="onPostInput()"></div>
+      <div class="out-box" id="postBox" contenteditable="true" oninput="onInput()"></div>
       <div class="char-row">
         <span style="font-size:11px;color:var(--muted)">X用（140文字換算）</span>
         <span class="char-cnt char-ok" id="charCount">0 / 280</span>
@@ -174,7 +188,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       </div>
       <hr class="divider">
       <div class="sec-label">🖼️ 投稿用画像</div>
-      <canvas id="ogCanvas" style="width:100%;border-radius:12px;display:block;margin-bottom:10px"></canvas>
+      <canvas id="cv" style="width:100%;border-radius:12px;display:block;margin-bottom:10px"></canvas>
       <div class="btn-row">
         <button class="btn btn-pink btn-full" onclick="genImg()">🖼️ 画像を生成</button>
         <button class="btn btn-ghost btn-sm" id="dlBtn" onclick="dlImg()" style="display:none">💾 保存</button>
@@ -187,24 +201,17 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 <div id="toast"></div>
 
 <script>
-const CAT_EMOJI={'スイーツ':'🍰','ガジェット':'📱','美容':'💄','ゆる健康':'🌿','高料率①':'💰','高料率②':'💎'};
+const CE={'スイーツ':'🍰','ガジェット':'📱','美容':'💄','ゆる健康':'🌿','高料率①':'💰','高料率②':'💎'};
 const HR=['高料率①','高料率②'];
 const SCHED={
-  wd:[
-    {t:'06:00',c:'ガジェット'},{t:'09:00',c:'高料率①'},{t:'12:00',c:'スイーツ'},
-    {t:'15:00',c:'高料率②'},{t:'18:00',c:'美容'},{t:'21:00',c:'ゆる健康'},
-  ],
-  we:[
-    {t:'09:00',c:'ガジェット'},{t:'11:00',c:'高料率①'},{t:'13:00',c:'スイーツ'},
-    {t:'15:00',c:'高料率②'},{t:'18:00',c:'美容'},
-    {t:'21:00',c:'ゆる健康'},{t:'21:00',c:'スイーツ'},
-  ],
+  wd:[{t:'06:00',c:'ガジェット'},{t:'09:00',c:'高料率①'},{t:'12:00',c:'スイーツ'},{t:'15:00',c:'高料率②'},{t:'18:00',c:'美容'},{t:'21:00',c:'ゆる健康'}],
+  we:[{t:'09:00',c:'ガジェット'},{t:'11:00',c:'高料率①'},{t:'13:00',c:'スイーツ'},{t:'15:00',c:'高料率②'},{t:'18:00',c:'美容'},{t:'21:00',c:'ゆる健康'},{t:'21:00',c:'スイーツ'}],
 };
 const EVTS=['通常','お買い物マラソン','楽天スーパーSALE','5と0のつく日','買い回り','季節ギフト','訳あり・自宅用'];
-const EVT_DESC={'通常':'シンプルな商品紹介フォーマット','お買い物マラソン':'マラソン中の買い回り訴求','楽天スーパーSALE':'SALE期間の緊急感を強調','5と0のつく日':'ポイント倍率アップ訴求','買い回り':'複数ショップ購入を誘導','季節ギフト':'ギフト用途を強調','訳あり・自宅用':'コスパ重視・自分へのご褒美'};
-const CAT_GENRE={'スイーツ':'410899','ガジェット':'100044','美容':'216131','ゆる健康':'100533'};
-const CAT_RANK={'スイーツ':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B9%E3%82%A4%E3%83%BC%E3%83%84','ガジェット':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88','美容':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B3%E3%82%B9%E3%83%A1','ゆる健康':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B5%E3%83%97%E3%83%AA'};
-const CAT_TAGS={'スイーツ':'#楽天スイーツ #おやつ #スイーツ好き','ガジェット':'#ガジェット好き #便利グッズ','美容':'#楽天美容 #コスメ #スキンケア','ゆる健康':'#ゆる活 #健康習慣','高料率①':'#楽天セール #ポイ活','高料率②':'#楽天セール #ポイ活'};
+const ED={'通常':'シンプルな商品紹介','お買い物マラソン':'マラソン中の買い回り訴求','楽天スーパーSALE':'SALE期間の緊急感を強調','5と0のつく日':'ポイント倍率アップ訴求','買い回り':'複数ショップ購入を誘導','季節ギフト':'ギフト用途を強調','訳あり・自宅用':'コスパ重視・自分へのご褒美'};
+const CG={'スイーツ':'410899','ガジェット':'100044','美容':'216131','ゆる健康':'100533'};
+const CR={'スイーツ':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B9%E3%82%A4%E3%83%BC%E3%83%84','ガジェット':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%AC%E3%82%B8%E3%82%A7%E3%83%83%E3%83%88','美容':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B3%E3%82%B9%E3%83%A1','ゆる健康':'https://ranking.rakuten.co.jp/search/?keyword=%E3%82%B5%E3%83%97%E3%83%AA','高料率①':'https://affiliate.rakuten.co.jp/top/','高料率②':'https://affiliate.rakuten.co.jp/top/'};
+const CT={'スイーツ':'#楽天スイーツ #おやつ #スイーツ好き','ガジェット':'#ガジェット好き #便利グッズ','美容':'#楽天美容 #コスメ #スキンケア','ゆる健康':'#ゆる活 #健康習慣','高料率①':'#楽天セール #ポイ活','高料率②':'#楽天セール #ポイ活'};
 const INTRO={
   'スイーツ':{'通常':'楽天で気になったスイーツ3選。','お買い物マラソン':'マラソン中に見ておきたい1,000円台〜のスイーツ3選。','楽天スーパーSALE':'スーパーSALE中にチェックしておきたいスイーツ3選。','5と0のつく日':'5と0のつく日に買いたいスイーツ3選。','買い回り':'買い回りついでに見たい1,000〜3,000円台のスイーツ3選。','季節ギフト':'ちょっとしたギフトにも使えるスイーツ3選。','訳あり・自宅用':'自分用に候補に入れたいスイーツ3選。'},
   'ガジェット':{'通常':'デスク周りが少し整う、楽天ガジェット3選。','お買い物マラソン':'マラソン中に見ておきたい2,000円台までの便利グッズ3選。','楽天スーパーSALE':'スーパーSALE中に見ておきたい低単価ガジェット3選。','5と0のつく日':'5と0のつく日にポイントを貯めながら見たいガジェット3選。','買い回り':'買い回りついでに見たい2,000〜4,000円台のガジェット3選。','季節ギフト':'ちょっとしたギフトにも使える実用ガジェット3選。','訳あり・自宅用':'自宅用にコスパ重視で選んだガジェット3選。'},
@@ -213,10 +220,10 @@ const INTRO={
   '高料率①':{'通常':'価格・レビュー・用途を見て選んだ高料率アイテム3選。','お買い物マラソン':'マラソン中に見ておきたい高料率×買いやすい価格帯の候補3選。','楽天スーパーSALE':'スーパーSALE×高料率で狙いたいアイテム3選。','5と0のつく日':'5と0のつく日に狙いたい高料率アイテム3選。','買い回り':'買い回り候補に入れたい高料率×低単価アイテム3選。','季節ギフト':'ギフトにも使える高料率アイテム3選。','訳あり・自宅用':'自宅用にコスパ重視で選んだ高料率アイテム3選。'},
   '高料率②':{'通常':'価格・レビュー・用途を見て選んだ高料率アイテム3選。','お買い物マラソン':'マラソン中に見ておきたい高料率×買いやすい価格帯の候補3選。','楽天スーパーSALE':'スーパーSALE×高料率で狙いたいアイテム3選。','5と0のつく日':'5と0のつく日に狙いたい高料率アイテム3選。','買い回り':'買い回り候補に入れたい高料率×低単価アイテム3選。','季節ギフト':'ギフトにも使える高料率アイテム3選。','訳あり・自宅用':'自宅用にコスパ重視で選んだ高料率アイテム3選。'},
 };
-const NG_W=['食べた','使ってみた','美味しかった','最高だった','リピ確定','絶対おすすめ','効果あり','痩せる','治る','肌が変わる','若返る','疲労回復','睡眠改善','血糖値','改善する','治療','効く','爆売れ','買うべき','必須','間違いない','絶対','確実','必ず'];
-const NG_R={'食べた':'気になる','使ってみた':'レビューを見て気になった','美味しかった':'気になる','最高だった':'良さそう','リピ確定':'候補に入れたい','絶対おすすめ':'候補に入れたい','効果あり':'続けやすそう','痩せる':'体を整えたい人向け','治る':'続けやすそう','肌が変わる':'清潔感を整えたい人向け','若返る':'整えたい人向け','疲労回復':'リラックスタイムに良さそう','睡眠改善':'おやすみ前に良さそう','改善する':'続けやすそう','治療':'ケア','効く':'良さそう','爆売れ':'人気','買うべき':'候補に入れたい','必須':'役立ちそう','間違いない':'良さそう','絶対':'ぜひ','確実':'きっと','必ず':'ぜひ'};
+const NGW=['食べた','使ってみた','美味しかった','最高だった','リピ確定','絶対おすすめ','効果あり','痩せる','治る','肌が変わる','若返る','疲労回復','睡眠改善','血糖値','改善する','治療','効く','爆売れ','買うべき','必須','間違いない','絶対','確実','必ず'];
+const NGR={'食べた':'気になる','使ってみた':'レビューを見て気になった','美味しかった':'気になる','最高だった':'良さそう','リピ確定':'候補に入れたい','絶対おすすめ':'候補に入れたい','効果あり':'続けやすそう','痩せる':'体を整えたい人向け','治る':'続けやすそう','肌が変わる':'清潔感を整えたい人向け','若返る':'整えたい人向け','疲労回復':'リラックスタイムに良さそう','睡眠改善':'おやすみ前に良さそう','改善する':'続けやすそう','治療':'ケア','効く':'良さそう','爆売れ':'人気','買うべき':'候補に入れたい','必須':'役立ちそう','間違いない':'良さそう','絶対':'ぜひ','確実':'きっと','必ず':'ぜひ'};
 
-let day='wd',selIdx=null,selCat='',selTime='',selEvt='通常',affId='',appId='',prods=[];
+let day='wd',selIdx=null,selCat='',selEvt='通常',affId='',appId='',prods=[];
 
 function tog(id){document.getElementById(id).classList.toggle('open');}
 function toast(m,bad=false){const e=document.getElementById('toast');e.textContent=m;e.style.background=bad?'var(--red)':'var(--green)';e.style.color=bad?'#fff':'#000';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2400);}
@@ -229,45 +236,53 @@ function setDay(d){
   day=d;
   document.getElementById('tabWd').classList.toggle('active',d==='wd');
   document.getElementById('tabWe').classList.toggle('active',d==='we');
-  selIdx=null;selCat='';selTime='';
+  selIdx=null;selCat='';
   renderSched();
   document.getElementById('sec2').style.display='none';
   document.getElementById('postArea').style.display='none';
-  document.getElementById('genStatus').textContent='';
 }
+
 function renderSched(){
-  const list=document.getElementById('scheduleList');
-  list.innerHTML=SCHED[day].map((s,i)=>{
-    const e=CAT_EMOJI[s.c]||'🛍️';
+  document.getElementById('scheduleList').innerHTML=SCHED[day].map((s,i)=>{
+    const em=CE[s.c]||'🛍️';
     return `<div class="slot${i===selIdx?' sel':''}" onclick="selSlot(${i})">
       <div class="slot-time">${s.t}</div>
-      <div class="slot-cat">${e} ${s.c}</div>
+      <div class="slot-cat">${em} ${s.c}</div>
       <div class="slot-dot"></div>
     </div>`;
   }).join('');
 }
+
 function selSlot(i){
   selIdx=i;
   const s=SCHED[day][i];
-  selCat=s.c;selTime=s.t;
+  selCat=s.c;
   renderSched();
   prods=[];
   document.getElementById('postArea').style.display='none';
-  document.getElementById('genStatus').textContent='';
-  if(isHR(selCat)){
-    document.getElementById('sec2').style.display='';
-    renderProdSlots();
-  } else {
-    document.getElementById('sec2').style.display='none';
-  }
+  // Update STEP2
+  const hr=isHR(selCat);
+  // Ranking/affiliate link
+  const rUrl=CR[selCat]||'https://ranking.rakuten.co.jp/';
+  const rTitle=hr?下構:♪'楽天アフィリエイト管理画面を開く':`${CE[selCat]||''} ${selCat}ランキングを開く`;
+  document.getElementById('rankLink').href=rUrl;
+  document.getElementById('rankLinkTitle').textContent=rTitle;
+  document.getElementById('sec2Title').textContent=hr?'🔗 商品URLを入力（高料率）':'🔗 商品URLを入力';
+  // Auto-fetch button: non-HR only
+  document.getElementById('autoArea').style.display=hr?'none':'block';
+  document.getElementById('autoStatus').textContent='';
+  renderProdSlots();
+  document.getElementById('sec2').style.display='';
+  document.getElementById('sec2').classList.add('open');
 }
+
 function renderProdSlots(){
   document.getElementById('prodSlots').innerHTML=[1,2,3].map(n=>`
     <div class="prod-slot">
       <div class="prod-slot-hd"><span class="prod-num">${['①','②','③'][n-1]}</span><span class="prod-slot-name">商品${n}</span><span class="prod-st" id="st${n}"></span></div>
       <div class="fg" style="margin-top:0"><label>楽天商品URL</label>
         <div style="display:flex;gap:7px">
-          <input class="finput" id="ru${n}" placeholder="https://item.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url" style="flex:1;margin:0">
+          <input class="finput" id="ru${n}" placeholder="https://item.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url" style="flex:1;margin:0" oninput="onUrlInput()">
           <button class="btn btn-ghost btn-sm" onclick="fetchT(${n})">取得</button>
         </div>
       </div>
@@ -276,16 +291,20 @@ function renderProdSlots(){
     </div>`).join('');
 }
 
+function onUrlInput(){
+  // If all 3 URLs filled, highlight generate button
+  const all=[1,2,3].every(n=>(document.getElementById(`ru${n}`)?.value||'').trim());
+  document.getElementById('genBtn').style.borderColor=all?'var(--green)':'';
+}
+
 function renderEvts(){
   document.getElementById('evtGrid').innerHTML=EVTS.map(e=>
     `<button class="evt-chip${e===selEvt?' active':''}" onclick="setEvt('${e}')">${e}</button>`).join('');
-  document.getElementById('evtDesc').textContent=EVT_DESC[selEvt]||'';
+  document.getElementById('evtDesc').textContent=ED[selEvt]||'';
 }
 function setEvt(e){selEvt=e;renderEvts();}
 
-async function loadCfg(){
-  try{const r=await fetch('/api/config');const d=await r.json();affId=d.affId||'';appId=d.appId||'';}catch{}
-}
+async function loadCfg(){try{const r=await fetch('/api/config');const d=await r.json();affId=d.affId||'';appId=d.appId||'';}catch{}}
 
 async function fetchT(n){
   const raw=(document.getElementById(`ru${n}`).value||'').trim();
@@ -299,51 +318,60 @@ async function fetchT(n){
     document.getElementById(`nm${n}`).value=d.title||'';
     document.getElementById(`ul${n}`).value=d.affiliateUrl||raw;
     st.textContent='✓ 取得';st.style.color='var(--green)';
+    toast(`商品${n}を取得しました ✓`);
   }catch(e){
     st.textContent='❌ '+e.message;st.style.color='var(--red)';
     document.getElementById(`ul${n}`).value=raw;
   }
 }
 
-async function autoFetch(cat){
-  const genre=CAT_GENRE[cat];
-  if(!genre)return[];
-  const kwMap={'410899':'スイーツ','100044':'ガジェット','216131':'コスメ 美容','100533':'健康食品'};
-  const kw=kwMap[genre]||cat;
-  if(appId){
+async function tryAuto(){
+  if(!selCat||isHR(selCat))return;
+  const btn=document.getElementById('autoBtn'),status=document.getElementById('autoStatus');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 取得中...';
+  status.textContent='';
+  const genre=CG[selCat];
+  let ok=false;
+  if(genre&&appId){
     try{
-      const p=new URLSearchParams({applicationId:appId,keyword:kw,hits:20,sort:'-reviewCount',format:'json',genreId:genre});
+      const kwMap={'410899':'スイーツ','100044':'ガジェット','216131':'コスメ 美容','100533':'健康食品'};
+      const p=new URLSearchParams({applicationId:appId,keyword:kwMap[genre]||selCat,hits:20,sort:'-reviewCount',format:'json',genreId:genre});
       if(affId)p.set('affiliateId',affId);
       const r=await fetch(`https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?${p}`);
       const d=await r.json();
-      if(r.ok&&d.Items?.length)return d.Items.map(i=>i.Item).filter(i=>i.itemName).slice(0,3).map(i=>({name:i.itemName.slice(0,30),url:i.affiliateUrl||i.itemUrl}));
+      if(r.ok&&d.Items?.length){
+        const items=d.Items.map(i=>i.Item).filter(i=>i.itemName).slice(0,3);
+        items.forEach((it,i)=>{
+          const n=i+1;
+          document.getElementById(`nm${n}`).value=it.itemName.slice(0,40);
+          document.getElementById(`ru${n}`).value=it.itemUrl;
+          document.getElementById(`ul${n}`).value=it.affiliateUrl||it.itemUrl;
+          const st=document.getElementById(`st${n}`);
+          st.textContent='✓ 自動';st.style.color='var(--green)';
+        });
+        status.textContent=`✅ ${items.length}商品を自動取得しました`;
+        ok=true;
+      }
     }catch{}
   }
-  return[];
+  if(!ok){
+    status.innerHTML=`⚠️ API取得できませんでした。<a href="${CR[selCat]||'https://ranking.rakuten.co.jp/'}" target="_blank" style="color:var(--pink)">ランキングを開く ↗</a>でURLをコピーして貼り付けてください。`;
+  }
+  btn.disabled=false;btn.innerHTML='✨ ランキングから自動取得を試みる';
 }
 
 async function generate(){
   if(!selCat){toast('STEP1で投稿時間を選んでください',true);return;}
   const btn=document.getElementById('genBtn');
-  const status=document.getElementById('genStatus');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 生成中...';
-  status.innerHTML='';
   try{
-    if(isHR(selCat)){
-      prods=[1,2,3].map(i=>({name:(document.getElementById(`nm${i}`)?.value||'').trim(),url:(document.getElementById(`ul${i}`)?.value||document.getElementById(`ru${i}`)?.value||'').trim()})).filter(p=>p.name||p.url);
-      if(!prods.length){toast('商品名またはURLを入力してください（STEP2）',true);return;}
-    }else{
-      status.innerHTML='<span class="spinner"></span> ランキングから自動取得中...';
-      prods=await autoFetch(selCat);
-      if(!prods.length){
-        status.innerHTML=`⚠️ 自動取得できませんでした。<a href="${CAT_RANK[selCat]||'https://ranking.rakuten.co.jp/'}" target="_blank" style="color:var(--pink)">ランキングを開く ↗</a><br><span style="font-size:11px;color:var(--muted)">→ URLをコピーしてSTEP2に貼り付けるか、楽天APIキーの再登録が必要です。</span>`;
-        return;
-      }
-      status.textContent=`✅ ${prods.length}商品を取得しました`;
-    }
+    prods=[1,2,3].map(i=>({name:(document.getElementById(`nm${i}`)?.value||'').trim(),url:(document.getElementById(`ul${i}`)?.value||document.getElementById(`ru${i}`)?.value||'').trim()})).filter(p=>p.name||p.url);
+    if(!prods.length){toast('商品名またはURLを入力してください（STEP2）',true);return;}
     buildPost(prods);
     genImg();
     document.getElementById('postArea').style.display='block';
+    document.getElementById('sec3').classList.add('open');
+    document.getElementById('postArea').scrollIntoView({behavior:'smooth',block:'start'});
   }finally{
     btn.disabled=false;btn.innerHTML='✨ 生成する';
   }
@@ -352,66 +380,56 @@ async function generate(){
 function buildPost(ps){
   const intro=(INTRO[selCat]||INTRO['高料率①'])[selEvt]||(INTRO[selCat]||INTRO['高料率①'])['通常'];
   const lines=ps.map((p,i)=>`${['①','②','③'][i]} ${p.name||'（商品名）'}\n${p.url||'（URL）'}`).join('\n');
-  let post=`${intro}\n\n${lines}\n\n#PR #楽天市場 #ad ${CAT_TAGS[selCat]||''}`;
+  let post=`${intro}\n\n${lines}\n\n#PR #楽天市場 #ad ${CT[selCat]||''}`;
   post=autoNG(post);
   document.getElementById('postBox').textContent=post;
   updCnt(post);runNG(post);
 }
-function autoNG(t){let r=t;Object.entries(NG_R).forEach(([b,g])=>{r=r.replace(new RegExp(b,'g'),g);});return r;}
-function runNG(t){const f=NG_W.filter(w=>t.includes(w));const b=document.getElementById('ngBox');if(f.length){b.className='ng-box show ng-warn';b.innerHTML=`🚫 NG: ${f.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`;} else{b.className='ng-box show ng-ok';b.textContent='✅ NGワードなし';}}
-function onPostInput(){const t=document.getElementById('postBox').textContent||'';updCnt(t);runNG(t);}
+function autoNG(t){let r=t;Object.entries(NGR).forEach(([b,g])=>{r=r.replace(new RegExp(b,'g'),g);});return r;}
+function runNG(t){const f=NGW.filter(w=>t.includes(w));const b=document.getElementById('ngBox');if(f.length){b.className='ng-box show ng-warn';b.innerHTML=`🚫 NG: ${f.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`;} else{b.className='ng-box show ng-ok';b.textContent='✅ NGワードなし';}}
+function onInput(){const t=document.getElementById('postBox').textContent||'';updCnt(t);runNG(t);}
 function updCnt(t){const c=xchars(t);const e=document.getElementById('charCount');e.textContent=`${c} / 280`;e.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');}
-function copyPost(){const t=document.getElementById('postBox').textContent||'';if(xchars(t)>280){toast('文字数オーバーです',true);return;}const ng=NG_W.filter(w=>t.includes(w));if(ng.length&&!confirm(`NG「${ng[0]}」が含まれます。コピーしますか？`))return;cp(t);}
+function copyPost(){const t=document.getElementById('postBox').textContent||'';if(xchars(t)>280){toast('文字数オーバーです',true);return;}const ng=NGW.filter(w=>t.includes(w));if(ng.length&&!confirm(`NG「${ng[0]}」が含まれます。コピーしますか？`))return;cp(t);}
 
 function genImg(){
   const W=1080,H=1080;
-  const cv=document.getElementById('ogCanvas');cv.width=W;cv.height=H;
+  const cv=document.getElementById('cv');cv.width=W;cv.height=H;
   const c=cv.getContext('2d');
-  const bg=c.createLinearGradient(0,0,W,H);
-  bg.addColorStop(0,'#0f0f14');bg.addColorStop(1,'#1a0a2e');
+  const bg=c.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#0f0f14');bg.addColorStop(1,'#1a0a2e');
   c.fillStyle=bg;c.fillRect(0,0,W,H);
   c.save();c.globalAlpha=.12;
-  const g1=c.createRadialGradient(W*.8,H*.15,0,W*.8,H*.15,W*.5);
-  g1.addColorStop(0,'#a855f7');g1.addColorStop(1,'transparent');
+  const g1=c.createRadialGradient(W*.8,H*.15,0,W*.8,H*.15,W*.5);g1.addColorStop(0,'#a855f7');g1.addColorStop(1,'transparent');
   c.fillStyle=g1;c.fillRect(0,0,W,H);
-  const g2=c.createRadialGradient(W*.2,H*.85,0,W*.2,H*.85,W*.45);
-  g2.addColorStop(0,'#ff6b9d');g2.addColorStop(1,'transparent');
-  c.fillStyle=g2;c.fillRect(0,0,W,H);
-  c.restore();
+  const g2=c.createRadialGradient(W*.2,H*.85,0,W*.2,H*.85,W*.45);g2.addColorStop(0,'#ff6b9d');g2.addColorStop(1,'transparent');
+  c.fillStyle=g2;c.fillRect(0,0,W,H);c.restore();
   c.font='bold 34px sans-serif';c.fillStyle='rgba(255,255,255,.4)';c.textAlign='left';
   c.fillText('@おとな偏愛Lab',64,68);
-  const em=CAT_EMOJI[selCat]||'🛍️';
+  const em=CE[selCat]||'🛍️';
   const el=selEvt==='通常'?'':`【${selEvt}】`;
   c.font='bold 52px sans-serif';c.fillStyle='#ff6b9d';
   c.fillText(`${em} ${selCat} ${el}`,64,148);
-  const gL=c.createLinearGradient(64,0,W-64,0);
-  gL.addColorStop(0,'#a855f7');gL.addColorStop(1,'#ff6b9d');
-  c.strokeStyle=gL;c.lineWidth=3;
-  c.beginPath();c.moveTo(64,178);c.lineTo(W-64,178);c.stroke();
+  const gL=c.createLinearGradient(64,0,W-64,0);gL.addColorStop(0,'#a855f7');gL.addColorStop(1,'#ff6b9d');
+  c.strokeStyle=gL;c.lineWidth=3;c.beginPath();c.moveTo(64,178);c.lineTo(W-64,178);c.stroke();
   const pt=(document.getElementById('postBox')?.textContent||'').trim();
-  wrapTxt(c,(pt.split('\n')[0]||''),64,248,W-128,50);
-  const nums=['①','②','③'];
-  prods.slice(0,3).forEach((p,i)=>{
+  wrapT(c,(pt.split('\n')[0]||''),64,248,W-128,50);
+  ['①','②','③'].forEach((num,i)=>{
+    const p=prods[i];if(!p)return;
     const y=400+i*195;
-    c.save();c.globalAlpha=.18;c.fillStyle='#fff';
-    rrect(c,64,y-54,W-128,165,20);c.fill();c.restore();
-    const bg2=c.createLinearGradient(64,y-54,200,y-54);
-    bg2.addColorStop(0,'#a855f7');bg2.addColorStop(1,'#ff6b9d');
-    c.fillStyle=bg2;rrect(c,64,y-54,120,62,12);c.fill();
-    c.font='bold 40px sans-serif';c.fillStyle='#fff';c.textAlign='center';
-    c.fillText(nums[i],124,y-8);
+    c.save();c.globalAlpha=.18;c.fillStyle='#fff';rr(c,64,y-54,W-128,165,20);c.fill();c.restore();
+    const bg2=c.createLinearGradient(64,y-54,200,y-54);bg2.addColorStop(0,'#a855f7');bg2.addColorStop(1,'#ff6b9d');
+    c.fillStyle=bg2;rr(c,64,y-54,120,62,12);c.fill();
+    c.font='bold 40px sans-serif';c.fillStyle='#fff';c.textAlign='center';c.fillText(num,124,y-8);
     c.font='bold 38px sans-serif';c.fillStyle='#f0f0f5';c.textAlign='left';
     c.fillText((p.name||'').slice(0,20)+((p.name||'').length>20?'…':''),200,y-8);
-    if(p.url){c.font='26px sans-serif';c.fillStyle='rgba(255,107,157,.8)';
-      c.fillText(p.url.replace(/https?:\/\//,'').slice(0,40)+'…',200,y+52);}
+    if(p.url){c.font='26px sans-serif';c.fillStyle='rgba(255,107,157,.8)';c.fillText(p.url.replace(/https?:\/\//,'').slice(0,40)+'…',200,y+52);}
   });
   c.font='bold 32px sans-serif';c.fillStyle='rgba(168,85,247,.9)';c.textAlign='center';
   c.fillText('#PR  #楽天市場  #ad',W/2,H-72);
   document.getElementById('dlBtn').style.display='';
 }
-function wrapTxt(c,t,x,y,mW,lH){const w=t.split('');let l='';for(let i=0;i<w.length;i++){const ts=l+w[i];if(c.measureText(ts).width>mW&&l){c.fillText(l,x,y);l=w[i];y+=lH;}else l=ts;}if(l)c.fillText(l,x,y);}
-function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
-function dlImg(){const a=document.createElement('a');a.download=`ohenai_${Date.now()}.png`;a.href=document.getElementById('ogCanvas').toDataURL('image/png');a.click();toast('保存しました ✓');}
+function wrapT(c,t,x,y,mW,lH){const w=t.split('');let l='';for(let i=0;i<w.length;i++){const ts=l+w[i];if(c.measureText(ts).width>mW&&l){c.fillText(l,x,y);l=w[i];y+=lH;}else l=ts;}if(l)c.fillText(l,x,y);}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+function dlImg(){const a=document.createElement('a');a.download=`ohenai_${Date.now()}.png`;a.href=document.getElementById('cv').toDataURL('image/png');a.click();toast('保存しました ✓');}
 
 function initHeader(){
   const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
@@ -419,11 +437,7 @@ function initHeader(){
   document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;
   setDay(d.getDay()===0||d.getDay()===6?'we':'wd');
 }
-(function(){
-  renderEvts();
-  loadCfg();
-  initHeader();
-})();
+(function(){renderEvts();loadCfg();initHeader();})();
 </script>
 </body>
 </html>
