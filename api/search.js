@@ -2,14 +2,15 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // Vercel環境変数優先、なければ登録済み認証情報を使用
   const appId = process.env.RAKUTEN_APP_ID || '3fea067e-ff6e-46e3-ab90-82fa7628daad';
   const affId = process.env.RAKUTEN_AFF_ID || '5335e187.bd9b90cd.5335e188.d302f85f';
   const { genre = '', kw = '' } = req.query;
 
+  const keyword = kw || 'ランキング';
+
   const params = new URLSearchParams({
     applicationId: appId,
-    keyword: kw || '',
+    keyword,
     hits: '20',
     sort: 'standard',
     format: 'json',
