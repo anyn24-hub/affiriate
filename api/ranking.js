@@ -4,91 +4,67 @@ export default async function handler(req, res) {
 
   const { genre = '' } = req.query;
 
-  const GENRE_KW = {
-    '410899': 'スイーツ',
-    '100044': 'ガジェット',
-    '216131': 'コスメ',
-    '100533': 'サプリ 健康',
-  };
-
-  const kw = GENRE_KW[genre];
-  if (!kw) {
+  const VALID_GENRES = ['410899', '100044', '216131', '100533'];
+  if (!VALID_GENRES.includes(genre)) {
     return res.status(200).json({ items: [], _error: 'ジャンル不明' });
   }
 
   const affId = process.env.RAKUTEN_AFF_ID || '5335e187.bd9b90cd.5335e188.d302f85f';
+  const rssUrl = `https://ranking.rakuten.co.jp/daily/${genre}/rss/`;
 
-  const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+  try {
+    const r = await fetch(rssUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+        'Accept-Language': 'ja,en-US;q=0.9',
+      },
+    });
 
-  function extractItemUrls(html) {
-    const urls = new Set();
-    // href 属性内の item URL（最も確実）
-    const hrefPat = /href=["'](https?:\/\/item\.rakuten\.co\.jp\/[^"'<>\s]+)["']/g;
-    for (const m of html.matchAll(hrefPat)) urls.add(m[1].split('?')[0].replace(/\/$/, '') + '/');
-    // JSON 埋め込みデータ内の itemUrl
-    const jsonPat = /"(?:itemUrl|item_url|url)"\s*:\s*"(https?:\/\/item\.rakuten\.co\.jp\/[^"]+)"/g;
-    for (const m of html.matchAll(jsonPat)) urls.add(m[1].split('?')[0].replace(/\/$/, '') + '/');
-    // 直接 URL 記述
-    const directPat = /https?:\/\/item\.rakuten\.co\.jp\/[a-zA-Z0-9_.%-]+\/[a-zA-Z0-9_.%-]+\/?/g;
-    for (const m of html.matchAll(directPat)) urls.add(m[0].replace(/\/$/, '') + '/');
-    return [...urls].filter(u => !/campaign|banner|ad\.|^\/ad\//.test(u));
-  }
+    if (!r.ok) {
+      return res.status(200).json({ items: [], _error: `RSS取得失敗: HTTP ${r.status}` });
+    }
 
-  const tryUrls = [
-    `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(kw)}/?s=2&genreId=${genre}`,
-    `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(kw)}/?s=2`,
-    `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(kw + ' 送料無料')}/?s=2`,
-  ];
+    const xml = await r.text();
+    const itemBlocks = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)];
 
-  let foundUrls = [];
-  for (const url of tryUrls) {
-    try {
-      const r = await fetch(url, {
-        headers: {
-          'User-Agent': UA,
-          'Accept-Language': 'ja,en-US;q=0.9',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Encoding': 'gzip, deflate, br',
-        },
-        redirect: 'follow',
-      });
-      const html = await r.text();
-      foundUrls = extractItemUrls(html).slice(0, 10);
-      if (foundUrls.length >= 3) break;
-    } catch {}
-  }
+    const items = [];
+    for (const m of itemBlocks) {
+      if (items.length >= 3) break;
+      const block = m[1];
 
-  if (!foundUrls.length) {
-    return res.status(200).json({ items: [], _error: '商品URLを取得できませんでした。URLを手動で貼り付けてください。', _debug: `kw=${kw} genre=${genre}` });
-  }
-
-  const items = [];
-  for (const itemUrl of foundUrls.slice(0, 6)) {
-    if (items.length >= 3) break;
-    try {
-      const pr = await fetch(itemUrl, {
-        headers: { 'User-Agent': UA, 'Accept-Language': 'ja,en;q=0.9' },
-        redirect: 'follow',
-      });
-      const phtml = await pr.text();
-      let title = phtml.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1]
-                || phtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i)?.[1]
-                || phtml.match(/<title>([^<]+)<\/title>/i)?.[1]
-                || '';
-      title = title.replace(/\s*[｜|]\s*.*楽天.*$/i, '').replace(/楽天市場[:：]\s*/i, '').replace(/\s*-\s*楽天市場.*$/i, '').trim();
+      // title (with optional CDATA)
+      let title = block.match(/<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i)?.[1]?.trim() || '';
+      title = title
+        .replace(/\s*[｜|]\s*.*楽天.*$/i, '')
+        .replace(/楽天市場[:：]\s*/i, '')
+        .replace(/\s*-\s*楽天市場.*$/i, '')
+        .trim();
       if (!title || title.length < 3) continue;
 
+      // link (prefer <link>, fall back to <guid>)
+      let link = block.match(/<link[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i)?.[1]?.trim()
+               || block.match(/<guid[^>]*>(?:<!\[CDATA\[)?(https?:\/\/[^<\]]+)(?:\]\]>)?<\/guid>/i)?.[1]?.trim()
+               || '';
+      link = link.trim();
+      if (!link || !link.includes('rakuten')) continue;
+
+      // strip query params, normalise trailing slash
+      link = link.split('?')[0].replace(/\/$/, '') + '/';
+
       const affiliateUrl = affId
-        ? `https://hb.afl.rakuten.co.jp/ichiba/${affId}/?pc=${encodeURIComponent(itemUrl)}&link_type=text`
-        : itemUrl;
+        ? `https://hb.afl.rakuten.co.jp/ichiba/${affId}/?pc=${encodeURIComponent(link)}&link_type=text`
+        : link;
 
-      items.push({ name: title, url: affiliateUrl, itemUrl });
-    } catch {}
+      items.push({ name: title, url: affiliateUrl, itemUrl: link });
+    }
+
+    if (!items.length) {
+      return res.status(200).json({ items: [], _error: 'RSSから商品を取得できませんでした', _xmlSample: xml.slice(0, 600) });
+    }
+
+    return res.status(200).json({ items });
+  } catch (e) {
+    return res.status(200).json({ items: [], _error: e.message });
   }
-
-  if (!items.length) {
-    return res.status(200).json({ items: [], _error: '商品情報を取得できませんでした。URLを手動で貼り付けてください。' });
-  }
-
-  return res.status(200).json({ items });
 }
