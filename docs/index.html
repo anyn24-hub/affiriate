@@ -215,36 +215,22 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="rtab-row">
-      <button class="rtab active" onclick="switchTab('s2','jp',this)">🇯🇵 日本</button>
-      <button class="rtab"        onclick="switchTab('s2','intl',this)">🌍 米国・中国・香港</button>
+    <div class="info cyan" style="font-size:12px">企業名・ティッカー・証券コードを入力 → ChatGPTに決算PDF URLを調べてもらう → Driveに保存（日本株・海外株どちらもOK）</div>
+    <div class="fg mt12">
+      <label>企業名 / ティッカー / 証券コード（コンマ区切りで複数入力可）</label>
+      <input class="finput" id="allTicker" placeholder="例：トヨタ, 7203, AAPL, テンセント, 0700" oninput="renderAllChips()" autocomplete="off" spellcheck="false">
     </div>
-    <!-- 日本 -->
-    <div class="rtab-body active" id="s2-jp">
-      <div class="info cyan" style="font-size:12px">TDnetで各社の決算短信PDFを開き → Driveの「資料」フォルダに保存してください。</div>
-      <ul class="res-list" style="margin-top:10px">
-        <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">企業名で検索 → 決算短信PDFを開く → Driveに保存</div></div></a></li>
-        <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Driveの資料フォルダを開く</div><div class="res-desc">保存済みPDFの確認・追加</div></div></a></li>
-      </ul>
+    <div id="allChipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="allChipCount"></span></div>
+      <div class="company-chips" id="allCompanyChips"><span style="font-size:12px;color:rgba(255,255,255,.15)">企業名を入力すると横並びで表示されます</span></div>
     </div>
-    <!-- 海外 -->
-    <div class="rtab-body" id="s2-intl">
-      <div class="info cyan" style="font-size:12px;margin-top:8px">企業名/ティッカーを入力 → ChatGPTにPDF URLを調べてもらう → PDFをDriveの「資料」フォルダに保存してください。</div>
-      <div class="fg" style="margin-top:10px">
-        <label>企業名 / ティッカー（コンマ区切りで複数入力可）</label>
-        <input class="finput" id="intlTicker" placeholder="例：AAPL, NVDA, テンセント, 0700" oninput="renderChips()" autocomplete="off" spellcheck="false">
-      </div>
-      <div id="chipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="chipCount"></span></div>
-        <div class="company-chips" id="companyChips"><span style="font-size:12px;color:var(--border)">企業名を入力すると表示されます</span></div>
-      </div>
-      <button class="big-btn" onclick="copyIntlPrompt()" style="margin-top:12px;width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border)">
-        <span class="bico">📋</span><div class="btxt"><div class="blabel">ChatGPT用プロンプトをコピー</div><div class="bsub">ChatGPTにPDF URLを調べてもらう</div></div><span class="barr">📋</span>
-      </button>
-      <ul class="res-list" style="margin-top:10px">
-        <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Driveの資料フォルダを開く</div><div class="res-desc">ダウンロードしたPDFをここに保存</div></div></a></li>
-      </ul>
-    </div>
+    <button class="big-btn" onclick="copyAllPdfPrompt()" style="margin-top:12px;width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border)">
+      <span class="bico">📋</span><div class="btxt"><div class="blabel">ChatGPT用プロンプトをコピー</div><div class="bsub">決算PDF URLをChatGPTに調べてもらう（日本・海外どちらもOK）</div></div><span class="barr">📋</span>
+    </button>
+    <ul class="res-list" style="margin-top:10px">
+      <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Driveの資料フォルダを開く</div><div class="res-desc">ダウンロードしたPDFをここに保存</div></div></a></li>
+      <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く（日本株 手動確認用）</div><div class="res-desc">企業名で検索 → 決算短信PDFを直接確認</div></div></a></li>
+    </ul>
   </div>
 </div>
 
@@ -433,16 +419,16 @@ ${SBI_URL}
 }
 
 // ─────────────────────────────────────────
-// STEP 2: LINKS + CHIPS
+// STEP 2: CHIPS + PROMPT
 // ─────────────────────────────────────────
-function parseEntries(){
-  const val = document.getElementById('intlTicker').value;
+function parseAllEntries(){
+  const val = document.getElementById('allTicker').value;
   return val.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
 }
-function renderChips(){
-  const entries = parseEntries();
-  const count   = document.getElementById('chipCount');
-  const chips   = document.getElementById('companyChips');
+function renderAllChips(){
+  const entries = parseAllEntries();
+  const count   = document.getElementById('allChipCount');
+  const chips   = document.getElementById('allCompanyChips');
   if(!entries.length){
     count.textContent = '';
     chips.innerHTML   = '<span style="font-size:12px;color:rgba(255,255,255,.15)">企業名を入力すると横並びで表示されます</span>';
@@ -452,33 +438,22 @@ function renderChips(){
   chips.innerHTML   = entries.map(n=>`<span class="company-chip">${escHtml(n)}</span>`).join('');
 }
 function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function openIrSearch(type){
-  const el = document.getElementById(`irSearch${type==='jp'?'Jp':'Intl'}`);
-  el.style.display = el.style.display==='none' ? 'block' : 'none';
-}
-function goIrSearch(type){
-  const name = document.getElementById(`irName${type==='jp'?'Jp':'Intl'}`).value.trim();
-  if(!name){ toast('企業名を入力してください',true); return; }
-  const url = type==='jp'
-    ? `https://www.google.com/search?q=${encodeURIComponent(name+' IR 決算説明資料')}`
-    : `https://www.google.com/search?q=${encodeURIComponent(name+' investor relations annual results')}`;
-  window.open(url,'_blank','noopener');
-}
-function copyIntlPrompt(){
-  const entries = parseEntries();
+function copyAllPdfPrompt(){
+  const entries = parseAllEntries();
   const companies = entries.length
     ? entries.map((e,i)=>`${i+1}. ${e}`).join('\n')
     : '（企業名またはティッカー・証券コードを入力してから押してください）';
-  const prompt = `以下の企業の最新 Annual Results（決算発表資料）のPDF直リンクURLを調べてください。
+  const prompt = `以下の企業の最新の決算発表資料のPDF直リンクURLを調べてください。
 
 対象企業：
 ${companies}
 
 出力形式（この形式のみで回答してください）：
-企業名（ティッカー）: https://...
+企業名（コード/ティッカー）: https://...
 
 条件：
-・Annual Results（決算発表プレスリリース）のPDF直リンクURLのみを回答
+・日本株：TDnet掲載の決算短信PDFの直リンクURLを回答
+・米国・中国・香港株：Annual Results（決算発表プレスリリース）のPDF直リンクURLを回答
 ・Annual Report（年次報告書）は不要
 ・URLが不明な場合は「不明」と記載
 ・説明文・補足は不要`;
