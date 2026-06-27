@@ -196,51 +196,24 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="rtab-row">
-      <button class="rtab active" onclick="switchTab('s2','jp',this)">🇯🇵 日本</button>
-      <button class="rtab"        onclick="switchTab('s2','intl',this)">🌍 米国・中国・香港</button>
+    <div class="info cyan" style="font-size:12px">企業名・ティッカー・証券コードを入力 → ChatGPTに決算PDF URLを調べてもらう → Driveに保存（日本株・海外株どちらもOK）</div>
+    <div class="fg mt12">
+      <label>企業名 / ティッカー / 証券コード（コンマ区切りで複数入力可）</label>
+      <input class="finput" id="allTicker" placeholder="例：トヨタ, 7203, AAPL, テンセント, 0700" oninput="renderAllChips()" autocomplete="off" spellcheck="false">
     </div>
-    <!-- 日本 -->
-    <div class="rtab-body active" id="s2-jp">
-      <div class="info cyan">TDnet・EDINETで決算資料を検索してダウンロードし、Google Driveに保存してください。</div>
-      <ul class="res-list">
-        <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く</div><div class="res-desc">決算短信・業績予想修正・配当・自社株買いの適時開示</div></div></a></li>
-        <li><a class="res-link" href="https://disclosure2.edinet-fsa.go.jp/" target="_blank" rel="noopener"><span class="res-ico">🏛</span><div><div>EDINETを開く</div><div class="res-desc">有価証券報告書・四半期報告書・半期報告書</div></div></a></li>
-        <li><button class="res-link" onclick="openIrSearch('jp')"><span class="res-ico">🔍</span><div><div>企業IRをGoogle検索</div><div class="res-desc">企業名を入力してIRページ・決算説明資料を検索</div></div></button></li>
-        <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算短信・説明資料PDFをここに保存</div></div></a></li>
-      </ul>
-      <div class="fg" id="irSearchJp" style="display:none">
-        <label>企業名</label>
-        <div style="display:flex;gap:8px"><input class="finput" id="irNameJp" placeholder="例：トヨタ自動車" style="flex:1"><button class="btn btn-blue btn-sm" onclick="goIrSearch('jp')">検索</button></div>
-      </div>
+    <div id="allChipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="allChipCount"></span></div>
+      <div class="company-chips" id="allCompanyChips"><span style="font-size:12px;color:rgba(255,255,255,.15)">企業名を入力すると横並びで表示されます</span></div>
     </div>
-    <!-- 海外 -->
-    <div class="rtab-body" id="s2-intl">
-      <div class="fg" style="margin-top:8px">
-        <label>企業名 / ティッカー / 証券コード（カンマ区切りで複数可）</label>
-        <input class="finput" id="intlTicker" placeholder="例：AAPL, NVDA, テンセント, 0700" oninput="renderChips()" autocomplete="off" spellcheck="false">
-      </div>
-      <button class="big-btn blue" onclick="copyIntlPrompt()">
-        <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算書URL抽出を依頼</div><div class="bsub">Annual Results のPDF直リンクURLのみを回答させる</div></div><span class="barr">📋</span>
-      </button>
-      <ul class="res-list mt12">
-        <li><a class="res-link" href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener"><span class="res-ico">🇺🇸</span><div><div>SEC EDGARを開く（米国）</div><div class="res-desc">10-K・10-Q・8-K Earnings Release を検索</div></div></a></li>
-        <li><a class="res-link" href="https://www.hkexnews.hk/" target="_blank" rel="noopener"><span class="res-ico">🇭🇰</span><div><div>HKEXnewsを開く（香港・中国）</div><div class="res-desc">Annual Results・決算公告・年次報告書を検索</div></div></a></li>
-        <li><button class="res-link" onclick="openIrSearch('intl')"><span class="res-ico">🔍</span><div><div>企業IRをGoogle検索（海外）</div><div class="res-desc">ティッカーを入力してIR / Investor Relations を検索</div></div></button></li>
-        <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算資料PDFをここに保存</div></div></a></li>
-      </ul>
-      <div class="fg" id="irSearchIntl" style="display:none">
-        <label>ティッカー / 企業名</label>
-        <div style="display:flex;gap:8px"><input class="finput" id="irNameIntl" placeholder="例：AAPL" style="flex:1"><button class="btn btn-blue btn-sm" onclick="goIrSearch('intl')">検索</button></div>
-      </div>
-      <!-- 企業名 横並び表示 (末尾) -->
-      <div id="chipArea" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:8px">入力中の企業 <span id="chipCount"></span></div>
-        <div class="company-chips" id="companyChips">
-          <span style="font-size:12px;color:var(--border)">企業名を入力すると横並びで表示されます</span>
-        </div>
-      </div>
-    </div>
+    <button class="big-btn blue" onclick="copyAllPdfPrompt()" style="margin-top:12px">
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算PDF URL抽出を依頼</div><div class="bsub">日本株（TDnet）・海外株（Annual Results）どちらも対応</div></div><span class="barr">📋</span>
+    </button>
+    <ul class="res-list mt12">
+      <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算資料PDFをここに保存</div></div></a></li>
+      <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く（日本株 手動確認用）</div><div class="res-desc">決算短信・業績予想修正・配当・自社株買いの適時開示</div></div></a></li>
+      <li><a class="res-link" href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener"><span class="res-ico">🇺🇸</span><div><div>SEC EDGARを開く（米国 手動確認用）</div><div class="res-desc">10-K・10-Q・8-K Earnings Release を検索</div></div></a></li>
+      <li><a class="res-link" href="https://www.hkexnews.hk/" target="_blank" rel="noopener"><span class="res-ico">🇭🇰</span><div><div>HKEXnewsを開く（香港・中国 手動確認用）</div><div class="res-desc">Annual Results・決算公告・年次報告書を検索</div></div></a></li>
+    </ul>
   </div>
 </div>
 
@@ -506,36 +479,37 @@ URL：
 ${SBI_URL}
 
 出力形式（この形式のみで回答してください）：
-| 国 | 証券コード | 企業名 | 発表日 |
+| 国 | 証券コード | 企業名（ローマ字） | 発表日 |
 |---|---|---|---|
-| 日本 | 7203 | トヨタ自動車 | 2026-06-20 |
+| 日本 | 7203 | Toyota Motor Corporation | 2026-06-20 |
 ...
 
 条件：
 ・日本・米国・中国・香港すべて対象
+・企業名はすべてローマ字（英語表記）で出力すること
 ・本日の発表が10社未満の場合は前日・前々日にさかのぼって補足し、合計最低10社を出力
 ・さかのぼった場合は発表日を正確に記載
 ・表以外の説明文は不要
 
 【最後に必ずこの形式で出力してください】
-━━━ コピペ用（米国・中国・香港のみ） ━━━
-企業名（ティッカー）, 企業名（ティッカー）, 企業名（証券コード）, ...
+━━━ コピペ用（全企業・ローマ字） ━━━
+Company Name (Ticker), Company Name (Ticker), Company Name (Code), ...
 ━━━━━━━━━━━━━━━━━━━━━━━━━
-※日本株は含めない。カンマ区切りで1行にまとめる。`;
+※全地域含む。カンマ区切り・ローマ字表記で1行にまとめる。`;
 
 function copyAiPrompt(){ copyText(AI_PROMPT); }
 
 // ─────────────────────────────────────────
-// STEP 2: LINKS + CHIPS
+// STEP 2: CHIPS + PROMPT
 // ─────────────────────────────────────────
-function parseEntries(){
-  const val = document.getElementById('intlTicker').value;
+function parseAllEntries(){
+  const val = document.getElementById('allTicker').value;
   return val.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
 }
-function renderChips(){
-  const entries = parseEntries();
-  const count   = document.getElementById('chipCount');
-  const chips   = document.getElementById('companyChips');
+function renderAllChips(){
+  const entries = parseAllEntries();
+  const count   = document.getElementById('allChipCount');
+  const chips   = document.getElementById('allCompanyChips');
   if(!entries.length){
     count.textContent = '';
     chips.innerHTML   = '<span style="font-size:12px;color:rgba(255,255,255,.15)">企業名を入力すると横並びで表示されます</span>';
@@ -545,33 +519,22 @@ function renderChips(){
   chips.innerHTML   = entries.map(n=>`<span class="company-chip">${escHtml(n)}</span>`).join('');
 }
 function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function openIrSearch(type){
-  const el = document.getElementById(`irSearch${type==='jp'?'Jp':'Intl'}`);
-  el.style.display = el.style.display==='none' ? 'block' : 'none';
-}
-function goIrSearch(type){
-  const name = document.getElementById(`irName${type==='jp'?'Jp':'Intl'}`).value.trim();
-  if(!name){ toast('企業名を入力してください',true); return; }
-  const url = type==='jp'
-    ? `https://www.google.com/search?q=${encodeURIComponent(name+' IR 決算説明資料')}`
-    : `https://www.google.com/search?q=${encodeURIComponent(name+' investor relations annual results')}`;
-  window.open(url,'_blank','noopener');
-}
-function copyIntlPrompt(){
-  const entries = parseEntries();
+function copyAllPdfPrompt(){
+  const entries = parseAllEntries();
   const companies = entries.length
     ? entries.map((e,i)=>`${i+1}. ${e}`).join('\n')
     : '（企業名またはティッカー・証券コードを入力してから押してください）';
-  const prompt = `以下の企業の最新 Annual Results（決算発表資料）のPDF直リンクURLを調べてください。
+  const prompt = `以下の企業の最新の決算発表資料のPDF直リンクURLを調べてください。
 
 対象企業：
 ${companies}
 
 出力形式（この形式のみで回答してください）：
-企業名（ティッカー）: https://...
+企業名（コード/ティッカー）: https://...
 
 条件：
-・Annual Results（決算発表プレスリリース）のPDF直リンクURLのみを回答
+・日本株：TDnet掲載の決算短信PDFの直リンクURLを回答
+・米国・中国・香港株：Annual Results（決算発表プレスリリース）のPDF直リンクURLを回答
 ・Annual Report（年次報告書）は不要
 ・URLが不明な場合は「不明」と記載
 ・説明文・補足は不要`;
