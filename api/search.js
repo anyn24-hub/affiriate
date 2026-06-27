@@ -23,6 +23,10 @@ export default async function handler(req, res) {
       `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?${params}`
     );
     const data = await r.json();
+    // 楽天APIがエラーを返した場合はフロントに伝える
+    if (data.error) {
+      return res.status(200).json({ Items: [], count: 0, _error: `楽天API: ${data.error_description || data.error}` });
+    }
     return res.status(200).json(data);
   } catch (e) {
     return res.status(200).json({ Items: [], count: 0, _error: e.message });
