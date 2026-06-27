@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ items: [], _error: 'ランキングから商品URLを取得できませんでした' });
     }
 
-    // 各商品ページからタイトルを取得（最刧3件）
+    // 各商品ページからタイトルを取得（最大3件）
     const items = [];
     for (const itemUrl of foundUrls.slice(0, 6)) {
       if (items.length >= 3) break;
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         let title = phtml.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1]
                   || phtml.match(/<title>([^<]+)<\/title>/i)?.[1]
                   || '';
-        title = title.replace(/\s*[イ|]\s*.*楽天.*$/i, '').replace(/楽天市場[::ィ]　?/i, '').trim();
+        title = title.replace(/\s*[｜|]\s*.*楽天.*$/i, '').replace(/楽天市場[:：]\s*/i, '').trim();
         if (!title || title.length < 3) continue;
 
         const affiliateUrl = affId
