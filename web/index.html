@@ -145,7 +145,6 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
     <span class="chevron">▼</span>
   </div>
   <div class="sec-body">
-    <!-- ランキング/アフィリエイトリンク -->
     <a id="rankLink" class="rank-link" href="https://ranking.rakuten.co.jp/" target="_blank" rel="noopener">
       <span class="rank-link-icon">🏆</span>
       <div class="rank-link-body">
@@ -154,12 +153,10 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       </div>
       <span style="color:var(--muted);font-size:16px">↗</span>
     </a>
-    <!-- 自動取得ボタン（非高料率のみ） -->
     <div id="autoArea" style="display:none;margin-top:10px">
       <button class="btn btn-pink btn-full" id="autoBtn" onclick="tryAuto()">✨ ランキングから自動取得を試みる</button>
       <div id="autoStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
     </div>
-    <!-- 商品スロット -->
     <div id="prodSlots"></div>
   </div>
 </div>
@@ -260,15 +257,12 @@ function selSlot(i){
   renderSched();
   prods=[];
   document.getElementById('postArea').style.display='none';
-  // Update STEP2
   const hr=isHR(selCat);
-  // Ranking/affiliate link
   const rUrl=CR[selCat]||'https://ranking.rakuten.co.jp/';
-  const rTitle=hr?下構:♪'楽天アフィリエイト管理画面を開く':`${CE[selCat]||''} ${selCat}ランキングを開く`;
+  const rTitle=hr?'楽天アフィリエイト管理画面を開く':`${CE[selCat]||''} ${selCat}ランキングを開く`;
   document.getElementById('rankLink').href=rUrl;
   document.getElementById('rankLinkTitle').textContent=rTitle;
   document.getElementById('sec2Title').textContent=hr?'🔗 商品URLを入力（高料率）':'🔗 商品URLを入力';
-  // Auto-fetch button: non-HR only
   document.getElementById('autoArea').style.display=hr?'none':'block';
   document.getElementById('autoStatus').textContent='';
   renderProdSlots();
@@ -292,7 +286,6 @@ function renderProdSlots(){
 }
 
 function onUrlInput(){
-  // If all 3 URLs filled, highlight generate button
   const all=[1,2,3].every(n=>(document.getElementById(`ru${n}`)?.value||'').trim());
   document.getElementById('genBtn').style.borderColor=all?'var(--green)':'';
 }
