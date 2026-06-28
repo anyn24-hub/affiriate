@@ -4,46 +4,46 @@ export default async function handler(req, res) {
 
   const { genre = '' } = req.query;
 
+  const GENRE_CONFIG = {
+    '410899': { kw: 'スイーツ', label: 'スイーツ' },
+    '100044': { kw: 'ガジェット', label: 'ガジェット' },
+    '216131': { kw: 'コスメ', label: '美容' },
+    '100533': { kw: 'サプリ', label: 'ゆる健康' },
+  };
+
+  const cfg = GENRE_CONFIG[genre];
+  if (!cfg) return res.status(200).json({ items: [], _error: 'ジャンル不明' });
+
   const affId = process.env.RAKUTEN_AFF_ID || '5335e187.bd9b90cd.5335e188.d302f85f';
+  const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
   function makeAff(itemUrl) {
     return `https://hb.afl.rakuten.co.jp/ichiba/${affId}/?pc=${encodeURIComponent(itemUrl)}&link_type=text`;
   }
-
-  const STATIC_ITEMS = {
-    '410899': [
-      { name: 'ルタオ ドゥーブルフロマージュ（濃厚チーズケーキ）', itemUrl: 'https://item.rakuten.co.jp/letao/10000003/' },
-      { name: 'バスクチーズケーキ 5号 誕生日ケーキ スイーツ', itemUrl: 'https://item.rakuten.co.jp/furutoya/basque-5/' },
-      { name: '銀座千疋屋 フルーツゼリー 詰め合わせ ギフト', itemUrl: 'https://item.rakuten.co.jp/ginza-sembikiya/gc-48/' },
-    ],
-    '100044': [
-      { name: 'Anker PowerCore 10000 モバイルバッテリー コンパクト 大容量', itemUrl: 'https://item.rakuten.co.jp/ankerjapan/a1263/' },
-      { name: 'Anker USB-C 充電器 65W GaN 急速充電 PD対応', itemUrl: 'https://item.rakuten.co.jp/ankerjapan/a2667/' },
-      { name: 'Belkin MagSafe対応 ワイヤレス充電スタンド 15W', itemUrl: 'https://item.rakuten.co.jp/r-kojima/4250001168/' },
-    ],
-    '216131': [
-      { name: 'ORBIS オルビスユー ホワイトニングモイスチャー 保湿クリーム', itemUrl: 'https://item.rakuten.co.jp/orbis/mst050/' },
-      { name: 'HAKU 薬用 美白美容液 ファンデーション SPF50+', itemUrl: 'https://item.rakuten.co.jp/shiseido-sp/mq4022/' },
-      { name: 'ちふれ 化粧水 しっとりタイプ 大容量 詰め替え用 500mL', itemUrl: 'https://item.rakuten.co.jp/chifure/4971710320466/' },
-    ],
-    '100533': [
-      { name: 'DHC マルチビタミン 60日分 栄養機能食品', itemUrl: 'https://item.rakuten.co.jp/dhc/multivitamin-60/' },
-      { name: 'ファンケル 大人のカロリミット 機能性表示食品 30日分', itemUrl: 'https://item.rakuten.co.jp/fancl-official/1870/' },
-      { name: 'サントリー セサミン＆ビタミンE 120粒 60日分 ゴマ', itemUrl: 'https://item.rakuten.co.jp/suntory-kenko/sasamin01/' },
-    ],
-  };
-
-  const staticList = STATIC_ITEMS[genre];
-  if (!staticList) return res.status(200).json({ items: [], _error: 'ジャンル不明' });
-
-  const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
   function cleanTitle(raw) {
     return (raw || '')
       .replace(/\s*[｜|]\s*.*楽天.*$/i, '')
       .replace(/楽天市場[:：]\s*/i, '')
       .replace(/\s*-\s*楽天市場.*$/i, '')
+      .replace(/\s*\|.*$/i, '')
       .trim();
+  }
+
+  function extractItemUrls(html) {
+    const seen = new Set();
+    const urls = [];
+    const re = /href=["'](https?:\/\/item\.rakuten\.co\.jp\/[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.\/]+)/gi;
+    let m;
+    while ((m = re.exec(html)) !== null && urls.length < 10) {
+      let u = m[1].split('?')[0].replace(/\/$/, '') + '/';
+      // Require at least shop/item structure: /shop/item/
+      if (u.split('/').filter(Boolean).length >= 4 && !seen.has(u)) {
+        seen.add(u);
+        urls.push(u);
+      }
+    }
+    return urls;
   }
 
   async function fetchItem(itemUrl) {
@@ -51,18 +51,18 @@ export default async function handler(req, res) {
       const pr = await fetch(itemUrl, {
         headers: { 'User-Agent': UA, 'Accept-Language': 'ja,en;q=0.9' },
         redirect: 'follow',
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(7000),
       });
       if (!pr.ok) return { title: null, imageUrl: null };
-      const phtml = await pr.text();
+      const html = await pr.text();
       const title = cleanTitle(
-        phtml.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1]
-        || phtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i)?.[1]
-        || phtml.match(/<title>([^<]+)<\/title>/i)?.[1]
+        html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1]
+        || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i)?.[1]
+        || html.match(/<title>([^<]+)<\/title>/i)?.[1]
       );
       const imageUrl =
-        phtml.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
-        || phtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1]
+        html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
+        || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1]
         || null;
       return { title: title && title.length >= 3 ? title : null, imageUrl: imageUrl || null };
     } catch {
@@ -70,17 +70,70 @@ export default async function handler(req, res) {
     }
   }
 
-  const items = [];
-  for (const entry of staticList) {
-    if (items.length >= 3) break;
-    const { title: liveTitle, imageUrl } = await fetchItem(entry.itemUrl);
-    items.push({
-      name: liveTitle || entry.name,
-      url: makeAff(entry.itemUrl),
-      itemUrl: entry.itemUrl,
-      imageUrl: imageUrl || null,
-    });
+  async function resolveItems(itemUrls) {
+    const items = [];
+    for (const itemUrl of itemUrls) {
+      if (items.length >= 3) break;
+      const { title, imageUrl } = await fetchItem(itemUrl);
+      if (title) items.push({ name: title, url: makeAff(itemUrl), itemUrl, imageUrl });
+    }
+    return items;
   }
 
-  return res.status(200).json({ items });
+  // ── Strategy 1: Rakuten Ranking page ─────────────────────────
+  try {
+    const url = `https://ranking.rakuten.co.jp/daily/${genre}/`;
+    const r = await fetch(url, {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html', 'Accept-Language': 'ja' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (r.ok) {
+      const html = await r.text();
+      const itemUrls = extractItemUrls(html);
+      if (itemUrls.length >= 1) {
+        const items = await resolveItems(itemUrls);
+        if (items.length >= 1) return res.status(200).json({ items });
+      }
+    }
+  } catch {}
+
+  // ── Strategy 2: Rakuten Search page ──────────────────────────
+  try {
+    const url = `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(cfg.kw)}/${genre}/?s=4`;
+    const r = await fetch(url, {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html', 'Accept-Language': 'ja' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (r.ok) {
+      const html = await r.text();
+      const itemUrls = extractItemUrls(html);
+      if (itemUrls.length >= 1) {
+        const items = await resolveItems(itemUrls);
+        if (items.length >= 1) return res.status(200).json({ items });
+      }
+    }
+  } catch {}
+
+  // ── Strategy 3: DuckDuckGo search ────────────────────────────
+  try {
+    const query = encodeURIComponent(`site:item.rakuten.co.jp ${cfg.kw} 人気`);
+    const r = await fetch(`https://html.duckduckgo.com/html/?q=${query}`, {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html', 'Accept-Language': 'ja,en;q=0.9' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (r.ok) {
+      const html = await r.text();
+      let itemUrls = [...html.matchAll(/uddg=(https?%3A%2F%2Fitem\.rakuten[^&"]+)/gi)]
+        .map(m => decodeURIComponent(m[1]).split('?')[0].replace(/\/$/, '') + '/');
+      if (!itemUrls.length) {
+        itemUrls = [...html.matchAll(/href=["'](https?:\/\/item\.rakuten\.co\.jp\/[^"'<>\s]+)["']/gi)]
+          .map(m => m[1].split('?')[0].replace(/\/$/, '') + '/');
+      }
+      itemUrls = [...new Set(itemUrls)].slice(0, 8);
+      const items = await resolveItems(itemUrls);
+      if (items.length >= 1) return res.status(200).json({ items });
+    }
+  } catch {}
+
+  return res.status(200).json({ items: [], _error: '商品を取得できませんでした' });
 }
