@@ -423,14 +423,34 @@ function parseAffHtml(){
 // ═══ GENERATE POST ════════════════════════════════════════════
 function trimHighRateName(raw){
   let t=(raw||'').trim();
-  t=t.replace(/[\d,]+→[\d,]+円[^\s]*/g,'');
+  // 1. ブラケット系を除去
+  t=t.replace(/【[^】]*】/g,'');
+  t=t.replace(/\[[^\]]*\]/g,'');
+  t=t.replace(/＜[^＞]*＞/g,'');
+  t=t.replace(/〔[^〕]*〕/g,'');
+  t=t.replace(/（[^）]{0,60}）/g,'');
+  // 2. ＼...／ 装飾を除去
   t=t.replace(/[＼\\][^\/／]{0,40}[\/／]/g,'');
-  t=t.replace(/楽天[^\s！。]{0,15}(1位|2位|3位|\d+冠|ランキング|大賞|受賞|獲得|優良)/g,'');
-  t=t.replace(/【[^】]{0,100}】/g,'');
-  t=t.replace(/\[[^\]]{0,100}\]/g,'');
-  t=t.replace(/★[^★\s]{0,20}/g,'');
-  t=t.replace(/[✨🎁🔥💥👑]{0,5}/gu,'');
-  t=t.replace(/送料無料[^\s]*/g,'');
+  // 3. 価格パターンを除去（貪欲マッチせず数字+単位のみ）
+  t=t.replace(/[\d,]+→[\d,]+円/g,'');
+  t=t.replace(/¥[\d,]+/g,'');
+  t=t.replace(/[\d,]+円/g,'');
+  t=t.replace(/\d+%[A-Za-z]{0,5}/g,'');
+  // 4. ！以前を除去（前置きの宣伝文）
+  t=t.replace(/^[^！]{0,60}！+\s*/,'');
+  // 5. 宣伝フレーズを除去（\S*は使わず範囲を限定）
+  [
+    /楽天[^\s！。]{0,15}(1位|2位|3位|\d+冠|ランキング|大賞|受賞|獲得|優良)/g,
+    /送料無料/g, /P\d+倍/g, /クーポン[^\s]{0,10}/g,
+    /期間限定/g, /新色(追加|登場)/g, /★[^\s★]{0,15}/g,
+    /累計\d+[^\s。！]{0,10}/g, /今なら[^\s。！]{0,15}/g,
+    /先着\d+[^\s]{0,5}/g, /大人気/g, /話題沸騰/g,
+  ].forEach(re=>{t=t.replace(re,'');});
+  // 6. 絵文字を除去
+  t=t.replace(/[\u{1F300}-\u{1FFFF}]/gu,'');
+  t=t.replace(/[✨🎁🔥💥👑⭐✅]/g,'');
+  // 7. ｜以降を除去
+  t=t.replace(/\s*[｜|]\s*.*/,'');
   t=t.replace(/\s{2,}/g,' ').trim();
   if(t.length>28)t=t.slice(0,28).trim();
   return t||raw;
@@ -455,7 +475,7 @@ function buildPostText(cat, extra){
   })).filter(p=>p.name||p.url);
   if(!prods.length)return null;
   const sep=isHighRate?'｜':' ▷ ';
-  const tag=isHighRate?'\n\n#PR #楽天市場':'\n\n#楽天市場';
+  const tag='\n\n#楽天市場';
   const lines=prods.map((p,i)=>{
     const comment=comments[i]||'';
     const name=isHighRate?trimHighRateName(p.name||''):p.name||'（商品名未入力）';
