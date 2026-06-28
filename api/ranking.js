@@ -23,31 +23,43 @@ export default async function handler(req, res) {
 
   function cleanTitle(raw) {
     let t = (raw || '').trim();
-    // Strip Jina.ai alt-text prefix "Image 3: "
+    // 1. Strip Jina.ai prefix "Image 3: "
     t = t.replace(/^Image\s*\d+[:\s]+/i, '');
-    // Remove bracket content (promotional)
-    t = t.replace(/【[^】]{0,200}】/g, '');
-    t = t.replace(/\[[^\]]{0,200}\]/g, '');
-    t = t.replace(/＼[^／]{0,100}／/g, '');
+    // 2. Remove ALL bracket/fence content (must be before ！ split)
+    t = t.replace(/【[^】]*】/g, '');
+    t = t.replace(/\[[^\]]*\]/g, '');
+    t = t.replace(/＜[^＞]*＞/g, '');
+    t = t.replace(/〔[^〕]*〕/g, '');
+    t = t.replace(/＼[^/／]*[/／]/g, '');
     t = t.replace(/「[^」]{0,30}」/g, '');
-    t = t.replace(/（[^）]{0,60}[円ポP%％送無料個枚本袋]{1}[^）]{0,40}）/g, '');
-    // Remove marketing patterns
-    t = t.replace(/楽天[^\s]{0,10}(1位|ランキング|大賞|受賞|冠|獲得)/g, '');
-    t = t.replace(/累計[^\s]*?(突破|食)/g, '');
-    t = t.replace(/送料無料\S*/g, '');
-    t = t.replace(/P\d+倍\S*/g, '');
-    t = t.replace(/クーポン[^\s]{0,15}/g, '');
-    t = t.replace(/\d+[\d,\.]*\s*(mAh|ml|kg|g|L|個入|個|枚|本|袋|錠|粒|冊|種類)\S*/gi, '');
-    t = t.replace(/[！!？?。、，・]{1,}/g, ' ');
-    t = t.replace(/\s*[｜|]\s*.*$/i, '');
-    t = t.replace(/楽天市場[:：]\s*/i, '');
-    t = t.replace(/\s{2,}/g, ' ').trim();
-    // Extract first 1–2 meaningful words as the generic product name
+    t = t.replace(/（[^）]{0,60}）/g, '');
+    // 3. Remove everything up to (and including) the first ！ — promotional text precedes ！
+    t = t.replace(/^[^！]{0,80}！+\s*/g, '');
+    // 4. Remove remaining promotional patterns
+    const promo = [
+      /リピ続出中\S*/g, /話題\S*の/g, /大人気\S*/g,
+      /楽天[^\s！]{0,15}(1位|ランキング|大賞|受賞|冠|獲得|優良)/g,
+      /累計\S*/g,                        // 累計〇〇突破 → 全削除
+      /送料無料\S*/g, /P\d+倍\S*/g,
+      /クーポン[^\s]{0,15}/g,
+      /今なら\S*/g, /先着\S*/g, /期間限定\S*/g,
+      /\S+で(紹介|話題)\S*/g,
+      /\d+[\d,\.]*\s*(mAh|ml|kg|g|L|個入|個|枚|本|袋|錠|粒|冊|種類|円相当|円台)\S*/gi,
+      /楽天市場[:：]\s*/ig,
+      /\s*[｜|]\s*.*/g,
+    ];
+    promo.forEach(re => { t = t.replace(re, ''); });
+    // 5. Normalize punctuation to space
+    t = t.replace(/[！!？?。、，・]\s*/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    // 6. Skip leading occasion/container words (not the actual product)
+    const SKIP = new Set(['父の日','母の日','お中元','お歳暮','バレンタイン','ホワイトデー','ハロウィン','クリスマス','誕生日','ギフト','プレゼント','贈り物','セット']);
     const words = t.split(/\s+/).filter(w => w.length > 0);
+    while (words.length > 1 && SKIP.has(words[0])) words.shift();
+    // 7. Extract first 1–2 meaningful words
     let result = '';
     for (const w of words) {
       if (!result) { result = w; }
-      else if (result.replace(/[a-zA-Z0-9]/g, '').length < 4) { result += ' ' + w; }
+      else if (result.replace(/[a-zA-Z0-9\s]/g, '').length < 4) { result += ' ' + w; }
       else break;
     }
     if (result.length > 18) result = result.slice(0, 18).trim();
