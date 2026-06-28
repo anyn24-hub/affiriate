@@ -13,34 +13,29 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:17px;-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;min-height:100vh;padding-bottom:90px;max-width:700px;margin:0 auto}
-
 .hdr{background:linear-gradient(135deg,#0a0a12,#16101e);border-bottom:1px solid rgba(168,85,247,.35);padding:14px 20px 12px;position:sticky;top:0;z-index:100}
 .hdr-inner{display:flex;justify-content:space-between;align-items:center}
 .hdr-title{font-size:19px;font-weight:900;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .hdr-sub{font-size:11px;color:var(--muted);margin-top:2px}
 .hdr-date{font-size:13px;color:var(--cyan);font-weight:700}
 .page{padding:14px 16px}
-
 .sec{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
 .sec-hd{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none;-webkit-user-select:none}
 .sec-hd:active{background:rgba(255,255,255,.03)}
 .badge{font-size:11px;font-weight:900;padding:4px 11px;border-radius:100px;flex-shrink:0}
-.bp{background:var(--pink);color:#fff}.bpu{background:var(--purple);color:#fff}
-.bc{background:var(--cyan);color:#000}.bgo{background:var(--gold);color:#000}
-.bx{background:rgba(255,255,255,.08);color:var(--muted)}.bred{background:var(--red);color:#fff}
+.bp{background:var(--pink);color:#fff}.bpu{background:var(--purple);color:#fff}.bc{background:var(--cyan);color:#000}
 .sec-title{font-size:15px;font-weight:800;flex:1}
 .chevron{color:var(--muted);font-size:14px;transition:transform .2s}
 .sec.open .chevron{transform:rotate(180deg)}
 .sec-body{display:none;padding:0 18px 20px;border-top:1px solid var(--border)}
 .sec.open .sec-body{display:block}
-
 .fg{margin-top:14px}
 .fg label{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:6px;display:block}
-.finput,.fsel{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:15px;padding:12px 14px;outline:none;-webkit-appearance:none}
-.finput:focus,.fsel:focus{border-color:var(--purple)}
-.fsel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M0 0l6 7 6-7z' fill='%23aaa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.finput,.fsel,.ftarea{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:inherit;font-size:14px;padding:12px 14px;outline:none;-webkit-appearance:none}
+.finput:focus,.fsel:focus,.ftarea:focus{border-color:var(--purple)}
+.fsel{font-size:15px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M0 0l6 7 6-7z' fill='%23aaa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.ftarea{resize:vertical;min-height:90px;line-height:1.5;word-break:break-all}
 .finput.sm{font-size:13px;padding:10px 12px}
-
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 18px;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .15s,transform .1s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 .btn:active{opacity:.7;transform:scale(.97)}
 .btn-full{width:100%}.btn-pink{background:var(--pink);color:#fff}.btn-purple{background:var(--purple);color:#fff}
@@ -49,12 +44,9 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .btn-cyan{background:var(--cyan);color:#000}
 .btn-sm{padding:9px 14px;font-size:13px;border-radius:8px}
 .btn-row{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap}
-
 .prod-slot{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:15px;margin-top:12px}
 .prod-slot-hd{display:flex;align-items:center;gap:9px;margin-bottom:10px}
 .prod-num{width:26px;height:26px;border-radius:50%;background:var(--purple);color:#fff;font-size:12px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-.prod-slot-name{font-size:14px;font-weight:800}
-
 .out-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;word-break:break-all;min-height:150px;outline:none;color:var(--text)}
 .out-box[contenteditable=true]:focus{border-color:var(--purple)}
 .char-row{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
@@ -64,16 +56,10 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .ng-box.show{display:block}
 .ng-ok{background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.25);color:var(--green)}
 .ng-warn{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red)}
-
-.info{border-radius:9px;padding:12px 14px;font-size:13px;line-height:1.7;margin-top:12px}
-.ipurple{background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.25);color:rgba(240,240,245,.85)}
-
-.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:11px 24px;border-radius:100px;font-size:14px;font-weight:800;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;white-space:nowrap}
 #toast.show{opacity:1}
-.empty{text-align:center;color:var(--muted);font-size:14px;padding:18px 0}
 .mt8{margin-top:8px}.mt12{margin-top:12px}
 </style>
 </head>
@@ -90,27 +76,19 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 <div class="sec open" id="sec1">
   <div class="sec-hd" onclick="tog('sec1')">
     <span class="badge bp">STEP 1</span>
-    <span class="sec-title">📅 カテゴリ・時間を選ぶ</span>
+    <span class="sec-title">📅 カテゴリを選ぶ</span>
     <span class="chevron">▼</span>
   </div>
   <div class="sec-body">
     <div class="fg" style="margin-top:0">
       <label>カテゴリ</label>
       <select class="fsel" id="catSel" onchange="onCatChange()">
-        <option value="ガジェット">📱 ガジェット（6:00 / 9:00）</option>
-        <option value="スイーツ">🍰 スイーツ（12:00 / 13:00）</option>
-        <option value="美容">💄 美容（18:00）</option>
-        <option value="ゆる健康">🌿 ゆる健康（21:00）</option>
-        <option value="高料率①">💰 高料率①（9:00 / 11:00）</option>
-        <option value="高料率②">💎 高料率②（15:00）</option>
-      </select>
-    </div>
-    <div class="fg">
-      <label>投稿時間</label>
-      <select class="fsel" id="timeSel">
-        <option>06:00</option><option>09:00</option><option>11:00</option>
-        <option>12:00</option><option>13:00</option><option>15:00</option>
-        <option>18:00</option><option>21:00</option>
+        <option value="ガジェット">📱 ガジェット</option>
+        <option value="スイーツ">🍰 スイーツ</option>
+        <option value="美容">💄 美容</option>
+        <option value="ゆる健康">🌿 ゆる健康</option>
+        <option value="高料率①">💰 高料率①</option>
+        <option value="高料率②">💎 高料率②</option>
       </select>
     </div>
   </div>
@@ -120,48 +98,48 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 <div class="sec open" id="sec2">
   <div class="sec-hd" onclick="tog('sec2')">
     <span class="badge bpu">STEP 2</span>
-    <span class="sec-title" id="step2Title">🔗 商品を取得する</span>
+    <span class="sec-title">🔗 商品を取得する</span>
     <span class="chevron">▼</span>
   </div>
   <div class="sec-body">
 
-    <!-- 高料率カテゴリ: 管理画面リンク -->
-    <div id="highRateArea" style="display:none;margin-top:4px">
-      <a id="highRateLink" href="https://affiliate.rakuten.co.jp/link/high_ranking?l-id=af_header_search_02" target="_blank" rel="noopener"
-        style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:15px;text-decoration:none;color:var(--text)">
-        <span style="font-size:24px">💰</span>
-        <div style="flex:1"><div style="font-size:15px;font-weight:800">楽天アフィリエイト管理画面を開く</div><div style="font-size:12px;color:var(--muted);margin-top:3px">高料率ランキングから商品URLをコピー → 下に貼り付け</div></div>
-        <span style="color:var(--muted);font-size:16px">↗</span>
-      </a>
-    </div>
-
-    <!-- 自動取得ボタン（RANK_AUTO_CATSのみ） -->
-    <div id="autoFetchArea" style="margin-top:10px">
+    <!-- 自動取得（RANK_AUTO_CATS） -->
+    <div id="autoFetchArea" style="margin-top:4px">
       <button class="btn btn-pink btn-full" onclick="fetchRanking()" id="autoFetchBtn">✨ ランキング上位3商品を自動取得</button>
       <div id="autoFetchStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
+      <div id="autoResultArea" style="display:none;margin-top:12px"></div>
     </div>
 
-    <!-- 自動取得結果 -->
-    <div id="autoResultArea" style="display:none;margin-top:12px"></div>
+    <!-- 高料率エリア -->
+    <div id="highRateArea" style="display:none;margin-top:4px">
+      <a href="https://affiliate.rakuten.co.jp/link/high_ranking?l-id=af_header_search_02" target="_blank" rel="noopener"
+        style="display:flex;align-items:center;gap:12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:15px;text-decoration:none;color:var(--text)">
+        <span style="font-size:22px">💰</span>
+        <div style="flex:1"><div style="font-size:14px;font-weight:800">楽天アフィリエイト管理画面を開く</div><div style="font-size:11px;color:var(--muted);margin-top:2px">高料率ランキングからアフィリエイトHTMLを取得</div></div>
+        <span style="color:var(--muted);font-size:15px">↗</span>
+      </a>
 
-    <!-- 手動入力スロット（高料率カテゴリのみ・1商品） -->
-    <div id="manualSlots" style="display:none">
-      <div class="prod-slot">
-        <div class="prod-slot-hd"><span class="prod-num">①</span><span class="prod-slot-name">商品</span><span id="st1" style="font-size:11px;margin-left:8px"></span></div>
-        <div class="fg" style="margin-top:0">
-          <label>楽天商品URL（貼り付け）</label>
-          <div style="display:flex;gap:8px">
-            <input class="finput" id="rawUrl1" placeholder="https://item.rakuten.co.jp/..." autocomplete="off" spellcheck="false" inputmode="url" style="flex:1;margin:0">
-            <button class="btn btn-ghost btn-sm" onclick="fetchTitle(1)">取得</button>
-          </div>
-        </div>
-        <div class="fg"><label>商品名（自動入力・編集可）</label><input class="finput" id="name1" placeholder="URLを取得すると自動入力されます" autocomplete="off"></div>
-        <input type="hidden" id="url1">
-        <input type="hidden" id="imageUrl1">
+      <div class="fg">
+        <label>アフィリエイトHTMLソースを貼り付け</label>
+        <textarea class="ftarea" id="affHtml" placeholder="管理画面で生成した &lt;table&gt;...&lt;/table&gt; を丸ごと貼り付け"></textarea>
       </div>
-      <!-- hidden inputs for slots 2/3 -->
-      <input type="hidden" id="rawUrl2"><input type="hidden" id="name2"><input type="hidden" id="url2"><input type="hidden" id="imageUrl2">
-      <input type="hidden" id="rawUrl3"><input type="hidden" id="name3"><input type="hidden" id="url3"><input type="hidden" id="imageUrl3">
+      <div class="btn-row">
+        <button class="btn btn-gold btn-full" onclick="parseAffHtml()">🔍 解析して取得</button>
+      </div>
+      <div id="parseResult" style="margin-top:10px"></div>
+
+      <!-- hidden fields for slot 1 -->
+      <input type="hidden" id="name1">
+      <input type="hidden" id="url1">
+      <input type="hidden" id="imageUrl1">
+      <!-- slots 2/3 unused for 高率 -->
+      <input type="hidden" id="name2"><input type="hidden" id="url2"><input type="hidden" id="imageUrl2">
+      <input type="hidden" id="name3"><input type="hidden" id="url3"><input type="hidden" id="imageUrl3">
+    </div>
+
+    <!-- hidden fields for auto-fetch (RANK_AUTO_CATS) -->
+    <div id="autoHiddenFields" style="display:none">
+      <input type="hidden" id="rawUrl1"><input type="hidden" id="rawUrl2"><input type="hidden" id="rawUrl3">
     </div>
   </div>
 </div>
@@ -192,12 +170,11 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <button class="btn btn-green" onclick="copyPost()" style="flex:1">📋 X用にコピー</button>
         <button class="btn btn-ghost btn-sm" onclick="generatePost()">🔄 再生成</button>
       </div>
-      <!-- 画像生成 -->
       <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像を生成</div>
-        <canvas id="ogCanvas" style="width:100%;border-radius:12px;display:block"></canvas>
+        <canvas id="ogCanvas" style="width:100%;border-radius:12px;display:block;background:#0d0d18"></canvas>
         <div class="btn-row mt8">
-          <button class="btn btn-cyan btn-full" onclick="generateImage()">🖼️ 画像を生成</button>
+          <button class="btn btn-cyan btn-full" id="imgBtn" onclick="generateImage()">🖼️ 画像を生成</button>
           <button class="btn btn-ghost btn-sm" id="dlBtn" onclick="downloadImage()" style="display:none">💾 保存</button>
         </div>
       </div>
@@ -205,18 +182,13 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
   </div>
 </div>
 
-</div><!-- /page -->
+</div>
 <div id="toast"></div>
 
 <script>
 // ═══ CONSTANTS ════════════════════════════════════════════════
 const RANK_AUTO_CATS = ['スイーツ','ガジェット','美容','ゆる健康'];
-const CAT_GENRE = {
-  'スイーツ':  '410899',
-  'ガジェット':'100044',
-  '美容':      '216131',
-  'ゆる健康':  '100533',
-};
+const CAT_GENRE = {'スイーツ':'410899','ガジェット':'100044','美容':'216131','ゆる健康':'100533'};
 const INTRO = {
   'スイーツ':  '楽天で気になったスイーツ候補。\n価格・レビューを見て自分用にもギフトにも良さそうなものを3つ。',
   'ガジェット':'デスク周りの小さいストレスを減らしたい人向け、楽天で気になったガジェット候補。\n2,000〜4,000円台を中心に3つ。',
@@ -233,91 +205,118 @@ function tog(id){document.getElementById(id).classList.toggle('open');}
 function toast(msg,bad=false){const el=document.getElementById('toast');el.textContent=msg;el.style.background=bad?'var(--red)':'var(--green)';el.style.color=bad?'#fff':'#000';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 function cp(t){navigator.clipboard.writeText(t).then(()=>toast('コピーしました ✓')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('コピーしました ✓');});}
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function pad2(n){return String(n).padStart(2,'0');}
 function xchars(t){return [...t.replace(/https?:\/\/\S+/g,m=>'?'.repeat(23))].reduce((a,c)=>a+(c.codePointAt(0)>0x7f?2:1),0);}
 
 // ═══ CATEGORY ════════════════════════════════════════════════
 function onCatChange(){
   const cat=document.getElementById('catSel').value;
-  const tm={'ガジェット':'06:00','高料率①':'09:00','スイーツ':'12:00','高料率②':'15:00','美容':'18:00','ゆる健康':'21:00'};
-  if(tm[cat]){const sel=document.getElementById('timeSel');for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===tm[cat]){sel.selectedIndex=i;break;}}}
   const isAuto=RANK_AUTO_CATS.includes(cat);
-  const isHigh=cat==='高料率①'||cat==='高料率②';
+  const isHigh=!isAuto;
   document.getElementById('autoFetchArea').style.display=isAuto?'block':'none';
   document.getElementById('highRateArea').style.display=isHigh?'block':'none';
-  document.getElementById('manualSlots').style.display=isHigh?'block':'none';
+  document.getElementById('autoHiddenFields').style.display=isAuto?'block':'none';
+  // Reset
   document.getElementById('autoResultArea').style.display='none';
   document.getElementById('autoFetchStatus').textContent='';
+  document.getElementById('parseResult').innerHTML='';
+  document.getElementById('affHtml').value='';
   for(let i=1;i<=3;i++){
-    ['name','url','rawUrl','imageUrl'].forEach(k=>{const el=document.getElementById(k+i);if(el)el.value='';});
+    ['name','url','imageUrl','rawUrl'].forEach(k=>{const el=document.getElementById(k+i);if(el)el.value='';});
   }
 }
 
-// ═══ RANKING AUTO-FETCH ══════════════════════════════════════
+// ═══ AUTO-FETCH RANKING ══════════════════════════════════════
 async function fetchRanking(){
   const cat=document.getElementById('catSel').value;
   const genre=CAT_GENRE[cat];
-  if(!genre){toast('このカテゴリは手動入力のみです',true);return;}
+  if(!genre)return;
   const btn=document.getElementById('autoFetchBtn');
   const status=document.getElementById('autoFetchStatus');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 取得中...';
-  status.textContent='商品情報を取得中…';
-  status.style.color='var(--muted)';
+  status.textContent='商品情報を取得中…';status.style.color='var(--muted)';
   try{
     const r=await fetch(`/api/ranking?genre=${genre}`);
     const data=await r.json();
     if(data._error)throw new Error(data._error);
-    const items=data.items||[];
+    const items=(data.items||[]).slice(0,3);
     if(!items.length)throw new Error('商品を取得できませんでした');
-    const got=Math.min(items.length,3);
-    for(let i=0;i<got;i++){
+    for(let i=0;i<items.length;i++){
       const n=i+1,it=items[i];
-      document.getElementById(`name${n}`).value=it.name||'';
-      document.getElementById(`rawUrl${n}`).value=it.itemUrl||'';
-      document.getElementById(`url${n}`).value=it.url||it.itemUrl||'';
-      document.getElementById(`imageUrl${n}`).value=it.imageUrl||'';
+      setField(`name${n}`,it.name||'');
+      setField(`rawUrl${n}`,it.itemUrl||'');
+      setField(`url${n}`,it.url||it.itemUrl||'');
+      setField(`imageUrl${n}`,it.imageUrl||'');
     }
-    const resultArea=document.getElementById('autoResultArea');
-    resultArea.style.display='block';
-    resultArea.innerHTML=items.slice(0,got).map((it,i)=>`
-      <div style="background:var(--card2);border:1px solid rgba(74,222,128,.3);border-radius:10px;padding:12px;margin-top:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="background:var(--purple);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">${i+1}</span>
-          <a href="${escH(it.itemUrl||'#')}" target="_blank" rel="noopener"
-            style="font-size:13px;font-weight:700;flex:1;color:var(--text);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.3)"
-            >${escH((it.name||'').slice(0,40))}${(it.name||'').length>40?'…':''}</a>
-          <span style="font-size:11px;color:var(--green)">✓</span>
-        </div>
+    const ra=document.getElementById('autoResultArea');
+    ra.style.display='block';
+    ra.innerHTML=items.map((it,i)=>`
+      <div style="background:var(--card2);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:11px;margin-top:8px;display:flex;align-items:center;gap:10px">
+        <span style="background:var(--purple);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">${i+1}</span>
+        <a href="${escH(it.itemUrl||'#')}" target="_blank" rel="noopener"
+          style="font-size:13px;font-weight:700;flex:1;color:var(--text);text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.3)"
+          >${escH((it.name||'').slice(0,45))}${(it.name||'').length>45?'…':''}</a>
+        ${it.imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(it.imageUrl)}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:``}
       </div>`).join('');
-    status.textContent=`✅ ${got}商品を取得しました`;
-    status.style.color='var(--green)';
+    status.textContent=`✅ ${items.length}商品を取得しました`;status.style.color='var(--green)';
     document.getElementById('sec3').classList.add('open');
   }catch(e){
-    status.textContent='❌ '+e.message;
-    status.style.color='var(--red)';
+    status.textContent='❌ '+e.message;status.style.color='var(--red)';
   }finally{
     btn.disabled=false;btn.innerHTML='✨ ランキング上位3商品を自動取得';
   }
 }
 
-// ═══ FETCH TITLE (高率手動) ═══════════════════════════════════
-async function fetchTitle(n){
-  const rawUrl=(document.getElementById(`rawUrl${n}`).value||'').trim();
-  if(!rawUrl){toast('URLを入力してください',true);return;}
-  const st=document.getElementById(`st${n}`);
-  st.textContent='取得中...';st.style.color='var(--muted)';
-  try{
-    const r=await fetch(`/api/product?url=${encodeURIComponent(rawUrl)}`);
-    const d=await r.json();
-    if(d.error)throw new Error(d.error);
-    document.getElementById(`name${n}`).value=d.title||'';
-    document.getElementById(`url${n}`).value=d.affiliateUrl||rawUrl;
-    document.getElementById(`imageUrl${n}`).value=d.image||'';
-    st.textContent='✓ 取得完了';st.style.color='var(--green)';
-  }catch(e){
-    st.textContent='❌ '+e.message;st.style.color='var(--red)';
-    document.getElementById(`url${n}`).value=rawUrl;
+function setField(id,val){const el=document.getElementById(id);if(el)el.value=val;}
+
+// ═══ 高率 HTML PARSER ════════════════════════════════════════
+function parseAffHtml(){
+  const html=(document.getElementById('affHtml').value||'').trim();
+  if(!html){toast('HTMLを貼り付けてください',true);return;}
+
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(html,'text/html');
+
+  // Affiliate URL: first hb.afl link
+  const affLinks=[...doc.querySelectorAll('a[href]')].filter(a=>(a.getAttribute('href')||'').includes('hb.afl.rakuten.co.jp'));
+  const affUrl=affLinks[0]?.getAttribute('href')||'';
+
+  // Product name: longest text in affiliate links (exclude "楽天で購入")
+  let name='';
+  affLinks.forEach(a=>{
+    const t=a.textContent.trim().replace(/\s+/g,' ');
+    if(t.length>name.length&&t.length>5&&!t.includes('楽天で購入')&&!t.includes('楽天市場'))name=t;
+  });
+
+  // Image: from hbb.afl.rakuten img, extract the thumbnail URL from pc= param
+  let imageUrl='';
+  const affImgs=[...doc.querySelectorAll('img[src]')].filter(img=>(img.getAttribute('src')||'').includes('hbb.afl.rakuten.co.jp'));
+  if(affImgs.length){
+    const src=affImgs[0].getAttribute('src')||'';
+    const m=src.match(/[?&]pc=([^&]+)/);
+    if(m) imageUrl=decodeURIComponent(m[1]).replace(/\?_ex=\d+x\d+$/,'?_ex=400x400');
   }
+
+  if(!affUrl){toast('アフィリエイトURLが見つかりませんでした。HTMLを確認してください',true);return;}
+
+  setField('name1',name.slice(0,80));
+  setField('url1',affUrl);
+  setField('imageUrl1',imageUrl);
+
+  const pr=document.getElementById('parseResult');
+  pr.innerHTML=`
+    <div style="background:var(--card2);border:1px solid rgba(74,222,128,.3);border-radius:10px;padding:13px">
+      <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:8px">✅ 解析完了</div>
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        ${imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(imageUrl)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:``}
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;line-height:1.5;margin-bottom:6px">${escH(name.slice(0,60))}${name.length>60?'…':''}</div>
+          <div style="font-size:10px;color:var(--muted);word-break:break-all">${escH(affUrl.slice(0,80))}…</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('sec3').classList.add('open');
+  toast('解析しました ✓');
 }
 
 // ═══ GENERATE POST ════════════════════════════════════════════
@@ -332,7 +331,7 @@ function generatePost(){
     url:(document.getElementById(`url${i}`)?.value||'').trim()
   }));
   const filled=prods.filter(p=>p.name||p.url);
-  if(!filled.length){toast('商品名またはURLを入力してください（STEP2）',true);return;}
+  if(!filled.length){toast('先にSTEP2で商品を取得してください',true);return;}
   const lines=filled.map((p,i)=>`${['①','②','③'][i]} ${p.name||'（商品名未入力）'}\n${p.url||'（URL未入力）'}`).join('\n');
   let post=`${intro}\n\n${lines}`;
   if(extra)post+=`\n\n${extra}`;
@@ -351,16 +350,15 @@ function updateCounter(t){const c=xchars(t);const el=document.getElementById('ch
 function copyPost(){const t=document.getElementById('postBox').textContent||'';const c=xchars(t);if(c>280){toast(`${c}文字です。280文字以内に収めてください`,true);return;}const ng=NG_WORDS.filter(w=>t.includes(w));if(ng.length){if(!confirm(`NGワード「${ng[0]}」が含まれています。このままコピーしますか？`))return;}cp(t);}
 
 // ═══ IMAGE GENERATION ════════════════════════════════════════
-const CAT_EMOJI={'スイーツ':'🍰','ガジェット':'📱','美容':'💄','ゆる健康':'🌿','高料率①':'💰','高料率②':'💎'};
-
 function loadImg(src){
-  return new Promise((resolve)=>{
+  return new Promise(resolve=>{
     if(!src){resolve(null);return;}
     const img=new Image();
     img.onload=()=>resolve(img);
     img.onerror=()=>resolve(null);
+    img.crossOrigin='anonymous';
     img.src='/api/proxy-image?url='+encodeURIComponent(src);
-    setTimeout(()=>resolve(null),8000);
+    setTimeout(()=>resolve(null),10000);
   });
 }
 
@@ -370,15 +368,15 @@ async function generateImage(){
   const maxSlots=isHighRate?1:3;
   const prods=Array.from({length:maxSlots},(_,i)=>i+1).map(i=>({
     name:(document.getElementById(`name${i}`)?.value||'').trim(),
-    url:(document.getElementById(`url${i}`)?.value||document.getElementById(`rawUrl${i}`)?.value||'').trim(),
+    url:(document.getElementById(`url${i}`)?.value||'').trim(),
     imageUrl:(document.getElementById(`imageUrl${i}`)?.value||'').trim(),
   })).filter(p=>p.name);
+  if(!prods.length){toast('先にSTEP2で商品を取得してください',true);return;}
 
-  const btn=document.querySelector('.btn-cyan');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 生成中...';
+  const btn=document.getElementById('imgBtn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 画像を読み込み中...';
 
-  // Load product images
-  const imgs=await Promise.all(prods.map(p=>loadImg(p.imageUrl)));
+  const productImgs=await Promise.all(prods.map(p=>loadImg(p.imageUrl)));
 
   btn.disabled=false;btn.innerHTML='🖼️ 画像を生成';
 
@@ -387,110 +385,116 @@ async function generateImage(){
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');
 
-  // Background
+  // ── Background ──
   const bg=ctx.createLinearGradient(0,0,W,H);
-  bg.addColorStop(0,'#0f0f14');bg.addColorStop(1,'#1a0a2e');
+  bg.addColorStop(0,'#0d0d18');bg.addColorStop(1,'#180d2a');
   ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-
-  // Glow blobs
   ctx.save();ctx.globalAlpha=0.12;
-  const c1=ctx.createRadialGradient(W*0.8,H*0.15,0,W*0.8,H*0.15,W*0.5);
-  c1.addColorStop(0,'#a855f7');c1.addColorStop(1,'transparent');
-  ctx.fillStyle=c1;ctx.fillRect(0,0,W,H);
-  const c2=ctx.createRadialGradient(W*0.2,H*0.85,0,W*0.2,H*0.85,W*0.45);
-  c2.addColorStop(0,'#ff6b9d');c2.addColorStop(1,'transparent');
-  ctx.fillStyle=c2;ctx.fillRect(0,0,W,H);
+  const g1=ctx.createRadialGradient(W*0.85,H*0.08,0,W*0.85,H*0.08,W*0.55);
+  g1.addColorStop(0,'#7c3aed');g1.addColorStop(1,'transparent');
+  ctx.fillStyle=g1;ctx.fillRect(0,0,W,H);
+  const g2=ctx.createRadialGradient(W*0.15,H*0.92,0,W*0.15,H*0.92,W*0.4);
+  g2.addColorStop(0,'#be185d');g2.addColorStop(1,'transparent');
+  ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);
   ctx.restore();
 
-  // Header
-  ctx.font='bold 36px sans-serif';
-  ctx.fillStyle='rgba(255,255,255,0.4)';
+  // ── Header ──
+  ctx.font='bold 30px sans-serif';
+  ctx.fillStyle='rgba(168,85,247,0.75)';
   ctx.textAlign='left';
-  ctx.fillText('@おとな偏愛Lab',64,72);
+  ctx.fillText('おとな偏愛Lab',52,58);
 
-  // Category title
-  const emoji=CAT_EMOJI[cat]||'🛍️';
-  ctx.font='bold 52px sans-serif';
-  ctx.fillStyle='#ff6b9d';
-  ctx.fillText(`${emoji} ${cat}`,64,160);
+  ctx.font='900 76px sans-serif';
+  ctx.fillStyle='#ffffff';
+  ctx.fillText(`${cat}｜偏愛セレクト`,52,148);
 
-  // Divider
-  const grad=ctx.createLinearGradient(64,0,W-64,0);
-  grad.addColorStop(0,'#a855f7');grad.addColorStop(1,'#ff6b9d');
-  ctx.strokeStyle=grad;ctx.lineWidth=3;
-  ctx.beginPath();ctx.moveTo(64,190);ctx.lineTo(W-64,190);ctx.stroke();
-
-  // Intro text
-  const postText=(document.getElementById('postBox')?.innerText||'').trim();
-  const intro=postText.split('\n')[0]||'';
-  ctx.font='400 38px sans-serif';
-  ctx.fillStyle='rgba(255,255,255,0.85)';
-  ctx.textAlign='left';
-  wrapText(ctx,intro,64,260,W-128,54);
-
-  // Product rows with images
+  // ── Product rows ──
   const nums=['①','②','③'];
-  const rowH=190;
-  const startY=420;
-  const imgSize=150;
+  const ROWS=prods.length;
+  const PAD=40;
+  const rowAreaTop=178;
+  const rowAreaBot=H-72;
+  const totalH=rowAreaBot-rowAreaTop;
+  const GAP=14;
+  const rowH=Math.floor((totalH-(ROWS-1)*GAP)/ROWS);
+  const IMG_W=Math.round(rowH*0.88);
 
   prods.forEach((p,i)=>{
-    const y=startY+i*rowH;
-    // Row background
-    ctx.save();ctx.globalAlpha=0.18;
-    ctx.fillStyle='#ffffff';
-    roundRect(ctx,64,y-54,W-128,rowH-14,20);ctx.fill();
+    const ry=rowAreaTop+i*(rowH+GAP);
+
+    // Card background
+    ctx.save();
+    ctx.globalAlpha=0.38;
+    ctx.fillStyle='#1a1a2e';
+    rrect(ctx,PAD,ry,W-PAD*2,rowH,18);ctx.fill();
     ctx.restore();
 
+    // Subtle left accent bar
+    const bar=ctx.createLinearGradient(PAD,ry,PAD,ry+rowH);
+    bar.addColorStop(0,'#a855f7');bar.addColorStop(1,'#ec4899');
+    ctx.fillStyle=bar;
+    rrect(ctx,PAD,ry,6,rowH,3);ctx.fill();
+
     // Product image
-    const img=imgs[i];
-    if(img){
-      ctx.save();
-      roundRect(ctx,80,y-46,imgSize,imgSize,12);
-      ctx.clip();
-      const ar=img.naturalWidth/img.naturalHeight;
-      let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
-      if(ar>1){sw=img.naturalHeight;sx=(img.naturalWidth-sw)/2;}
-      else{sh=img.naturalWidth;sy=(img.naturalHeight-sh)/2;}
-      ctx.drawImage(img,sx,sy,sw,sh,80,y-46,imgSize,imgSize);
-      ctx.restore();
+    const img=productImgs[i];
+    const imgX=PAD+18,imgY=ry+Math.round((rowH-IMG_W)/2);
+    ctx.save();
+    rrect(ctx,imgX,imgY,IMG_W,IMG_W,14);ctx.clip();
+    if(img&&img.naturalWidth>0){
+      const iw=img.naturalWidth,ih=img.naturalHeight;
+      const scale=Math.max(IMG_W/iw,IMG_W/ih);
+      const dx=(IMG_W-iw*scale)/2,dy=(IMG_W-ih*scale)/2;
+      ctx.drawImage(img,imgX+dx,imgY+dy,iw*scale,ih*scale);
     }else{
-      // Fallback: numbered circle
-      const bgrad=ctx.createLinearGradient(80,y-46,80+imgSize,y-46+imgSize);
-      bgrad.addColorStop(0,'#a855f7');bgrad.addColorStop(1,'#ff6b9d');
-      ctx.fillStyle=bgrad;
-      roundRect(ctx,80,y-46,imgSize,imgSize,12);ctx.fill();
-      ctx.font='bold 72px sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';
-      ctx.fillText(nums[i],80+imgSize/2,y-46+imgSize/2+26);
+      const gf=ctx.createLinearGradient(imgX,imgY,imgX+IMG_W,imgY+IMG_W);
+      gf.addColorStop(0,'#4c1d95');gf.addColorStop(1,'#831843');
+      ctx.fillStyle=gf;ctx.fillRect(imgX,imgY,IMG_W,IMG_W);
+      ctx.font=`900 ${Math.round(IMG_W*0.45)}px sans-serif`;
+      ctx.fillStyle='rgba(255,255,255,0.35)';
+      ctx.textAlign='center';
+      ctx.fillText(nums[i],imgX+IMG_W/2,imgY+IMG_W/2+Math.round(IMG_W*0.16));
     }
+    ctx.restore();
+
+    // Number circle
+    const circR=30;
+    const circX=PAD+18+IMG_W+32+circR;
+    const circY=ry+rowH/2;
+    const cg=ctx.createLinearGradient(circX-circR,circY-circR,circX+circR,circY+circR);
+    cg.addColorStop(0,'#a855f7');cg.addColorStop(1,'#ec4899');
+    ctx.beginPath();ctx.arc(circX,circY,circR,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
+    ctx.font='900 34px sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';
+    ctx.fillText(nums[i],circX,circY+12);
 
     // Product name
-    const textX=80+imgSize+20;
-    const textMaxW=W-128-imgSize-20;
-    ctx.font='bold 38px sans-serif';ctx.fillStyle='#f0f0f5';ctx.textAlign='left';
-    wrapText(ctx,p.name,textX,y-10,textMaxW,48,2);
+    const nameX=circX+circR+18;
+    const nameMaxW=W-PAD-nameX-16;
+    ctx.font='bold 42px sans-serif';ctx.fillStyle='#f0f0f5';ctx.textAlign='left';
+    wrapText(ctx,p.name,nameX,circY-16,nameMaxW,52,ROWS===1?4:2);
   });
 
-  // Footer hashtags
-  ctx.font='bold 34px sans-serif';ctx.fillStyle='rgba(168,85,247,0.9)';ctx.textAlign='center';
-  ctx.fillText('#PR  #楽天市場  #ad',W/2,H-60);
+  // ── Footer ──
+  ctx.font='26px sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.textAlign='left';
+  ctx.fillText('#ad　楽天で気になったモノを偏愛目線でセレクト',52,H-30);
 
   document.getElementById('dlBtn').style.display='';
   toast('画像を生成しました ✓');
 }
 
 function wrapText(ctx,text,x,y,maxW,lineH,maxLines=99){
-  const chars=text.split('');let line='';let lines=0;
+  const chars=text.split('');let line='';let n=0;
   for(let i=0;i<chars.length;i++){
     const test=line+chars[i];
     if(ctx.measureText(test).width>maxW&&line){
-      ctx.fillText(line,x,y);line=chars[i];y+=lineH;lines++;
-      if(lines>=maxLines){ctx.fillText(line+'…',x,y);return;}
+      ctx.fillText(line,x,y);line=chars[i];y+=lineH;n++;
+      if(n>=maxLines){if(i<chars.length-1)ctx.fillText(line.slice(0,-1)+'…',x,y);else ctx.fillText(line,x,y);return;}
     }else line=test;
   }
   if(line)ctx.fillText(line,x,y);
 }
-function roundRect(ctx,x,y,w,h,r){
+function rrect(ctx,x,y,w,h,r){
   ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
   ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
   ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
@@ -498,19 +502,15 @@ function roundRect(ctx,x,y,w,h,r){
   ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
 }
 function downloadImage(){
-  const canvas=document.getElementById('ogCanvas');
   const a=document.createElement('a');
   a.download=`ohenai_${Date.now()}.png`;
-  a.href=canvas.toDataURL('image/png');
-  a.click();
-  toast('画像を保存しました ✓');
+  a.href=document.getElementById('ogCanvas').toDataURL('image/png');
+  a.click();toast('画像を保存しました ✓');
 }
 
 // ═══ INIT ════════════════════════════════════════════════════
 function initHeader(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));const wd=['日','月','火','水','木','金','土'][d.getDay()];document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;}
-(function init(){
-  initHeader();onCatChange();
-})();
+(function(){initHeader();onCatChange();})();
 </script>
 </body>
 </html>
