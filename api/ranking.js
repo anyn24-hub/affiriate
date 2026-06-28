@@ -4,11 +4,11 @@ export default async function handler(req, res) {
 
   const { genre = '' } = req.query;
 
-  // Only shops verified to have actual item URLs in Wayback CDX
+  // Shops verified to have item URLs in Wayback CDX
   const GENRE_SHOPS = {
     '410899': ['rakuten24', 'bourbon', 'morozoff'],
     '100044': ['biccamera', 'elecom', 'edion'],
-    '216131': ['dhc', 'hb-online', 'elecom'],
+    '216131': ['dhc', 'hb-online', 'biccamera'],
     '100533': ['dhc', 'kenkocom', 'rakuten24'],
   };
 
@@ -16,8 +16,7 @@ export default async function handler(req, res) {
   if (!shops) return res.status(200).json({ items: [], _error: 'ジャンル不明' });
 
   const affId = process.env.RAKUTEN_AFF_ID || '5335e187.bd9b90cd.5335e188.d302f85f';
-  // Use mobile UA — same as api/product.js which is confirmed to work
-  const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+  const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
   function makeAff(itemUrl) {
     return `https://hb.afl.rakuten.co.jp/ichiba/${affId}/?pc=${encodeURIComponent(itemUrl)}&link_type=text`;
@@ -39,16 +38,14 @@ export default async function handler(req, res) {
     return t;
   }
 
-  async function fetchItem(itemUrl) {
+  // Fetch from Wayback Machine cached page (bypasses Rakuten's Akamai block)
+  async function fetchWaybackItem(itemUrl, timestamp) {
     try {
-      const pr = await fetch(itemUrl, {
-        headers: {
-          'User-Agent': UA,
-          'Accept': 'text/html,application/xhtml+xml',
-          'Accept-Language': 'ja,en;q=0.9',
-        },
+      const waybackUrl = `https://web.archive.org/web/${timestamp}/${itemUrl}`;
+      const pr = await fetch(waybackUrl, {
+        headers: { 'User-Agent': UA, 'Accept-Language': 'ja,en;q=0.9' },
         redirect: 'follow',
-        signal: AbortSignal.timeout(7000),
+        signal: AbortSignal.timeout(10000),
       });
       if (!pr.ok) return null;
       const html = await pr.text();
@@ -58,10 +55,16 @@ export default async function handler(req, res) {
         || html.match(/<title>([^<]+)<\/title>/i)?.[1]
         || '';
       const title = cleanTitle(rawTitle);
-      const imageUrl =
+      // Extract og:image but rewrite Wayback proxy URLs to original URLs
+      let imageUrl =
         html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
         || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1]
         || null;
+      // Strip Wayback prefix from image URLs: /web/20240101000000im_/https://...
+      if (imageUrl && imageUrl.includes('web.archive.org')) {
+        const m = imageUrl.match(/web\.archive\.org\/web\/[^/]+\/(https?:\/\/.+)/);
+        if (m) imageUrl = m[1];
+      }
       if (!title || title.length < 3) return null;
       return { title, imageUrl: imageUrl || null, itemUrl };
     } catch {
@@ -69,10 +72,11 @@ export default async function handler(req, res) {
     }
   }
 
-  async function fetchCdxUrls(shopName) {
+  async function fetchCdxItems(shopName) {
     try {
       const shopBase = `item.rakuten.co.jp/${shopName}`;
-      const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(shopBase + '/*')}&output=json&fl=original&filter=statuscode:200&collapse=urlkey&limit=50&from=20220101`;
+      // Request both original URL and timestamp
+      const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(shopBase + '/*')}&output=json&fl=original,timestamp&filter=statuscode:200&collapse=urlkey&limit=50&from=20220101`;
       const r = await fetch(cdxUrl, {
         headers: { 'User-Agent': UA },
         signal: AbortSignal.timeout(8000),
@@ -80,16 +84,14 @@ export default async function handler(req, res) {
       if (!r.ok) return [];
       const data = await r.json();
       return data.slice(1)
-        .map(row => row[0])
-        .filter(url => {
+        .map(row => ({ url: row[0], ts: row[1] }))
+        .filter(({ url }) => {
           if (url.includes('?') || url.includes('#')) return false;
           const path = url.replace(/^https?:\/\/item\.rakuten\.co\.jp\//, '');
           const parts = path.split('/').filter(Boolean);
-          // Exact shop match + exactly 2 path parts (shop/itemId)
           if (parts.length !== 2) return false;
           if (parts[0] !== shopName) return false;
           const itemId = parts[1];
-          // Exclude category pages
           if (/^c($|\d)/.test(itemId)) return false;
           if (itemId.length < 4) return false;
           return true;
@@ -99,22 +101,28 @@ export default async function handler(req, res) {
     }
   }
 
-  const cdxResults = await Promise.allSettled(shops.map(s => fetchCdxUrls(s)));
-  const cdxUrls = [...new Set(
-    cdxResults.flatMap(r => r.status === 'fulfilled' ? r.value : [])
-  )];
+  // Fetch CDX entries for all shops in parallel
+  const cdxResults = await Promise.allSettled(shops.map(s => fetchCdxItems(s)));
+  const allEntries = cdxResults.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  const seen = new Set();
+  const entries = allEntries.filter(e => {
+    if (seen.has(e.url)) return false;
+    seen.add(e.url);
+    return true;
+  }).slice(0, 15);
 
-  if (cdxUrls.length >= 1) {
-    // Pick up to 12 URLs to try in parallel (need at least 3 good ones)
-    const toFetch = cdxUrls.slice(0, 12);
-    const fetched = await Promise.allSettled(toFetch.map(u => fetchItem(u)));
+  if (entries.length >= 1) {
+    // Fetch Wayback cached pages in parallel
+    const fetched = await Promise.allSettled(
+      entries.map(({ url, ts }) => fetchWaybackItem(url, ts))
+    );
     const items = fetched
       .filter(r => r.status === 'fulfilled' && r.value)
       .map(r => r.value)
       .slice(0, 3)
       .map(it => ({ name: it.title, url: makeAff(it.itemUrl), itemUrl: it.itemUrl, imageUrl: it.imageUrl }));
-    if (items.length >= 1) return res.status(200).json({ items, _src: 'cdx' });
+    if (items.length >= 1) return res.status(200).json({ items, _src: 'wayback' });
   }
 
-  return res.status(200).json({ items: [], _error: '商品を取得できませんでした', _cdxCount: cdxUrls.length });
+  return res.status(200).json({ items: [], _error: '商品を取得できませんでした', _cdxCount: entries.length });
 }
