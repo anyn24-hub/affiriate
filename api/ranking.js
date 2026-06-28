@@ -51,11 +51,16 @@ export default async function handler(req, res) {
     promo.forEach(re => { t = t.replace(re, ''); });
     // 5. Normalize punctuation to space
     t = t.replace(/[！!？?。、，・]\s*/g, ' ').replace(/\s{2,}/g, ' ').trim();
-    // 6. Skip leading occasion/container words (not the actual product)
+    // 6. Generic extraction: longest katakana run (≥5 chars) = product category noun
+    //    e.g. "フロム蔵王 マルチアイスBOX24" → "マルチアイス"
+    //         "mileda パウダーファンデーション" → "パウダーファンデーション"
+    // First katakana run ≥5 chars = product category (appears before brand in title)
+    const kataMatch = t.match(/[ァ-ヶー]{5,}/);
+    if (kataMatch) return kataMatch[0].slice(0, 18);
+    // 7. Fallback: skip leading occasion/brand-like words, take first noun phrase
     const SKIP = new Set(['父の日','母の日','お中元','お歳暮','バレンタイン','ホワイトデー','ハロウィン','クリスマス','誕生日','ギフト','プレゼント','贈り物','セット']);
     const words = t.split(/\s+/).filter(w => w.length > 0);
     while (words.length > 1 && SKIP.has(words[0])) words.shift();
-    // 7. Extract first 1–2 meaningful words
     let result = '';
     for (const w of words) {
       if (!result) { result = w; }
