@@ -295,6 +295,22 @@ async function fetchRanking(){
 }
 
 // ═══ 高率 HTML PARSER ════════════════════════════════════════
+function cleanTitle(raw){
+  let t=(raw||'').trim();
+  t=t.replace(/【[^】]{0,200}】/g,'');
+  t=t.replace(/\[[^\]]{0,200}\]/g,'');
+  t=t.replace(/＜[^＞]{0,100}＞/g,'');
+  t=t.replace(/〔[^〕]{0,200}〕/g,'');
+  t=t.replace(/（[^）]{0,60}[円ポP%％送無料][^）]{0,60}）/g,'');
+  t=t.replace(/\s*[｜|]\s*.*楽天.*$/i,'');
+  t=t.replace(/楽天市場[:：]\s*/i,'');
+  t=t.replace(/\s*-\s*楽天市場.*$/i,'');
+  t=t.replace(/送料無料[^\s]{0,20}/g,'');
+  t=t.replace(/\s{2,}/g,' ').trim();
+  if(t.length>40)t=t.slice(0,40).trim();
+  return t;
+}
+
 function parseAffHtml(){
   const html=(document.getElementById('affHtml').value||'').trim();
   if(!html){toast('HTMLを貼り付けてください',true);return;}
@@ -309,6 +325,7 @@ function parseAffHtml(){
     const t=a.textContent.trim().replace(/\s+/g,' ');
     if(t.length>name.length&&t.length>5&&!t.includes('楽天で購入')&&!t.includes('楽天市場'))name=t;
   });
+  name=cleanTitle(name);
 
   let imageUrl='';
   const affImgs=[...doc.querySelectorAll('img[src]')].filter(img=>(img.getAttribute('src')||'').includes('hbb.afl.rakuten.co.jp'));
