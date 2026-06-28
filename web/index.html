@@ -108,7 +108,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
   </div>
   <div class="sec-body">
 
-    <!-- 自動取得（スイーツ/ガジェット/美容/ゆる健康） -->
+    <!-- 自動取得カテゴリ（スイーツ/ガジェット/美容/ゆる健康） -->
     <div id="autoFetchArea" style="margin-top:4px">
       <button class="btn btn-pink btn-full" onclick="fetchRanking()" id="autoFetchBtn">✨ ランキング上位3商品を自動取得</button>
       <div id="autoFetchStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
@@ -256,7 +256,7 @@ async function fetchRanking(){
   const btn=document.getElementById('autoFetchBtn');
   const status=document.getElementById('autoFetchStatus');
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 取得中...';
-  status.textContent='ランキングページを取得中…（20〜30秒かかる場合があります）';
+  status.textContent='商品を取得中…（10〜15秒かかる場合があります）';
   status.style.color='var(--muted)';
   try{
     const r=await fetch(`/api/ranking?genre=${genre}`);
