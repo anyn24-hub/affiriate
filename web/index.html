@@ -229,7 +229,7 @@ function tog(id){document.getElementById(id).classList.toggle('open');}
 function toast(msg,bad=false){const el=document.getElementById('toast');el.textContent=msg;el.style.background=bad?'var(--red)':'var(--green)';el.style.color=bad?'#fff':'#000';el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400);}
 function cp(t){navigator.clipboard.writeText(t).then(()=>toast('コピーしました ✓')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('コピーしました ✓');});}
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function xchars(t){return [...t.replace(/https?:\/\/\S+/g,m=>'?'.repeat(23))].reduce((a,c)=>a+(c.codePointAt(0)>0x7f?2:1),0);}
+function xchars(t){return [...t.replace(/https?:\/\/\S+/g,m=>'?'.repeat(23))].reduce((a,c)=>a+1,0);}
 function setF(id,v){const el=document.getElementById(id);if(el)el.value=v||'';}
 function getF(id){return(document.getElementById(id)?.value||'').trim();}
 function fmtTs(iso){const d=new Date(iso);const pad=n=>String(n).padStart(2,'0');return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;}
