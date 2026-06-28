@@ -110,7 +110,8 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
     <!-- 自動取得カテゴリ（スイーツ/ガジェット/美容/ゆる健康） -->
     <div id="autoFetchArea" style="margin-top:4px">
-      <button class="btn btn-pink btn-full" onclick="fetchRanking()" id="autoFetchBtn">✨ ランキング上位3商品を自動取得</button>
+      <button class="btn btn-pink btn-full" onclick="autoGenerate()" id="autoFetchBtn" style="font-size:16px;padding:15px">⚡ 1クリック全自動生成</button>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:5px">商品取得 → 投稿文 → 画像　すべて自動</div>
       <div id="autoFetchStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
       <div id="autoResultArea" style="display:none;margin-top:10px"></div>
     </div>
@@ -249,48 +250,70 @@ function onCatChange(){
 }
 
 // ═══ AUTO-FETCH RANKING ══════════════════════════════════════
-async function fetchRanking(){
+async function fetchRankingItems(genre){
+  const r=await fetch(`/api/ranking?genre=${genre}`);
+  const data=await r.json();
+  if(data._error)throw new Error(data._error);
+  const items=(data.items||[]).slice(0,3);
+  if(!items.length)throw new Error('商品を取得できませんでした');
+  return items;
+}
+
+function populateProducts(items){
+  for(let i=0;i<items.length;i++){
+    const n=i+1,it=items[i];
+    setF(`name${n}`,it.name);
+    setF(`url${n}`,it.url||it.itemUrl);
+    setF(`imageUrl${n}`,it.imageUrl||'');
+  }
+  const ra=document.getElementById('autoResultArea');
+  ra.style.display='block';
+  ra.innerHTML=items.map((it,i)=>`
+    <div style="background:var(--card2);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:10px 12px;margin-top:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="background:var(--purple);color:#fff;border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">${i+1}</span>
+        <a href="${escH(it.url||it.itemUrl||'#')}" target="_blank" rel="noopener"
+          style="font-size:11px;color:var(--muted);text-decoration:underline;flex:1;word-break:break-all">楽天で開く ↗</a>
+        ${it.imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(it.imageUrl)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:``}
+      </div>
+      <input class="finput" style="font-size:13px;padding:9px 11px" value="${escH(it.name||'')}"
+        placeholder="商品名（短く編集可）"
+        oninput="setF('name${i+1}',this.value)">
+    </div>`).join('');
+}
+
+async function autoGenerate(){
   const cat=document.getElementById('catSel').value;
   const genre=CAT_GENRE[cat];
   if(!genre)return;
   const btn=document.getElementById('autoFetchBtn');
   const status=document.getElementById('autoFetchStatus');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> 取得中...';
-  status.textContent='商品を取得中…（10〜15秒かかる場合があります）';
-  status.style.color='var(--muted)';
+  btn.disabled=true;
   try{
-    const r=await fetch(`/api/ranking?genre=${genre}`);
-    const data=await r.json();
-    if(data._error)throw new Error(data._error);
-    const items=(data.items||[]).slice(0,3);
-    if(!items.length)throw new Error('商品を取得できませんでした');
-    for(let i=0;i<items.length;i++){
-      const n=i+1,it=items[i];
-      setF(`name${n}`,it.name);
-      setF(`url${n}`,it.url||it.itemUrl);  // affiliate URL
-      setF(`imageUrl${n}`,it.imageUrl);
-    }
-    const ra=document.getElementById('autoResultArea');
-    ra.style.display='block';
-    ra.innerHTML=items.map((it,i)=>`
-      <div style="background:var(--card2);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:10px 12px;margin-top:8px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <span style="background:var(--purple);color:#fff;border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">${i+1}</span>
-          <a href="${escH(it.url||it.itemUrl||'#')}" target="_blank" rel="noopener"
-            style="font-size:11px;color:var(--muted);text-decoration:underline;flex:1;word-break:break-all"
-            >楽天で開く ↗</a>
-          ${it.imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(it.imageUrl)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:``}
-        </div>
-        <input class="finput" style="font-size:13px;padding:9px 11px" value="${escH(it.name||'')}"
-          placeholder="商品名（短く編集可：例「モバイルバッテリー」）"
-          oninput="setF('name${i+1}',this.value)">
-      </div>`).join('');
-    status.textContent=`✅ ${items.length}商品を取得しました`;status.style.color='var(--green)';
+    // Step 1: 商品取得
+    btn.innerHTML='<span class="spinner"></span> 商品を取得中…';
+    status.textContent='① 商品を取得中…';status.style.color='var(--muted)';
+    const items=await fetchRankingItems(genre);
+    populateProducts(items);
+    status.textContent='✅ 商品取得完了 → 投稿文を生成中…';status.style.color='var(--green)';
+
+    // Step 2: 投稿文生成
+    btn.innerHTML='<span class="spinner"></span> 投稿文を生成中…';
+    await new Promise(r=>setTimeout(r,200));
+    generatePost();
     document.getElementById('sec3').classList.add('open');
+    status.textContent='✅ 投稿文生成完了 → 画像を生成中…';
+
+    // Step 3: 画像生成
+    btn.innerHTML='<span class="spinner"></span> 画像を生成中…';
+    await new Promise(r=>setTimeout(r,300));
+    await generateImage();
+    status.textContent=`✅ 完成！${items.length}商品・投稿文・画像すべて生成しました`;
+
   }catch(e){
     status.textContent='❌ '+e.message;status.style.color='var(--red)';
   }finally{
-    btn.disabled=false;btn.innerHTML='✨ ランキング上位3商品を自動取得';
+    btn.disabled=false;btn.innerHTML='⚡ 1クリック全自動生成';
   }
 }
 
