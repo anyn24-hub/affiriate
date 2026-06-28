@@ -23,18 +23,35 @@ export default async function handler(req, res) {
 
   function cleanTitle(raw) {
     let t = (raw || '').trim();
+    // Strip Jina.ai alt-text prefix "Image 3: "
+    t = t.replace(/^Image\s*\d+[:\s]+/i, '');
+    // Remove bracket content (promotional)
     t = t.replace(/【[^】]{0,200}】/g, '');
     t = t.replace(/\[[^\]]{0,200}\]/g, '');
-    t = t.replace(/＜[^＞]{0,100}＞/g, '');
-    t = t.replace(/〔[^〕]{0,200}〕/g, '');
-    t = t.replace(/（[^）]{0,60}[円ポP%％送無料][^）]{0,60}）/g, '');
+    t = t.replace(/＼[^／]{0,100}／/g, '');
+    t = t.replace(/「[^」]{0,30}」/g, '');
+    t = t.replace(/（[^）]{0,60}[円ポP%％送無料個枚本袋]{1}[^）]{0,40}）/g, '');
+    // Remove marketing patterns
+    t = t.replace(/楽天[^\s]{0,10}(1位|ランキング|大賞|受賞|冠|獲得)/g, '');
+    t = t.replace(/累計[^\s]*?(突破|食)/g, '');
+    t = t.replace(/送料無料\S*/g, '');
+    t = t.replace(/P\d+倍\S*/g, '');
+    t = t.replace(/クーポン[^\s]{0,15}/g, '');
+    t = t.replace(/\d+[\d,\.]*\s*(mAh|ml|kg|g|L|個入|個|枚|本|袋|錠|粒|冊|種類)\S*/gi, '');
+    t = t.replace(/[！!？?。、，・]{1,}/g, ' ');
     t = t.replace(/\s*[｜|]\s*.*$/i, '');
     t = t.replace(/楽天市場[:：]\s*/i, '');
-    t = t.replace(/送料無料[^\s]{0,20}/g, '');
-    t = t.replace(/「[^」]{0,30}」/g, '');
     t = t.replace(/\s{2,}/g, ' ').trim();
-    if (t.length > 40) t = t.slice(0, 40).trim();
-    return t;
+    // Extract first 1–2 meaningful words as the generic product name
+    const words = t.split(/\s+/).filter(w => w.length > 0);
+    let result = '';
+    for (const w of words) {
+      if (!result) { result = w; }
+      else if (result.replace(/[a-zA-Z0-9]/g, '').length < 4) { result += ' ' + w; }
+      else break;
+    }
+    if (result.length > 18) result = result.slice(0, 18).trim();
+    return result;
   }
 
   // ── Jina.ai reader → Rakuten ranking page (no API key needed) ───────────
