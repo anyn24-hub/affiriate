@@ -4,12 +4,12 @@ export default async function handler(req, res) {
 
   const { genre = '' } = req.query;
 
-  // Shops verified to have item URLs in Wayback CDX
+  // Shops verified to have item URLs in Wayback CDX (2024+)
   const GENRE_SHOPS = {
-    '410899': ['rakuten24', 'bourbon', 'morozoff'],
-    '100044': ['biccamera', 'elecom', 'edion'],
-    '216131': ['dhc', 'hb-online', 'biccamera'],
-    '100533': ['dhc', 'kenkocom', 'rakuten24'],
+    '410899': ['bourbon', 'morozoff', 'yamada-denki'],
+    '100044': ['elecom', 'yamada-denki', 'biccamera'],
+    '216131': ['dhc', 'elecom', 'yamada-denki'],
+    '100533': ['dhc', 'kenkocom', 'yamada-denki'],
   };
 
   const shops = GENRE_SHOPS[genre];
@@ -38,33 +38,54 @@ export default async function handler(req, res) {
     return t;
   }
 
-  // Fetch from Wayback Machine cached page (bypasses Rakuten's Akamai block)
+  // Decode HTML entities (for titles like &amp; &quot; etc.)
+  function decodeEntities(s) {
+    return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+  }
+
   async function fetchWaybackItem(itemUrl, timestamp) {
     try {
       const waybackUrl = `https://web.archive.org/web/${timestamp}/${itemUrl}`;
       const pr = await fetch(waybackUrl, {
         headers: { 'User-Agent': UA, 'Accept-Language': 'ja,en;q=0.9' },
         redirect: 'follow',
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(12000),
       });
       if (!pr.ok) return null;
-      const html = await pr.text();
+
+      // Detect charset from Content-Type header (Rakuten pages are EUC-JP)
+      const ct = pr.headers.get('content-type') || '';
+      const charsetMatch = ct.match(/charset=([^\s;]+)/i);
+      const charset = charsetMatch ? charsetMatch[1].toLowerCase() : 'utf-8';
+
+      const buf = await pr.arrayBuffer();
+      let html;
+      try {
+        html = new TextDecoder(charset).decode(buf);
+      } catch {
+        // Fallback: try euc-jp then utf-8
+        try { html = new TextDecoder('euc-jp').decode(buf); }
+        catch { html = new TextDecoder('utf-8', { fatal: false }).decode(buf); }
+      }
+
       const rawTitle =
         html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)?.[1]
         || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i)?.[1]
         || html.match(/<title>([^<]+)<\/title>/i)?.[1]
         || '';
-      const title = cleanTitle(rawTitle);
-      // Extract og:image but rewrite Wayback proxy URLs to original URLs
+      const title = cleanTitle(decodeEntities(rawTitle));
+
       let imageUrl =
         html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1]
         || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)?.[1]
         || null;
-      // Strip Wayback prefix from image URLs: /web/20240101000000im_/https://...
+      // Strip Wayback proxy prefix: /web/20240101000000im_/https://...
       if (imageUrl && imageUrl.includes('web.archive.org')) {
-        const m = imageUrl.match(/web\.archive\.org\/web\/[^/]+\/(https?:\/\/.+)/);
+        const m = imageUrl.match(/web\.archive\.org\/web\/[^/]+im_\/(https?:\/\/.+)/);
         if (m) imageUrl = m[1];
       }
+
       if (!title || title.length < 3) return null;
       return { title, imageUrl: imageUrl || null, itemUrl };
     } catch {
@@ -74,9 +95,7 @@ export default async function handler(req, res) {
 
   async function fetchCdxItems(shopName) {
     try {
-      const shopBase = `item.rakuten.co.jp/${shopName}`;
-      // Request both original URL and timestamp
-      const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent(shopBase + '/*')}&output=json&fl=original,timestamp&filter=statuscode:200&collapse=urlkey&limit=50&from=20220101`;
+      const cdxUrl = `https://web.archive.org/cdx/search/cdx?url=${encodeURIComponent('item.rakuten.co.jp/' + shopName + '/*')}&output=json&fl=original,timestamp&filter=statuscode:200&collapse=urlkey&limit=50&from=20220101`;
       const r = await fetch(cdxUrl, {
         headers: { 'User-Agent': UA },
         signal: AbortSignal.timeout(8000),
@@ -90,7 +109,7 @@ export default async function handler(req, res) {
           const path = url.replace(/^https?:\/\/item\.rakuten\.co\.jp\//, '');
           const parts = path.split('/').filter(Boolean);
           if (parts.length !== 2) return false;
-          if (parts[0] !== shopName) return false;
+          if (parts[0] !== shopName) return false; // exact shop match
           const itemId = parts[1];
           if (/^c($|\d)/.test(itemId)) return false;
           if (itemId.length < 4) return false;
@@ -101,18 +120,18 @@ export default async function handler(req, res) {
     }
   }
 
-  // Fetch CDX entries for all shops in parallel
   const cdxResults = await Promise.allSettled(shops.map(s => fetchCdxItems(s)));
-  const allEntries = cdxResults.flatMap(r => r.status === 'fulfilled' ? r.value : []);
   const seen = new Set();
-  const entries = allEntries.filter(e => {
-    if (seen.has(e.url)) return false;
-    seen.add(e.url);
-    return true;
-  }).slice(0, 15);
+  const entries = cdxResults
+    .flatMap(r => r.status === 'fulfilled' ? r.value : [])
+    .filter(e => {
+      if (seen.has(e.url)) return false;
+      seen.add(e.url);
+      return true;
+    })
+    .slice(0, 15);
 
   if (entries.length >= 1) {
-    // Fetch Wayback cached pages in parallel
     const fetched = await Promise.allSettled(
       entries.map(({ url, ts }) => fetchWaybackItem(url, ts))
     );
