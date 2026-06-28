@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ items: [], _error: 'ジャンル不明' });
   }
 
-  const appId    = process.env.RAKUTEN_APP_ID;
+  const appId    = process.env.RAKUTEN_APP_ID || '3fea067e-ff6e-46e3-ab90-82fa7628daad';
   const affId    = process.env.RAKUTEN_AFF_ID || '5335e187.bd9b90cd.5335e188.d302f85f';
 
   // ── Rakuten Item Search API (primary) ──────────────────────────────────────
