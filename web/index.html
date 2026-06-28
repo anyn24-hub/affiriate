@@ -378,7 +378,7 @@ function parseAffHtml(){
   const doc=parser.parseFromString(html,'text/html');
 
   const affLinks=[...doc.querySelectorAll('a[href]')].filter(a=>(a.getAttribute('href')||'').includes('hb.afl.rakuten.co.jp'));
-  const affUrl=affLinks[0]?.getAttribute('href')||'';
+  const rawAffUrl=affLinks[0]?.getAttribute('href')||'';
 
   let name='';
   affLinks.forEach(a=>{
@@ -386,6 +386,15 @@ function parseAffHtml(){
     if(t.length>name.length&&t.length>5&&!t.includes('楽天で購入')&&!t.includes('楽天市場'))name=t;
   });
   name=cleanTitle(name);
+
+  // pc= パラメータから商品URLを取り出し、テキスト形式のアフィリエイトURLを再構築
+  const pcM=rawAffUrl.match(/[?&]pc=([^&]+)/);
+  const itemUrl=pcM?decodeURIComponent(pcM[1]).split('?')[0].replace(/\/?$/,'/'):'';
+  const affIdM=rawAffUrl.match(/\/ichiba\/([^\/\?]+)/);
+  const affId=affIdM?affIdM[1]:(process?.env?.RAKUTEN_AFF_ID||'5335e187.bd9b90cd.5335e188.d302f85f');
+  const affUrl=itemUrl
+    ?`https://hb.afl.rakuten.co.jp/ichiba/${affId}/?pc=${encodeURIComponent(itemUrl)}&link_type=text`
+    :rawAffUrl;
 
   let imageUrl='';
   const affImgs=[...doc.querySelectorAll('img[src]')].filter(img=>(img.getAttribute('src')||'').includes('hbb.afl.rakuten.co.jp'));
@@ -395,7 +404,7 @@ function parseAffHtml(){
     if(m)imageUrl=decodeURIComponent(m[1]).replace(/\?_ex=\d+x\d+$/,'?_ex=400x400');
   }
 
-  if(!affUrl){toast('アフィリエイトURLが見つかりません。HTMLを確認してください',true);return;}
+  if(!rawAffUrl){toast('アフィリエイトURLが見つかりません。HTMLを確認してください',true);return;}
 
   setF('name1',name.slice(0,80));
   setF('url1',affUrl);
@@ -407,7 +416,8 @@ function parseAffHtml(){
       <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
         ${imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(imageUrl)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:``}
         <div style="flex:1;min-width:0">
-          <div style="font-size:11px;color:var(--muted);word-break:break-all">${escH(affUrl.slice(0,80))}…</div>
+          <div style="font-size:11px;color:var(--muted);word-break:break-all">${escH(affUrl.slice(0,100))}</div>
+          ${itemUrl?`<div style="font-size:10px;color:var(--green);margin-top:3px">✅ テキストリンクに変換済み</div>`:''}
         </div>
       </div>
       <label style="font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:5px">商品名（短く編集可：例「美顔器」「防災トイレ」）</label>
