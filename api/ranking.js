@@ -4,15 +4,16 @@ export default async function handler(req, res) {
 
   const { genre = '' } = req.query;
 
-  const GENRE_SEARCH = {
-    '410899': 'スイーツ お菓子 人気 ギフト',
-    '100044': 'ガジェット スマホ 便利グッズ 人気',
-    '216131': 'スキンケア 美容液 人気 コスメ',
-    '100533': 'サプリメント 健康 人気 栄養',
+  // Correct Rakuten ranking genre IDs (verified via ranking.rakuten.co.jp sitemap)
+  const GENRE_RANKING_ID = {
+    '410899': '551167', // スイーツ・お菓子
+    '100044': '564500', // スマートフォン・タブレット（ガジェット）
+    '216131': '100939', // 美容・コスメ・香水
+    '100533': '100938', // ダイエット・健康
   };
 
-  const keyword = GENRE_SEARCH[genre];
-  if (!keyword) return res.status(200).json({ items: [], _error: 'ジャンル不明' });
+  const rankingId = GENRE_RANKING_ID[genre];
+  if (!rankingId) return res.status(200).json({ items: [], _error: 'ジャンル不明' });
 
   const affId = process.env.RAKUTEN_AFF_ID || '5335e187.bd9b90cd.5335e188.d302f85f';
 
@@ -36,10 +37,9 @@ export default async function handler(req, res) {
     return t;
   }
 
-  // ── Jina.ai reader → Rakuten search (no API key needed) ──────────────────
+  // ── Jina.ai reader → Rakuten ranking page (no API key needed) ───────────
   try {
-    const searchUrl = `https://search.rakuten.co.jp/search/mall/${encodeURIComponent(keyword)}/?s=6&v=2`;
-    const jinaUrl = `https://r.jina.ai/${searchUrl}`;
+    const jinaUrl = `https://r.jina.ai/https://ranking.rakuten.co.jp/daily/${rankingId}/`;
 
     const r = await fetch(jinaUrl, {
       headers: {
