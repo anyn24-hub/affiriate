@@ -332,7 +332,16 @@ async function autoGenerate(){
     // Step 1: 商品取得
     btn.innerHTML='<span class="spinner"></span> 商品を取得中…';
     status.textContent='① 商品を取得中…';status.style.color='var(--muted)';
-    const allItems=await fetchRankingItems(genre);
+    const rawItems=await fetchRankingItems(genre);
+
+    // 商品名が同じなら異なるショップでも1件に絞る（名前正規化して重複排除）
+    const seenNames=new Set();
+    const allItems=rawItems.filter(it=>{
+      const key=(it.name||'').replace(/[\s　]/g,'').toLowerCase();
+      if(!key||seenNames.has(key))return false;
+      seenNames.add(key);
+      return true;
+    });
 
     // Fisher-Yatesシャッフル（毎回異なる順序で選出）
     function shuffle(arr){
