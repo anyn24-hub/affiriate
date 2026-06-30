@@ -68,6 +68,11 @@ export default async function handler(req, res) {
       else break;
     }
     if (result.length > 18) result = result.slice(0, 18).trim();
+    // 8. 商品名として明らかに不適切な文字列を除外（バナー・キャンペーン系）
+    const NOT_PRODUCT = /^(キャンペーン|ポイント|バナー|広告|お知らせ|ランキング|楽天市場|楽天|campaign|banner|point|PR|Image|sale|SALE|TOP|top)$/i;
+    if (NOT_PRODUCT.test(result.replace(/\s/g, ''))) return '';
+    // カタカナのみで「ポイント」「キャンペーン」等が含まれる場合も除外
+    if (/ポイント|キャンペーン|バナー|クーポン/.test(result)) return '';
     return result;
   }
 
@@ -86,12 +91,12 @@ export default async function handler(req, res) {
     const text = await r.text();
 
     // Parse: [![alt](imgUrl)](itemUrl)
-    // 最大15件取得して、フロント側で未使用3件を選べるようにする
+    // 1〜10位を取得してフロント側でランダム選出できるようにする
     const re = /\[!\[([^\]]*)\]\((https?:\/\/[^)]*r10s\.jp[^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
     const seen = new Set();
     const items = [];
     let m;
-    while ((m = re.exec(text)) !== null && items.length < 15) {
+    while ((m = re.exec(text)) !== null && items.length < 10) {
       const rawTitle = m[1];
       const imgUrl = m[2].split('?')[0];
       const rawUrl = m[3].split('?')[0].replace(/\/$/, '') + '/';

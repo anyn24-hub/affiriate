@@ -334,6 +334,13 @@ async function autoGenerate(){
     status.textContent='① 商品を取得中…';status.style.color='var(--muted)';
     const allItems=await fetchRankingItems(genre);
 
+    // Fisher-Yatesシャッフル（毎回異なる順序で選出）
+    function shuffle(arr){
+      const a=[...arr];
+      for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+      return a;
+    }
+
     // 履歴済みURLセットを構築
     const usedUrls=new Set(
       loadHistArr()
@@ -342,13 +349,13 @@ async function autoGenerate(){
         .map(normalizeItemUrl)
     );
 
-    // 未使用を優先、不足分は使用済みで補完して必ず3件確保
-    const fresh=allItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||'')));
-    const used=allItems.filter(it=>usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||'')));
+    // 未使用をシャッフル優先、不足分は使用済みシャッフルで補完して必ず3件確保
+    const fresh=shuffle(allItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
+    const used=shuffle(allItems.filter(it=>usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
     const items=[...fresh,...used].slice(0,3);
 
     if(fresh.length===0){
-      status.textContent=`⚠️ 未使用商品なし（ランキング上位${allItems.length}件がすべて既出）。同じ商品で生成します`;
+      status.textContent=`⚠️ 未使用商品なし（上位${allItems.length}件がすべて既出）。ランダムで生成します`;
       status.style.color='var(--gold)';
     }else if(fresh.length<3){
       status.textContent=`✅ 未使用${fresh.length}件 + 既出${3-fresh.length}件で補完して生成`;
