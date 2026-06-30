@@ -293,7 +293,7 @@ async function fetchRankingItems(genre){
   const r=await fetch(`/api/ranking?genre=${genre}`);
   const data=await r.json();
   if(data._error)throw new Error(data._error);
-  const items=(data.items||[]).slice(0,3);
+  const items=data.items||[];
   if(!items.length)throw new Error('商品を取得できませんでした');
   return items;
 }
@@ -332,27 +332,32 @@ async function autoGenerate(){
     // Step 1: 商品取得
     btn.innerHTML='<span class="spinner"></span> 商品を取得中…';
     status.textContent='① 商品を取得中…';status.style.color='var(--muted)';
-    let items=await fetchRankingItems(genre);
+    const allItems=await fetchRankingItems(genre);
 
-    // 履歴済みURLを除外
+    // 履歴済みURLセットを構築
     const usedUrls=new Set(
       loadHistArr()
         .filter(e=>e.cat===cat)
         .flatMap(e=>getHistItemUrls(e))
         .map(normalizeItemUrl)
     );
-    const fresh=items.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||'')));
-    if(fresh.length>0&&fresh.length<items.length){
-      status.textContent=`⚠️ 既出${items.length-fresh.length}件をスキップ → 残り${fresh.length}件で生成`;
+
+    // 未使用を優先、不足分は使用済みで補完して必ず3件確保
+    const fresh=allItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||'')));
+    const used=allItems.filter(it=>usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||'')));
+    const items=[...fresh,...used].slice(0,3);
+
+    if(fresh.length===0){
+      status.textContent=`⚠️ 未使用商品なし（ランキング上位${allItems.length}件がすべて既出）。同じ商品で生成します`;
       status.style.color='var(--gold)';
-      items=fresh;
-    }else if(fresh.length===0){
-      status.textContent='⚠️ すべて既出商品です。そのまま生成します';
-      status.style.color='var(--gold)';
+    }else if(fresh.length<3){
+      status.textContent=`✅ 未使用${fresh.length}件 + 既出${3-fresh.length}件で補完して生成`;
+      status.style.color='var(--cyan)';
+    }else{
+      status.textContent='✅ 商品取得完了 → 投稿文を生成中…';status.style.color='var(--green)';
     }
 
     populateProducts(items);
-    if(fresh.length>0||usedUrls.size===0)status.textContent='✅ 商品取得完了 → 投稿文を生成中…',status.style.color='var(--green)';
 
     // Step 2: 投稿文生成（auto用要素へ）
     btn.innerHTML='<span class="spinner"></span> 投稿文を生成中…';

@@ -86,11 +86,12 @@ export default async function handler(req, res) {
     const text = await r.text();
 
     // Parse: [![alt](imgUrl)](itemUrl)
+    // 最大15件取得して、フロント側で未使用3件を選べるようにする
     const re = /\[!\[([^\]]*)\]\((https?:\/\/[^)]*r10s\.jp[^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
     const seen = new Set();
     const items = [];
     let m;
-    while ((m = re.exec(text)) !== null && items.length < 3) {
+    while ((m = re.exec(text)) !== null && items.length < 15) {
       const rawTitle = m[1];
       const imgUrl = m[2].split('?')[0];
       const rawUrl = m[3].split('?')[0].replace(/\/$/, '') + '/';
