@@ -427,17 +427,27 @@ function cleanTitle(raw){
   t=t.replace(/\[[^\]]{0,200}\]/g,'');
   t=t.replace(/＜[^＞]{0,100}＞/g,'');
   t=t.replace(/〔[^〕]{0,200}〕/g,'');
-  t=t.replace(/（[^）]{0,60}[円ポP%％送無料][^）]{0,60}）/g,'');
-  t=t.replace(/\s*[｜|]\s*.*楽天.*$/i,'');
-  t=t.replace(/楽天市場[:：]\s*/i,'');
-  t=t.replace(/\s*-\s*楽天市場.*$/i,'');
-  t=t.replace(/送料無料[^\s]{0,20}/g,'');
+  t=t.replace(/（[^）]{0,60}）/g,'');
+  t=t.replace(/[＼\\][^\/／]{0,40}[\/／]/g,'');
+  t=t.replace(/[\d,]+→[\d,]+円/g,'');
+  t=t.replace(/¥[\d,]+/g,'');
+  t=t.replace(/[\d,]+円[^\s！。]{0,10}/g,'');
+  t=t.replace(/^[^！]{0,80}！+\s*/,'');
+  [/楽天[^\s！。]{0,15}(1位|2位|3位|\d+冠|ランキング|大賞|受賞|獲得|優良)/g,
+   /送料無料[^\s]{0,20}/g,/P\d+倍/g,/クーポン[^\s]{0,10}/g,
+   /期間限定/g,/大人気/g,/話題沸騰/g,/リピ続出/g,
+   /累計\d+[^\s。！]{0,10}/g,/今なら[^\s。！]{0,15}/g,
+   /\s*[｜|]\s*.*/g,/楽天市場[:：]\s*/ig,/\s*-\s*楽天市場.*$/i,
+  ].forEach(re=>{t=t.replace(re,'');});
   t=t.replace(/\s{2,}/g,' ').trim();
-  if(t.length>40)t=t.slice(0,40).trim();
+  // カタカナ5文字以上の連続をブランド/商品カテゴリとして優先抽出
+  const kataMatch=t.match(/[ァ-ヶー]{5,}/);
+  if(kataMatch){const k=kataMatch[0];return k.length>28?k.slice(0,28).trim():k;}
+  if(t.length>28)t=t.slice(0,28).trim();
   return t;
 }
 
-function parseAffHtml(){
+async function parseAffHtml(){
   const html=(document.getElementById('affHtml').value||'').trim();
   if(!html){toast('HTMLを貼り付けてください',true);return;}
   const parser=new DOMParser();
@@ -445,6 +455,8 @@ function parseAffHtml(){
 
   const affLinks=[...doc.querySelectorAll('a[href]')].filter(a=>(a.getAttribute('href')||'').includes('hb.afl.rakuten.co.jp'));
   const rawAffUrl=affLinks[0]?.getAttribute('href')||'';
+
+  if(!rawAffUrl){toast('アフィリエイトURLが見つかりません。HTMLを確認してください',true);return;}
 
   let name='';
   affLinks.forEach(a=>{
@@ -470,30 +482,17 @@ function parseAffHtml(){
     if(m)imageUrl=decodeURIComponent(m[1]).replace(/\?_ex=\d+x\d+$/,'?_ex=400x400');
   }
 
-  if(!rawAffUrl){toast('アフィリエイトURLが見つかりません。HTMLを確認してください',true);return;}
-
   setF('name1',name.slice(0,80));
   setF('url1',affUrl);
   setF('imageUrl1',imageUrl);
+  document.getElementById('parseResult').innerHTML='';
 
-  document.getElementById('parseResult').innerHTML=`
-    <div style="background:var(--card2);border:1px solid rgba(74,222,128,.3);border-radius:10px;padding:12px">
-      <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:8px">✅ 解析完了 — 商品名を短く編集してください</div>
-      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
-        ${imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(imageUrl)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">`:``}
-        <div style="flex:1;min-width:0">
-          <div style="font-size:11px;color:var(--muted);word-break:break-all">${escH(affUrl.slice(0,100))}</div>
-          ${itemUrl?`<div style="font-size:10px;color:var(--green);margin-top:3px">✅ テキストリンクに変換済み</div>`:''}
-        </div>
-      </div>
-      <label style="font-size:12px;color:var(--muted);font-weight:700;display:block;margin-bottom:5px">商品名（短く編集可：例「美顔器」「防災トイレ」）</label>
-      <input class="finput" style="font-size:14px;padding:10px 12px" id="nameEdit1"
-        value="${escH(name.slice(0,80))}"
-        placeholder="短い商品名を入力"
-        oninput="setF('name1',this.value)">
-    </div>`;
+  // 投稿文を生成してからsec3を開き、画像を自動生成
+  generatePost();
   document.getElementById('sec3').classList.add('open');
-  toast('解析しました ✓');
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  generateImage();
+  window.scrollTo({top:document.getElementById('sec3').offsetTop-20,behavior:'smooth'});
 }
 
 // ═══ GENERATE POST ════════════════════════════════════════════
@@ -601,7 +600,9 @@ function generatePost(){
   updateCounter(post);runNGCheck(post);
   currentHistId=Date.now();
   const itemUrls=[getF('url1'),getF('url2'),getF('url3')].filter(Boolean);
-  saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString(),itemUrls});
+  const names=[getF('name1'),getF('name2'),getF('name3')];
+  const imageUrls=[getF('imageUrl1'),getF('imageUrl2'),getF('imageUrl3')];
+  saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString(),itemUrls,names,imageUrls});
 }
 
 // ═══ NG ══════════════════════════════════════════════════════
@@ -824,6 +825,7 @@ function renderHistory(){
         ${e.imageDataUrl?`<img src="${e.imageDataUrl}" style="width:100%;border-radius:8px;margin-bottom:8px">`:``}
         <div class="hist-post">${escH(e.postText||'')}</div>
         <div class="btn-row mt8">
+          <button class="btn btn-purple btn-sm" onclick="restoreHist(${idx})">🔄 再表示</button>
           <button class="btn btn-ghost btn-sm" onclick="cpHist(${idx})">📋 コピー</button>
           <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="delHist(${idx})">削除</button>
         </div>
@@ -834,6 +836,26 @@ function renderHistory(){
 function togHist(idx){
   const el=document.getElementById('hb'+idx);
   if(el)el.classList.toggle('open');
+}
+async function restoreHist(idx){
+  const arr=loadHistArr();
+  const e=arr[idx];
+  if(!e)return;
+  document.getElementById('catSel').value=e.cat;
+  onCatChange();
+  (e.names||[]).forEach((n,i)=>setF(`name${i+1}`,n));
+  (e.itemUrls||[]).forEach((u,i)=>setF(`url${i+1}`,u));
+  (e.imageUrls||[]).forEach((u,i)=>setF(`imageUrl${i+1}`,u));
+  const postBox=document.getElementById('postBox');
+  postBox.textContent=e.postText||'';
+  document.getElementById('postArea').style.display='block';
+  document.getElementById('sec3').classList.add('open');
+  updateCounter(e.postText||'');runNGCheck(e.postText||'');
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  currentHistId=e.id;
+  generateImage();
+  window.scrollTo({top:document.getElementById('sec3').offsetTop-20,behavior:'smooth'});
+  toast('履歴から復元しました ✓');
 }
 function cpHist(idx){
   const arr=loadHistArr();
