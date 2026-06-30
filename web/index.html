@@ -276,6 +276,19 @@ function onCatChange(){
 }
 
 // ═══ AUTO-FETCH RANKING ══════════════════════════════════════
+function normalizeItemUrl(u){
+  // アフィリエイトURLからpc=パラメータを取り出してnormalize、なければURLそのまま
+  const m=(u||'').match(/[?&]pc=([^&]+)/);
+  const raw=m?decodeURIComponent(m[1]):u||'';
+  return raw.split('?')[0].replace(/\/?$/,'/');
+}
+
+function getHistItemUrls(entry){
+  if(entry.itemUrls&&entry.itemUrls.length)return entry.itemUrls;
+  // 旧形式: postTextからURL抽出
+  return((entry.postText||'').match(/https?:\/\/\S+/g)||[]);
+}
+
 async function fetchRankingItems(genre){
   const r=await fetch(`/api/ranking?genre=${genre}`);
   const data=await r.json();
@@ -319,9 +332,27 @@ async function autoGenerate(){
     // Step 1: 商品取得
     btn.innerHTML='<span class="spinner"></span> 商品を取得中…';
     status.textContent='① 商品を取得中…';status.style.color='var(--muted)';
-    const items=await fetchRankingItems(genre);
+    let items=await fetchRankingItems(genre);
+
+    // 履歴済みURLを除外
+    const usedUrls=new Set(
+      loadHistArr()
+        .filter(e=>e.cat===cat)
+        .flatMap(e=>getHistItemUrls(e))
+        .map(normalizeItemUrl)
+    );
+    const fresh=items.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||'')));
+    if(fresh.length>0&&fresh.length<items.length){
+      status.textContent=`⚠️ 既出${items.length-fresh.length}件をスキップ → 残り${fresh.length}件で生成`;
+      status.style.color='var(--gold)';
+      items=fresh;
+    }else if(fresh.length===0){
+      status.textContent='⚠️ すべて既出商品です。そのまま生成します';
+      status.style.color='var(--gold)';
+    }
+
     populateProducts(items);
-    status.textContent='✅ 商品取得完了 → 投稿文を生成中…';status.style.color='var(--green)';
+    if(fresh.length>0||usedUrls.size===0)status.textContent='✅ 商品取得完了 → 投稿文を生成中…',status.style.color='var(--green)';
 
     // Step 2: 投稿文生成（auto用要素へ）
     btn.innerHTML='<span class="spinner"></span> 投稿文を生成中…';
@@ -331,7 +362,8 @@ async function autoGenerate(){
     document.getElementById('autoPostSection').style.display='block';
     updateAutoCounter(post);runAutoNGCheck(post);
     currentHistId=Date.now();
-    saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString()});
+    const itemUrls=items.map(it=>it.itemUrl||it.url||'');
+    saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString(),itemUrls});
     status.textContent='✅ 投稿文生成完了 → 画像を生成中…';
 
     // Step 3: 画像生成（autoCanvas へ）
@@ -515,11 +547,27 @@ function generatePost(){
   const extra=document.getElementById('extraNote').value.trim();
   const post=buildPostText(cat,extra);
   if(!post){toast('先にSTEP2で商品を取得してください',true);return;}
+
+  // 高料率: 既出チェック
+  const url1=getF('url1');
+  if(url1){
+    const usedUrls=new Set(
+      loadHistArr()
+        .filter(e=>e.cat===cat)
+        .flatMap(e=>getHistItemUrls(e))
+        .map(normalizeItemUrl)
+    );
+    if(usedUrls.has(normalizeItemUrl(url1))){
+      toast('⚠️ この商品は過去に紹介済みです',true);
+    }
+  }
+
   document.getElementById('postBox').textContent=post;
   document.getElementById('postArea').style.display='block';
   updateCounter(post);runNGCheck(post);
   currentHistId=Date.now();
-  saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString()});
+  const itemUrls=[getF('url1'),getF('url2'),getF('url3')].filter(Boolean);
+  saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString(),itemUrls});
 }
 
 // ═══ NG ══════════════════════════════════════════════════════
