@@ -51,16 +51,25 @@ export default async function handler(req, res) {
     promo.forEach(re => { t = t.replace(re, ''); });
     // 5. Normalize punctuation to space
     t = t.replace(/[！!？?。、，・]\s*/g, ' ').replace(/\s{2,}/g, ' ').trim();
-    // 6. 非商品名フィルター（カタカナ抽出前に適用）
-    const NG_NAME = /ポイント|キャンペーン|バナー|クーポン|プレゼント|ギフトセット|お知らせ|楽天市場|ランキング/;
+    // 6. 非商品名フィルター（共通・カタカナ抽出前後どちらにも適用）
+    const NG_NAME = /ポイント|キャンペーン|バナー|クーポン|プレゼント|ギフトセット|お知らせ|楽天市場|ランキング|ベストコスメ|アワード|同梱|注文|配送|お届け|手続き|申し込み/;
+    // ワード境界を考慮した文字数制限（途中で切らない）
+    function trimSmart(s, max) {
+      if (s.length <= max) return s;
+      const cut = s.slice(0, max);
+      const lastSp = cut.lastIndexOf(' ');
+      return (lastSp > max * 0.5 ? cut.slice(0, lastSp) : cut).trim();
+    }
     // First katakana run ≥5 chars = product category noun
     const kataMatch = t.match(/[ァ-ヶー]{5,}/);
     if (kataMatch) {
-      const kata = kataMatch[0].slice(0, 18);
-      if (NG_NAME.test(kata)) return '';  // カタカナでも非商品名なら除外
+      const kata = trimSmart(kataMatch[0], 24);
+      if (NG_NAME.test(kata)) return '';
       return kata;
     }
     // 7. Fallback: skip leading occasion/brand-like words, take first noun phrase
+    // 注文・説明文の文型（〜で同梱, 〜をご注文 等）は商品名ではない
+    if (/で同梱|ご注文|お届け|手続き|を.*[申送配]/.test(t)) return '';
     const SKIP = new Set(['父の日','母の日','お中元','お歳暮','バレンタイン','ホワイトデー','ハロウィン','クリスマス','誕生日','ギフト','プレゼント','贈り物','セット']);
     const words = t.split(/\s+/).filter(w => w.length > 0);
     while (words.length > 1 && SKIP.has(words[0])) words.shift();
@@ -70,9 +79,9 @@ export default async function handler(req, res) {
       else if (result.replace(/[a-zA-Z0-9\s]/g, '').length < 4) { result += ' ' + w; }
       else break;
     }
-    if (result.length > 18) result = result.slice(0, 18).trim();
+    result = trimSmart(result, 24);
     // 8. 完全一致・部分一致で非商品名を除外
-    const NOT_PRODUCT = /^(キャンペーン|ポイント|バナー|広告|お知らせ|ランキング|楽天市場|楽天|プレゼント|ギフト|campaign|banner|point|PR|Image|sale|SALE|TOP|top)$/i;
+    const NOT_PRODUCT = /^(キャンペーン|ポイント|バナー|広告|お知らせ|ランキング|楽天市場|楽天|プレゼント|ギフト|ベストコスメ|アワード|campaign|banner|point|PR|Image|sale|SALE|TOP|top)$/i;
     if (NOT_PRODUCT.test(result.replace(/\s/g, ''))) return '';
     if (NG_NAME.test(result)) return '';
     return result;
