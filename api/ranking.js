@@ -105,6 +105,7 @@ export default async function handler(req, res) {
     // 1〜10位を取得してフロント側でランダム選出できるようにする
     const re = /\[!\[([^\]]*)\]\((https?:\/\/[^)]*r10s\.jp[^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
     const seen = new Set();
+    const seenShops = new Set(); // 同一ショップ（ブランド）の重複を防ぐ
     const items = [];
     let m;
     while ((m = re.exec(text)) !== null && items.length < 10) {
@@ -115,8 +116,15 @@ export default async function handler(req, res) {
       if (seen.has(rawUrl)) continue;
       seen.add(rawUrl);
 
+      // ショップ名を抽出してブランド重複チェック
+      const shopMatch = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
+      const shop = shopMatch ? shopMatch[1].toLowerCase() : '';
+      if (shop && seenShops.has(shop)) continue;
+
       const name = cleanTitle(rawTitle);
       if (!name || name.length < 3) continue;
+
+      if (shop) seenShops.add(shop);
 
       items.push({
         name,

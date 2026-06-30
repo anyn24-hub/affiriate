@@ -361,7 +361,20 @@ async function autoGenerate(){
     // 未使用をシャッフル優先、不足分は使用済みシャッフルで補完して必ず3件確保
     const fresh=shuffle(allItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
     const used=shuffle(allItems.filter(it=>usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
-    const items=[...fresh,...used].slice(0,3);
+    // ショップ重複を避けながら3件選ぶ
+    function pickUniqShops(pool,n){
+      const result=[];const shops=new Set();
+      for(const it of pool){
+        if(result.length>=n)break;
+        const sm=(it.itemUrl||it.url||'').match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
+        const shop=sm?sm[1].toLowerCase():'';
+        if(shop&&shops.has(shop))continue;
+        if(shop)shops.add(shop);
+        result.push(it);
+      }
+      return result;
+    }
+    const items=pickUniqShops([...fresh,...used],3);
 
     if(fresh.length===0){
       status.textContent=`⚠️ 未使用商品なし（上位${allItems.length}件がすべて既出）。ランダムで生成します`;
