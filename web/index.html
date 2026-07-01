@@ -456,12 +456,16 @@ async function parseAffHtml(){
 
   if(!rawAffUrl){toast('アフィリエイトURLが見つかりません。HTMLを確認してください',true);return;}
 
-  let name='';
+  let rawName='';
   affLinks.forEach(a=>{
     const t=a.textContent.trim().replace(/\s+/g,' ');
-    if(t.length>name.length&&t.length>5&&!t.includes('楽天で購入')&&!t.includes('楽天市場'))name=t;
+    if(t.length>rawName.length&&t.length>5&&!t.includes('楽天で購入')&&!t.includes('楽天市場'))rawName=t;
   });
-  name=cleanTitle(name);
+  let name=cleanTitle(rawName);
+  // cleanTitleが空を返した場合は生の商品名を簡易クリーニングして使う
+  if(!name&&rawName){
+    name=rawName.replace(/【[^】]*】/g,'').replace(/\[[^\]]*\]/g,'').replace(/\s{2,}/g,' ').trim().slice(0,28);
+  }
 
   // pc= パラメータから商品URLを取り出し、テキスト形式のアフィリエイトURLを再構築
   const pcM=rawAffUrl.match(/[?&]pc=([^&]+)/);
@@ -644,7 +648,7 @@ async function drawCanvas(canvasId,dlBtnId,cat){
     name:getF(`name${i+1}`),
     url:getF(`url${i+1}`),
     imageUrl:getF(`imageUrl${i+1}`),
-  })).filter(p=>p.name);
+  })).filter(p=>p.name||p.url);
   if(!prods.length){toast('先にSTEP2で商品を取得してください',true);return;}
 
   const productImgs=await Promise.all(prods.map(p=>loadImg(p.imageUrl)));
