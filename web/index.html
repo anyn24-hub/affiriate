@@ -152,7 +152,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <textarea class="ftarea" id="affHtml" placeholder="管理画面で生成した &lt;table&gt;〜&lt;/table&gt; を貼り付け"></textarea>
       </div>
       <div class="btn-row">
-        <button class="btn btn-gold btn-full" onclick="parseAffHtml()">🔍 解析して取得</button>
+        <button class="btn btn-gold btn-full" onclick="parseAffHtml()">✨ HTMLを解析して投稿を生成</button>
       </div>
       <div id="parseResult" style="margin-top:10px"></div>
     </div>
@@ -178,7 +178,6 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       <label>追加メモ（任意）</label>
       <input class="finput" id="extraNote" placeholder="例: 買い回り候補にどうぞ" autocomplete="off">
     </div>
-    <div class="btn-row"><button class="btn btn-purple btn-full" onclick="generatePost()">✨ 投稿文を生成</button></div>
     <div id="postArea" style="display:none">
       <div class="mt12">
         <div class="out-box" id="postBox" contenteditable="true" oninput="onPostInput()"></div>
@@ -190,13 +189,12 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       <div class="ng-box" id="ngBox"></div>
       <div class="btn-row mt8">
         <button class="btn btn-green" onclick="copyPost()" style="flex:1">📋 X用にコピー</button>
-        <button class="btn btn-ghost btn-sm" onclick="generatePost()">🔄 再生成</button>
+        <button class="btn btn-ghost btn-sm" onclick="regenHighRate()">🔄 再生成</button>
       </div>
       <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像を生成</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像</div>
         <canvas id="ogCanvas" style="width:100%;border-radius:12px;display:block;background:#0d0d18"></canvas>
         <div class="btn-row mt8">
-          <button class="btn btn-cyan btn-full" id="imgBtn" onclick="generateImage()">🖼️ 画像を生成</button>
           <button class="btn btn-ghost btn-sm" id="dlBtn" onclick="downloadImage()" style="display:none">💾 保存</button>
         </div>
       </div>
@@ -489,10 +487,12 @@ async function parseAffHtml(){
 
   // 投稿文を生成してからsec3を開き、画像を自動生成
   generatePost();
-  document.getElementById('sec3').classList.add('open');
+  const s3=document.getElementById('sec3');
+  s3.style.display='block';
+  s3.classList.add('open');
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   generateImage();
-  window.scrollTo({top:document.getElementById('sec3').offsetTop-20,behavior:'smooth'});
+  window.scrollTo({top:s3.offsetTop-20,behavior:'smooth'});
 }
 
 // ═══ GENERATE POST ════════════════════════════════════════════
@@ -623,6 +623,12 @@ function loadImg(src){
     img.src='/api/proxy-image?url='+encodeURIComponent(src);
     setTimeout(()=>resolve(null),10000);
   });
+}
+
+async function regenHighRate(){
+  generatePost();
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  generateImage();
 }
 
 // generateImage: called from STEP3 button (高料率のみ)
