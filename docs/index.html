@@ -201,12 +201,6 @@ a{color:var(--cyan);text-decoration:none}
     <button class="big-btn blue" onclick="copyAllPdfPrompt()" style="margin-top:12px">
       <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算PDF URL抽出を依頼</div><div class="bsub">日本株（TDnet）・海外株（Annual Results）どちらも対応</div></div><span class="barr">📋</span>
     </button>
-    <ul class="res-list mt12">
-      <li><a class="res-link" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener"><span class="res-ico">📁</span><div><div>Google Drive保存先を開く</div><div class="res-desc">ダウンロードした決算資料PDFをここに保存</div></div></a></li>
-      <li><a class="res-link" href="https://www.release.tdnet.info/inbs/I_main_00.html" target="_blank" rel="noopener"><span class="res-ico">📋</span><div><div>TDnetを開く（日本株 手動確認用）</div><div class="res-desc">決算短信・業績予想修正・配当・自社株買いの適時開示</div></div></a></li>
-      <li><a class="res-link" href="https://www.sec.gov/edgar/search/" target="_blank" rel="noopener"><span class="res-ico">🇺🇸</span><div><div>SEC EDGARを開く（米国 手動確認用）</div><div class="res-desc">10-K・10-Q・8-K Earnings Release を検索</div></div></a></li>
-      <li><a class="res-link" href="https://www.hkexnews.hk/" target="_blank" rel="noopener"><span class="res-ico">🇭🇰</span><div><div>HKEXnewsを開く（香港・中国 手動確認用）</div><div class="res-desc">Annual Results・決算公告・年次報告書を検索</div></div></a></li>
-    </ul>
   </div>
 </div>
 
@@ -224,14 +218,8 @@ a{color:var(--cyan);text-decoration:none}
       <span class="toggle-label">アフィリエイトリンクを投稿文に含める</span>
       <label class="toggle"><input type="checkbox" id="affEnabled" onchange="saveAff()"><span class="tslider"></span></label>
     </div>
-    <div class="toggle-row">
-      <span class="toggle-label">URLをランダム選択</span>
-      <label class="toggle"><input type="checkbox" id="affRandom" onchange="saveAff()"><span class="tslider"></span></label>
-    </div>
-    <div class="fg"><label>アフィリエイトURL 1</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
-    <div class="fg"><label>アフィリエイトURL 2（任意）</label><input class="finput" id="affUrl2" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
-    <div class="fg"><label>アフィリエイトURL 3（任意）</label><input class="finput" id="affUrl3" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
-    <div class="info cyan mt12" style="font-size:12px">URLは入力後すぐに自動保存されます。複数登録時にランダム選択ONで順番に/ランダムに選択します。</div>
+    <div class="fg"><label>アフィリエイトURL</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
+    <div class="info cyan mt12" style="font-size:12px">入力後すぐに自動保存されます。</div>
   </div>
 </div>
 
@@ -309,31 +297,24 @@ function initHeader(){
 function loadAll(){
   try{
     const a = JSON.parse(localStorage.getItem(KEYS.affiliate)||'null');
-    if(a){ aff=a; if(!Array.isArray(aff.urls))aff.urls=['','','']; }
+    if(a){
+      aff.enabled = !!a.enabled;
+      // migrate old format: urls[] -> url
+      aff.url = a.url || (Array.isArray(a.urls) ? a.urls[0] : '') || '';
+    }
   }catch{}
 }
 function saveAff(){
   aff.enabled = document.getElementById('affEnabled').checked;
-  aff.random  = document.getElementById('affRandom').checked;
-  aff.urls    = [
-    document.getElementById('affUrl1').value.trim(),
-    document.getElementById('affUrl2').value.trim(),
-    document.getElementById('affUrl3').value.trim(),
-  ];
+  aff.url     = document.getElementById('affUrl1').value.trim();
   try{ localStorage.setItem(KEYS.affiliate, JSON.stringify(aff)); }catch{}
 }
 function loadAffUI(){
   document.getElementById('affEnabled').checked = !!aff.enabled;
-  document.getElementById('affRandom').checked  = !!aff.random;
-  document.getElementById('affUrl1').value = aff.urls[0]||'';
-  document.getElementById('affUrl2').value = aff.urls[1]||'';
-  document.getElementById('affUrl3').value = aff.urls[2]||'';
+  document.getElementById('affUrl1').value = aff.url||'';
 }
 function getAffUrl(){
-  if(!aff.enabled) return '';
-  const urls = aff.urls.filter(Boolean);
-  if(!urls.length) return '';
-  return aff.random ? urls[Math.floor(Math.random()*urls.length)] : urls[0];
+  return aff.enabled && aff.url ? aff.url : '';
 }
 
 // ─────────────────────────────────────────
