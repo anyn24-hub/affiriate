@@ -155,6 +155,27 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <button class="btn btn-gold btn-full" onclick="parseAffHtml()">✨ HTMLを解析して投稿を生成</button>
       </div>
       <div id="parseResult" style="margin-top:10px"></div>
+      <div id="postArea" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <div>
+          <div class="out-box" id="postBox" contenteditable="true" oninput="onPostInput()"></div>
+          <div class="char-row">
+            <span style="font-size:12px;color:var(--muted)">投稿先: X のみ</span>
+            <span class="char-cnt char-ok" id="charCount">0 / 280文字</span>
+          </div>
+        </div>
+        <div class="ng-box" id="ngBox"></div>
+        <div class="btn-row mt8">
+          <button class="btn btn-green" onclick="copyPost()" style="flex:1">📋 X用にコピー</button>
+          <button class="btn btn-ghost btn-sm" onclick="regenHighRate()">🔄 再生成</button>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像</div>
+          <canvas id="ogCanvas" style="width:100%;border-radius:12px;display:block;background:#0d0d18"></canvas>
+          <div class="btn-row mt8">
+            <button class="btn btn-ghost btn-sm" id="dlBtn" onclick="downloadImage()" style="display:none">💾 保存</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- hidden data fields (shared) -->
@@ -162,42 +183,6 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       <input type="hidden" id="name1"><input type="hidden" id="url1"><input type="hidden" id="imageUrl1">
       <input type="hidden" id="name2"><input type="hidden" id="url2"><input type="hidden" id="imageUrl2">
       <input type="hidden" id="name3"><input type="hidden" id="url3"><input type="hidden" id="imageUrl3">
-    </div>
-  </div>
-</div>
-
-<!-- STEP 3: 高料率①②のみ表示 -->
-<div class="sec" id="sec3" style="display:none">
-  <div class="sec-hd" onclick="tog('sec3')">
-    <span class="badge bc">STEP 3</span>
-    <span class="sec-title">✍️ 投稿文を生成・確認</span>
-    <span class="chevron">▼</span>
-  </div>
-  <div class="sec-body">
-    <div class="fg" style="margin-top:0">
-      <label>追加メモ（任意）</label>
-      <input class="finput" id="extraNote" placeholder="例: 買い回り候補にどうぞ" autocomplete="off">
-    </div>
-    <div id="postArea" style="display:none">
-      <div class="mt12">
-        <div class="out-box" id="postBox" contenteditable="true" oninput="onPostInput()"></div>
-        <div class="char-row">
-          <span style="font-size:12px;color:var(--muted)">投稿先: X のみ</span>
-          <span class="char-cnt char-ok" id="charCount">0 / 280文字</span>
-        </div>
-      </div>
-      <div class="ng-box" id="ngBox"></div>
-      <div class="btn-row mt8">
-        <button class="btn btn-green" onclick="copyPost()" style="flex:1">📋 X用にコピー</button>
-        <button class="btn btn-ghost btn-sm" onclick="regenHighRate()">🔄 再生成</button>
-      </div>
-      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像</div>
-        <canvas id="ogCanvas" style="width:100%;border-radius:12px;display:block;background:#0d0d18"></canvas>
-        <div class="btn-row mt8">
-          <button class="btn btn-ghost btn-sm" id="dlBtn" onclick="downloadImage()" style="display:none">💾 保存</button>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -262,15 +247,14 @@ function onCatChange(){
   const isAuto=RANK_AUTO_CATS.includes(cat);
   document.getElementById('autoFetchArea').style.display=isAuto?'block':'none';
   document.getElementById('highRateArea').style.display=isAuto?'none':'block';
-  document.getElementById('sec3').style.display=isAuto?'none':'block';
   document.getElementById('autoResultArea').style.display='none';
   document.getElementById('autoPostSection').style.display='none';
   document.getElementById('autoFetchStatus').textContent='';
   document.getElementById('parseResult').innerHTML='';
+  document.getElementById('postArea').style.display='none';
   document.getElementById('affHtml').value='';
   document.getElementById('catTimeHint').textContent=CAT_TIME[cat]||'';
   for(let i=1;i<=3;i++){['name','url','imageUrl'].forEach(k=>setF(k+i,''));}
-  if(!isAuto){document.getElementById('sec3').classList.add('open');}
 }
 
 // ═══ AUTO-FETCH RANKING ══════════════════════════════════════
@@ -489,14 +473,12 @@ async function parseAffHtml(){
   setF('imageUrl1',imageUrl);
   document.getElementById('parseResult').innerHTML='';
 
-  // 投稿文を生成してからsec3を開き、画像を自動生成
+  // 投稿文を生成して画像を自動生成
   generatePost();
-  const s3=document.getElementById('sec3');
-  s3.style.display='block';
-  s3.classList.add('open');
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   generateImage();
-  window.scrollTo({top:s3.offsetTop-20,behavior:'smooth'});
+  const pa=document.getElementById('postArea');
+  window.scrollTo({top:pa.offsetTop-20,behavior:'smooth'});
 }
 
 // ═══ GENERATE POST ════════════════════════════════════════════
@@ -581,7 +563,8 @@ function buildPostText(cat, extra){
 
 function generatePost(){
   const cat=document.getElementById('catSel').value;
-  const extra=document.getElementById('extraNote').value.trim();
+  const extraEl=document.getElementById('extraNote');
+  const extra=extraEl?extraEl.value.trim():'';
   const post=buildPostText(cat,extra);
   if(!post){toast('先にSTEP2で商品を取得してください',true);return;}
 
@@ -859,12 +842,11 @@ async function restoreHist(idx){
   const postBox=document.getElementById('postBox');
   postBox.textContent=e.postText||'';
   document.getElementById('postArea').style.display='block';
-  document.getElementById('sec3').classList.add('open');
   updateCounter(e.postText||'');runNGCheck(e.postText||'');
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   currentHistId=e.id;
   generateImage();
-  window.scrollTo({top:document.getElementById('sec3').offsetTop-20,behavior:'smooth'});
+  window.scrollTo({top:document.getElementById('postArea').offsetTop-20,behavior:'smooth'});
   toast('履歴から復元しました ✓');
 }
 function cpHist(idx){
