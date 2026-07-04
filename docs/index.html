@@ -394,7 +394,7 @@ function copyAllPdfPrompt(){
   const companies = entries.length
     ? entries.map((e,i)=>`${i+1}. ${e}`).join('\n')
     : '（企業名またはティッカー・証券コードを入力してから押してください）';
-  const prompt = `以下の企業の最新の決算発表資料のPDF直リンクURLを調べてください。
+  const prompt = `以下の企業の最新の決算発表資料のURLを調べてください。
 
 対象企業：
 ${companies}
@@ -402,11 +402,16 @@ ${companies}
 出力形式（この形式のみで回答してください）：
 企業名（コード/ティッカー）: https://...
 
-条件：
-・日本株：TDnet掲載の決算短信PDFの直リンクURLを回答
-・米国・中国・香港株：Annual Results（決算発表プレスリリース）のPDF直リンクURLを回答
+条件（重要）：
+・URLは必ずWeb検索・Browse機能で実在を確認してから回答すること
+・URLを推測・作成して回答することは禁止（存在しないURLは必ず404エラーになります）
+・日本株（決算短信）：
+　① Browse等でTDnetの実際のPDF URLが確認できた場合 → そのPDF URLを回答
+　② 確認できない場合 → 証券コードで特定できるTDnet企業別開示ページURLを回答
+　　 例：イーサポートリンク（2493）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2493
+・米国・中国・香港株：企業IRページのAnnual Results（決算発表プレスリリース）PDF URLを検索して回答
 ・Annual Report（年次報告書）は不要
-・URLが不明な場合は「不明」と記載
+・URLが確認できない場合は「不明」と記載
 ・説明文・補足は不要`;
   copyText(prompt);
   if(entries.length) addToExcluded(entries);
