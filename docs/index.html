@@ -400,15 +400,17 @@ function copyAllPdfPrompt(){
 ${companies}
 
 出力形式（この形式のみで回答してください）：
-企業名（コード/ティッカー）: https://...
+企業名（コード/ティッカー）: https://... または「未発表」または「不明」
 
 条件（重要）：
+・「最新の決算発表資料」とは、すでに公開済みの最も新しい決算短信・業績発表PDFのこと
 ・URLは必ずWeb検索・Browse機能で実在を確認してから回答すること
 ・URLを推測・作成して回答することは禁止（存在しないURLは必ず404エラーになります）
+・まだ決算期が到来していない／直近の決算短信が公開されていない場合は「未発表」と回答
 ・日本株（決算短信）：
 　① Browse等でTDnetの実際のPDF URLが確認できた場合 → そのPDF URLを回答
 　② 確認できない場合 → 証券コードで特定できるTDnet企業別開示ページURLを回答
-　　 例：イーサポートリンク（2493）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2493
+　　 例：メディア工房（3815）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=3815
 ・米国・中国・香港株：企業IRページのAnnual Results（決算発表プレスリリース）PDF URLを検索して回答
 ・Annual Report（年次報告書）は不要
 ・URLが確認できない場合は「不明」と記載
