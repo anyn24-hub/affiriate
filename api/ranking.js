@@ -27,6 +27,30 @@ export default async function handler(req, res) {
   // ゆる健康枠でサプリ・ダイエット系に偏りすぎないよう補助除外（一部のみ）
   const HEALTH_OVERINDEX_EXCLUDE = /ダイエット食品|プロテインバー|置き換え|断食|カロリー制限|糖質制限|脂肪燃焼|メタボ|痩身|スリム|減量/;
 
+  // ジャンル別: 商品名に必須のカテゴリ語（これがなければ採用しない）
+  const GENRE_REQUIRED = {
+    '100044': /ケース|フィルム|充電器|ケーブル|バッテリー|スタンド|カバー|保護|ハブ|イヤホン|ヘッドホン|ルーター|マウス|キーボード|モバイルバッテリー|USB/,
+    '410899': /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
+    '216131': /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ/,
+  };
+
+  // ジャンル別: この語が入っていたら除外
+  const GENRE_EXCLUDE = {
+    '100044': /スマートフォン本体|タブレット本体|SIMフリー[^\s]{0,10}本体|ノートパソコン本体/,
+    '216131': /美顔器|美容機器|リフトアップ|若返り|ナノアクション|EMS機器/,
+  };
+
+  function isValidProductName(name) {
+    if (!name || name.length < 3) return false;
+    // 未閉じ括弧
+    if (/[（(]/.test(name) && !/[）)]/.test(name)) return false;
+    // 販促文のみ（先頭がこれらで始まる）
+    if (/^(お中元|本日\d|早割|楽天限定|SALE|特価|クリアランス|送料無料|最大\d|ポイント|クーポン|\d{4}\s|\d{4}年)/.test(name.replace(/\s/g, ''))) return false;
+    // 記号残り
+    if (/[★♪≪≫《》]/.test(name)) return false;
+    return true;
+  }
+
   // スイーツ商品カテゴリキーワード（優先抽出用）
   const SWEETS_TYPES = ['チーズケーキ','アイスクリーム','アイス','チョコレート','チョコ','プリン','ワッフル','クッキー','焼き菓子','バウムクーヘン','バウム','シュークリーム','タルト','カヌレ','マドレーヌ','マカロン','どら焼き','大福','羊羹','饅頭','和菓子','詰め合わせ','スイーツ','ゼリー','フルーツゼリー','お菓子'];
 
@@ -141,7 +165,7 @@ export default async function handler(req, res) {
     const seenShops = new Set(); // 同一ショップ（ブランド）の重複を防ぐ
     const items = [];
     let m;
-    while ((m = re.exec(text)) !== null && items.length < 10) {
+    while ((m = re.exec(text)) !== null && items.length < 15) {
       const rawTitle = m[1];
       const imgUrl = m[2].split('?')[0];
       const rawUrl = m[3].split('?')[0].replace(/\/$/, '') + '/';
@@ -161,6 +185,13 @@ export default async function handler(req, res) {
 
       const name = cleanTitle(rawTitle);
       if (!name || name.length < 3) continue;
+
+      // 商品名バリデーション
+      if (!isValidProductName(name)) continue;
+      const req = GENRE_REQUIRED[genre];
+      if (req && !req.test(name)) continue;
+      const excl = GENRE_EXCLUDE[genre];
+      if (excl && excl.test(name)) continue;
 
       if (shop) seenShops.add(shop);
 
