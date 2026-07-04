@@ -60,6 +60,50 @@ export default async function handler(req, res) {
       const lastSp = cut.lastIndexOf(' ');
       return (lastSp > max * 0.5 ? cut.slice(0, lastSp) : cut).trim();
     }
+    // ブランド名抽出: 先頭1〜2語（英字2語連続はブランドとして結合）
+    function extractBrand(before) {
+      const f = before[0] || '';
+      const s = before[1] || '';
+      if (f && /^[A-Za-z]/.test(f) && s && /^[A-Za-z]/.test(s)) return `${f} ${s}`;
+      return f;
+    }
+
+    // 6b. スイーツ枠専用: 「ブランド + カテゴリ」形式に
+    if (genre === '410899') {
+      const SWEETS_TYPES = ['チーズケーキ','アイスクリーム','アイス','チョコレート','チョコ','プリン','ワッフル','クッキー','焼き菓子','バウムクーヘン','バウム','シュークリーム','タルト','カヌレ','マドレーヌ','マカロン','どら焼き','大福','羊羹','饅頭','和菓子','詰め合わせ','スイーツ','ゼリー','フルーツゼリー','お菓子'];
+      const sweetsType = SWEETS_TYPES.find(w => t.includes(w));
+      if (sweetsType) {
+        const idx = t.indexOf(sweetsType);
+        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 12);
+        const brand = extractBrand(before);
+        return trimSmart(brand ? `${brand} ${sweetsType}` : sweetsType, 24);
+      }
+    }
+
+    // 6c. 美容枠専用: 「ブランド + カテゴリ」形式に
+    if (genre === '216131') {
+      const BEAUTY_TYPES = ['美容液','化粧水','クリーム','乳液','シャンプー','トリートメント','コンディショナー','洗顔','日焼け止め','ヘアオイル','ヘアマスク','ファンデーション','ファンデ','リップ','アイクリーム','ヘアケアセット','スキンケアセット','ヘアケア','スキンケア','美容'];
+      const beautyType = BEAUTY_TYPES.find(w => t.includes(w));
+      if (beautyType) {
+        const idx = t.indexOf(beautyType);
+        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 14);
+        const brand = extractBrand(before);
+        return trimSmart(brand ? `${brand} ${beautyType}` : beautyType, 24);
+      }
+    }
+
+    // 6d. ガジェット枠専用: 「ブランド + カテゴリ」形式に
+    if (genre === '100044') {
+      const GADGET_TYPES = ['モバイルバッテリー','ワイヤレスイヤホン','ヘッドホン','ガラスフィルム','スマホケース','充電ケーブル','ワイヤレス充電器','充電器','USBハブ','マウス','キーボード','ルーター','スタンド','ケース','フィルム','ケーブル','バッテリー','カバー','イヤホン'];
+      const gadgetType = GADGET_TYPES.find(w => t.includes(w));
+      if (gadgetType) {
+        const idx = t.indexOf(gadgetType);
+        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 14);
+        const brand = extractBrand(before);
+        return trimSmart(brand ? `${brand} ${gadgetType}` : gadgetType, 24);
+      }
+    }
+
     // First katakana run ≥5 chars = product category noun
     const kataMatch = t.match(/[ァ-ヶー]{5,}/);
     if (kataMatch) {

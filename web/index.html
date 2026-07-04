@@ -235,10 +235,10 @@ const CAT_TIME = {
   '高料率②':   '⏰ 平日・土日: 15:00',
 };
 const INTRO = {
-  'スイーツ':  '楽天スイーツ候補。価格・レビュー・送料無料で選んだ3つ。',
-  'ガジェット':'楽天ガジェット候補。¥2,000〜5,000台・レビュー多めで選んだ3つ。',
-  '美容':      '楽天の美容・ケア候補。¥1,000〜3,000台・レビュー多めで選んだ3つ。',
-  'ゆる健康':  '楽天のゆる健康候補。コスパ重視・続けやすさで選んだ3つ。',
+  'スイーツ':  '甘いものを少し楽しみたい人向け。\n\n自分用にもギフトにも良さそうなスイーツを3つ選びました。',
+  'ガジェット':'スマホまわりを整えたい人向け。\n\nケース・フィルム・充電まわりで、使いやすそうなものを3つ選びました。',
+  '美容':      '清潔感を整えたい人向け。\n\nスキンケア・ヘアケア・リップまわりで、毎日使いやすそうなものを3つ選びました。',
+  'ゆる健康':  'ゆるく健康を気にしたい人向け。\n\n無理なく続けやすそうな、日常に取り入れやすいものを3つ選びました。',
   '高料率①':  '買い回りついでにチェックしたい、気になるアイテム。\n\nレビュー・価格を見て選びました。',
   '高料率②':  '買い回りついでにチェックしたい、気になるアイテム。\n\nレビュー・価格を見て選びました。',
 };
@@ -532,25 +532,75 @@ function trimHighRateName(raw){
 }
 
 const CAT_COMMENT = {
-  'スイーツ':  ['ギフトにも◎','自分用にも','送料無料'],
-  'ガジェット':['送料無料','レビュー高め','コスパ◎'],
-  '美容':      ['続けやすい価格','レビュー多め','コスパ◎'],
-  'ゆる健康':  ['続けやすいコスパ','レビュー多め','習慣にしやすい'],
+  'スイーツ':  ['ギフトにも使いやすそう','自分用にも良さそう','個包装で食べやすそう','夏のご褒美に良さそう'],
+  'ガジェット':['画面保護に良さそう','外出用にも使いやすそう','充電まわりを整えたい人向け','デスク周りに良さそう'],
+  '美容':      ['毎日のケアに使いやすそう','デイリー使いしやすそう','清潔感を整えたい人向け','レビュー多めで気になる'],
+  'ゆる健康':  ['毎日取り入れやすそう','間食にも良さそう','リラックス時間に使いやすそう','無理なく続けやすそう'],
   '高料率①':  ['口コミ多めで気になる','価格が手に取りやすい','買い回り候補に良さそう'],
   '高料率②':  ['レビュー多めで気になる','自分用にも良さそう','ギフトにも使いやすそう'],
 };
 
+const BEAUTY_SUBCAT_COMMENT = {
+  foundation: ['ベースメイクに使いやすそう','毎日のメイクに良さそう','身だしなみを整えたい人向け'],
+  lip:        ['口元の印象を整えたい人向け','デイリー使いしやすそう','ギフトにも良さそう'],
+  hair:       ['髪まわりを整えたい人向け','毎日のヘアケアに良さそう','香りケアにも良さそう'],
+  cleanse:    ['毎日のケアに使いやすそう','清潔感を整えたい人向け','朝晩のケアに良さそう'],
+  suncare:    ['外出前のケアに良さそう','毎日使いやすそう','季節的に見ておきたい'],
+  eyebrow:    ['眉まわりを整えたい人向け','身だしなみを整えたい人向け'],
+  skincare:   ['スキンケアを見直したい人向け','毎日のケアに使いやすそう','レビュー多めで気になる'],
+  general:    ['デイリー使いしやすそう','毎日のケアに使いやすそう','清潔感を整えたい人向け'],
+};
+
+function detectBeautySubcat(name) {
+  if (!name) return 'general';
+  if (/ファンデ|ファンデーション|BBクリーム|CCクリーム|コンシーラー/.test(name)) return 'foundation';
+  if (/リップ|口紅|グロス|リップケア/.test(name)) return 'lip';
+  if (/シャンプー|トリートメント|コンディショナー|ヘアオイル|ヘアマスク|ヘアケア/.test(name)) return 'hair';
+  if (/洗顔|クレンジング/.test(name)) return 'cleanse';
+  if (/日焼け止め|サンスクリーン|UV/.test(name)) return 'suncare';
+  if (/アイブロウ|眉|マスカラ/.test(name)) return 'eyebrow';
+  if (/化粧水|美容液|乳液|クリーム|スキンケア|アイクリーム/.test(name)) return 'skincare';
+  return 'general';
+}
+
+function detectBeautyIntro(names) {
+  const subcats = names.map(n => detectBeautySubcat(n));
+  const hasHair = subcats.some(s => s === 'hair');
+  const hasMakeup = subcats.some(s => s === 'foundation' || s === 'lip' || s === 'eyebrow');
+  const hasSkin = subcats.some(s => s === 'skincare' || s === 'cleanse' || s === 'suncare');
+  const parts = [];
+  if (hasMakeup) parts.push('メイク');
+  if (hasSkin) parts.push('スキンケア');
+  if (hasHair) parts.push('ヘアケア');
+  if (parts.length === 0) parts.push('スキンケア・ヘアケア・リップまわり');
+  return `清潔感を整えたい人向け。\n\n${parts.join('・')}で、毎日使いやすそうなものを3つ選びました。`;
+}
+
 function buildPostText(cat, extra){
-  const intro=INTRO[cat]||INTRO['高料率①'];
   const isHighRate=cat==='高料率①'||cat==='高料率②';
+  const isBeauty=cat==='美容';
   const maxSlots=isHighRate?1:3;
-  const comments=CAT_COMMENT[cat]||[];
   const prods=Array.from({length:maxSlots},(_,i)=>({
     name:getF(`name${i+1}`),url:getF(`url${i+1}`)
   })).filter(p=>p.name||p.url);
   if(!prods.length)return null;
+
+  let intro, comments;
+  if(isBeauty){
+    const names=prods.map(p=>p.name||'');
+    intro=detectBeautyIntro(names);
+    comments=names.map(n=>{
+      const sub=detectBeautySubcat(n);
+      const pool=BEAUTY_SUBCAT_COMMENT[sub]||BEAUTY_SUBCAT_COMMENT.general;
+      return pool[Math.floor(Math.random()*pool.length)];
+    });
+  }else{
+    intro=INTRO[cat]||INTRO['高料率①'];
+    comments=CAT_COMMENT[cat]||[];
+  }
+
   const sep=isHighRate?'｜':' ▷ ';
-  const tag='\n\n#楽天市場';
+  const tag='\n\n#PR #楽天市場';
   const lines=prods.map((p,i)=>{
     const comment=comments[i]||'';
     const name=isHighRate?trimHighRateName(p.name||''):p.name||'（商品名未入力）';
