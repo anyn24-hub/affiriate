@@ -24,14 +24,22 @@ export default async function handler(req, res) {
   // スイーツ枠で除外するキーワード（ナッツ・健康食品・おつまみ系）
   const SWEETS_EXCLUDE = /ミックスナッツ|アーモンド|カシューナッツ|くるみ|ピスタチオ|マカダミア|ナッツ[^ケ]|おつまみ|珍味|ジャーキー|グラノーラ|プロテイン|サプリ|青汁|コラーゲン|ドライフルーツのみ/;
 
+  // ゆる健康枠でサプリ・ダイエット系に偏りすぎないよう補助除外（一部のみ）
+  const HEALTH_OVERINDEX_EXCLUDE = /ダイエット食品|プロテインバー|置き換え|断食|カロリー制限|糖質制限|脂肪燃焼|メタボ|痩身|スリム|減量/;
+
   // スイーツ商品カテゴリキーワード（優先抽出用）
-  const SWEETS_TYPES = ['チーズケーキ','アイスクリーム','アイス','チョコレート','チョコ','プリン','ワッフル','クッキー','焼き菓子','バウムクーヘン','バウム','シュークリーム','タルト','カヌレ','マドレーヌ','マカロン','どら焼き','大福','羊羹','饅頭','和菓子','詰め合わせ','スイーツ','ギフト'];
+  const SWEETS_TYPES = ['チーズケーキ','アイスクリーム','アイス','チョコレート','チョコ','プリン','ワッフル','クッキー','焼き菓子','バウムクーヘン','バウム','シュークリーム','タルト','カヌレ','マドレーヌ','マカロン','どら焼き','大福','羊羹','饅頭','和菓子','詰め合わせ','スイーツ','ゼリー','フルーツゼリー','お菓子'];
+
+  // 美容商品カテゴリキーワード（優先抽出用）
+  const BEAUTY_TYPES = ['美容液','化粧水','クリーム','乳液','シャンプー','トリートメント','コンディショナー','洗顔','日焼け止め','ヘアオイル','ヘアマスク','ファンデーション','リップ','アイクリーム','美容'];
 
   function cleanTitle(raw) {
     let t = (raw || '').trim();
     // 1. Strip Jina.ai prefix "Image 3: "
     t = t.replace(/^Image\s*\d+[:\s]+/i, '');
-    // 2. Remove ALL bracket/fence content
+    // 2. Remove ALL bracket/fence content (including ≪≫《》)
+    t = t.replace(/≪[^≫]{0,60}≫/g, '');
+    t = t.replace(/《[^》]{0,60}》/g, '');
     t = t.replace(/【[^】]*】/g, '');
     t = t.replace(/\[[^\]]*\]/g, '');
     t = t.replace(/＜[^＞]*＞/g, '');
@@ -43,17 +51,24 @@ export default async function handler(req, res) {
     t = t.replace(/^[^！]{0,80}！+\s*/g, '');
     // 4. Remove promotional patterns
     const promo = [
+      /本日\d+時まで[^\s]{0,10}/g, /楽天限定[^\s]{0,10}/g,
+      /20\d{2}年?\s*/g,
       /リピ続出中\S*/g, /話題\S*の/g, /大人気\S*/g,
       /楽天[^\s！]{0,15}(1位|ランキング|大賞|受賞|冠|獲得|優良)/g,
       /累計\S*/g, /送料無料\S*/g, /P\d+倍\S*/g,
       /クーポン[^\s]{0,15}/g, /今なら\S*/g, /先着\S*/g, /期間限定\S*/g,
       /\S+で(紹介|話題)\S*/g,
+      /[♪★☆♦♥♡✨🎁🔥💥👑⭐✅]/g,
       /\d+[\d,\.]*\s*(mAh|ml|kg|g|L|個入|個|枚|本|袋|錠|粒|冊|種類|円相当|円台)\S*/gi,
       /楽天市場[:：]\s*/ig, /\s*[｜|]\s*.*/g,
     ];
     promo.forEach(re => { t = t.replace(re, ''); });
-    // 5. Normalize punctuation to space
+    // 5. Normalize punctuation to space + letter normalization (M A C → MAC)
     t = t.replace(/[！!？?。、，・]\s*/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    t = t.replace(/\b([A-Za-z]) ([A-Za-z]) ([A-Za-z])\b/g, '$1$2$3');
+    t = t.replace(/\b([A-Za-z]) ([A-Za-z])\b/g, '$1$2');
+    // Remove trailing open brackets/punct
+    t = t.replace(/[（(「『【≪《,、。\s]+$/, '').trim();
 
     const NG_NAME = /ポイント|キャンペーン|バナー|クーポン|プレゼント|ギフトセット|お知らせ|楽天市場|ランキング|ベストコスメ|アワード|同梱|注文|配送|お届け|手続き|申し込み/;
     function trimSmart(s, max) {
@@ -70,13 +85,24 @@ export default async function handler(req, res) {
         const idx = t.indexOf(sweetsType);
         const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 12);
         const brand = before[before.length - 1] || '';
-        // ブランド名がある場合は「ブランド 商品タイプ」形式
         const result = brand ? `${brand} ${sweetsType}` : sweetsType;
         return trimSmart(result, 24);
       }
     }
 
-    // 7. カタカナのみ抽出をやめ、クリーニング後のテキストをそのまま使う
+    // 7. 美容枠専用: 商品カテゴリキーワードを優先抽出して「ブランド + カテゴリ」形式に
+    if (genre === '216131') {
+      const beautyType = BEAUTY_TYPES.find(w => t.includes(w));
+      if (beautyType) {
+        const idx = t.indexOf(beautyType);
+        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 14);
+        const brand = before[before.length - 1] || '';
+        const result = brand ? `${brand} ${beautyType}` : beautyType;
+        return trimSmart(result, 24);
+      }
+    }
+
+    // 8. クリーニング後のテキストをそのまま使う
     if (/で同梱|ご注文|お届け|手続き|を.*[申送配]/.test(t)) return '';
     const SKIP = new Set(['父の日','母の日','お中元','お歳暮','バレンタイン','ホワイトデー','ハロウィン','クリスマス','誕生日','ギフト','プレゼント','贈り物','セット']);
     const words = t.split(/\s+/).filter(w => w.length > 0);
@@ -130,6 +156,8 @@ export default async function handler(req, res) {
 
       // スイーツ枠でナッツ・健康食品系を除外
       if (genre === '410899' && SWEETS_EXCLUDE.test(rawTitle)) continue;
+      // ゆる健康枠でダイエット食品系への偏りを除外
+      if (genre === '100533' && HEALTH_OVERINDEX_EXCLUDE.test(rawTitle)) continue;
 
       const name = cleanTitle(rawTitle);
       if (!name || name.length < 3) continue;
