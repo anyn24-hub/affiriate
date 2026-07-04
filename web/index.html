@@ -763,7 +763,14 @@ async function drawCanvas(canvasId,dlBtnId,cat){
     name:getF(`name${i+1}`),
     url:getF(`url${i+1}`),
     imageUrl:getF(`imageUrl${i+1}`),
-  })).filter(p=>p.name||p.url);
+  })).filter(p=>p.name||p.url).reduce((acc,p)=>{
+    // 投稿文と同じ整形・バリデーションを適用
+    const displayName=isHighRate?trimHighRateName(p.name||''):p.name||'';
+    const checkCat=isHighRate?null:cat;
+    if(checkCat&&!isValidProductName(displayName,checkCat))return acc;
+    acc.push({...p,name:displayName});
+    return acc;
+  },[]);
   if(!prods.length){toast('先にSTEP2で商品を取得してください',true);return;}
 
   const productImgs=await Promise.all(prods.map(p=>loadImg(p.imageUrl)));
