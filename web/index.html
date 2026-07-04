@@ -284,6 +284,13 @@ function cleanProductName(raw) {
   t = t.replace(/SALE|セール|クリアランス|楽天限定|早割|お中元/gi, '');
   // アルファベット間スペース正規化（M A C → MAC）
   t = t.replace(/([A-Z])(?: ([A-Z]))+/g, m => m.replace(/ /g, ''));
+  // 英語ガジェット用語→日本語（バリデーション前に変換してカテゴリ語を確立）
+  t = t.replace(/\bPower\s*Bank\b/gi, 'モバイルバッテリー');
+  t = t.replace(/\bScreen\s*Protector\b/gi, 'ガラスフィルム');
+  t = t.replace(/\bPhone\s*Case\b/gi, 'スマホケース');
+  t = t.replace(/\bCharging\s*Cable\b/gi, '充電ケーブル');
+  t = t.replace(/\bWireless\s*Charger\b/gi, 'ワイヤレス充電器');
+  t = t.replace(/\bEarbuds?\b/gi, 'ワイヤレスイヤホン');
   // 末尾の開きカッコ・句読点を除去
   t = t.replace(/[（(「≪《,、。\s]+$/, '').trim();
   t = t.replace(/\s{2,}/g, ' ').trim();
@@ -580,10 +587,10 @@ async function parseAffHtml(){
     const t=a.textContent.trim().replace(/\s+/g,' ');
     if(t.length>rawName.length&&t.length>5&&!t.includes('楽天で購入')&&!t.includes('楽天市場'))rawName=t;
   });
-  let name=cleanTitle(rawName);
+  let name=cleanProductName(cleanTitle(rawName));
   // cleanTitleが空を返した場合は生の商品名を簡易クリーニングして使う
   if(!name&&rawName){
-    name=rawName.replace(/【[^】]*】/g,'').replace(/\[[^\]]*\]/g,'').replace(/\s{2,}/g,' ').trim().slice(0,28);
+    name=cleanProductName(rawName.replace(/【[^】]*】/g,'').replace(/\[[^\]]*\]/g,'').replace(/\s{2,}/g,' ').trim().slice(0,32));
   }
 
   // pc= パラメータから商品URLを取り出し、テキスト形式のアフィリエイトURLを再構築
