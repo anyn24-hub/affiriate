@@ -265,30 +265,72 @@ function detectHighRateCat(name) {
   if (/布団|枕|ベッド|シーツ|毛布|扇風機|暖房|加湿器|除湿|カーテン|マット|ラグ/.test(n)) return 'seasonal';
   return 'daily';
 }
-// 商品名バリデーション: 採用NGなら false
-function isValidProductName(name, cat) {
-  if (!name || name.length < 3) return false;
-  // 未閉じ括弧
-  if (/[（(]/.test(name) && !/[）)]/.test(name)) return false;
+// ═══ PRODUCT VALIDATION (3-step) ════════════════════════════
+
+// Step 1: 商品名クリーニング（記号・販促語・年号・プロモ文を除去）
+function cleanProductName(raw) {
+  let t = (raw || '').trim();
+  // 不要記号を除去（≪≫★♪【】[]含む）
+  t = t.replace(/[≪≫《》★♪♦♥♡✨🎁🔥💥👑⭐✅【】\[\]]/g, '');
+  t = t.replace(/[\u{1F300}-\u{1FFFF}]/gu, '');
+  // 日付・時間・セール文言を除去
+  t = t.replace(/本日\d*時まで[^\s]*/g, '');
+  t = t.replace(/\d+時まで[^\s]*/g, '');
+  t = t.replace(/早朝\d+時[^\s]*/g, '');
+  t = t.replace(/\d+%オフ|\d+%OFF/gi, '');
+  // 年号を除去
+  t = t.replace(/20[12]\d年?\s*/g, '');
+  // セール・プロモ語を除去
+  t = t.replace(/SALE|セール|クリアランス|楽天限定|早割|お中元/gi, '');
+  // アルファベット間スペース正規化（M A C → MAC）
+  t = t.replace(/([A-Z])(?: ([A-Z]))+/g, m => m.replace(/ /g, ''));
+  // 末尾の開きカッコ・句読点を除去
+  t = t.replace(/[（(「≪《,、。\s]+$/, '').trim();
+  t = t.replace(/\s{2,}/g, ' ').trim();
+  return t;
+}
+
+// Step 2: 最終バリデーション（クリーニング済み名前に対して判定）
+function validateProductForPost(name, cat) {
+  if (!name || name.length < 2) return false;
+  // 不要記号が残っている
+  if (/[≪≫★♪【】\[\]《》]/.test(name)) return false;
+  // 販促文・日付・時間・セールが残っている
+  if (/本日|時まで|早朝|%オフ|%OFF|SALE|セール|クリアランス|楽天限定|早割/i.test(name)) return false;
   // 年号先頭
   if (/^\d{4}/.test(name.trim())) return false;
-  // 記号残り
-  if (/[★♪≪≫《》]/.test(name)) return false;
-  // 販促文のみ
-  if (/^(お中元|本日\d|早割|楽天限定|SALE|特価|クリアランス|送料無料|最大\d|ポイント|クーポン)/.test(name.replace(/\s/g,''))) return false;
+  // 未閉じ括弧
+  if (/[（(]/.test(name) && !/[）)]/.test(name)) return false;
   // カテゴリ別ハード除外
   if (cat==='ガジェット' && /スマートフォン本体|タブレット本体|SIMフリー[^\s]{0,10}本体/.test(name)) return false;
   if (cat==='美容' && /美顔器|美容機器|リフトアップ|ナノアクション/.test(name)) return false;
   // カテゴリ別必須キーワード
-  const CAT_REQUIRED = {
+  const CAT_KEYWORDS = {
     'ガジェット': /ケース|フィルム|充電器|ケーブル|バッテリー|スタンド|カバー|保護|ハブ|イヤホン|ヘッドホン|ルーター|マウス|キーボード|USB|モバイルバッテリー/,
-    'スイーツ': /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
-    '美容': /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア/,
-    'ゆる健康': /炭酸水|ナッツ|入浴剤|アイマスク|お茶|プロテイン|サプリ|ビタミン|マルチ|ストレッチ|乳酸菌|酵素|食物繊維|ヨーグルト|ノンカフェイン|グルコサミン/,
+    'スイーツ':   /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
+    '美容':       /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア|アイブロウ/,
+    'ゆる健康':   /炭酸水|ナッツ|入浴剤|アイマスク|お茶|プロテイン|サプリ|ビタミン|マルチ|ストレッチ|乳酸菌|酵素|食物繊維|ヨーグルト|ノンカフェイン|グルコサミン/,
   };
-  const req = CAT_REQUIRED[cat];
-  if (req && !req.test(name)) return false;
+  const kw = CAT_KEYWORDS[cat];
+  if (kw && !kw.test(name)) return false;
   return true;
+}
+
+// Step 3: 最終投稿テキストに対するNGパターンチェック
+const FINAL_POST_NG = [
+  /[≪≫★♪【】]/,
+  /本日\d*時まで|時まで|早朝\d/,
+  /\d+%オフ|\d+%OFF/i,
+  /クリアランスバッグ/,
+  /高料率|料率[^比]|報酬率|収益化|稼げる/,
+];
+function validateFinalPost(text) {
+  return FINAL_POST_NG.every(re => !re.test(text));
+}
+
+// 後方互換のエイリアス（drawCanvas等から呼ばれている）
+function isValidProductName(name, cat) {
+  return validateProductForPost(cleanProductName(name), cat);
 }
 
 const NG_WORDS=['食べた','使ってみた','美味しかった','最高だった','リピ確定','絶対おすすめ','効果あり','痩せる','治る','肌が変わる','若返る','疲労回復','睡眠改善','血糖値','改善する','治療','効く','爆売れ','買うべき','必須','間違いない','絶対','確実','必ず','激安','格安','最安値','断言','保証する','副作用なし','奇跡','魔法のような','ダイエット効果','医師推薦','薬機法','高料率','料率','報酬率','アフィリエイト報酬','成果報酬','稼げる','収益化','利益'];
@@ -388,8 +430,13 @@ async function autoGenerate(){
       const key=(it.name||'').replace(/[\s　]/g,'').toLowerCase();
       if(!key||seenNames.has(key))return false;
       seenNames.add(key);
-      return isValidProductName(it.name, cat);
+      // cleanProductName → validateProductForPost の2段階チェック
+      const cleaned=cleanProductName(it.name);
+      return validateProductForPost(cleaned, cat);
     });
+    if(!allItems.length){
+      throw new Error('有効な商品が見つかりませんでした（NG商品名のため除外）');
+    }
 
     // Fisher-Yatesシャッフル（毎回異なる順序で選出）
     function shuffle(arr){
@@ -440,6 +487,12 @@ async function autoGenerate(){
     btn.innerHTML='<span class="spinner"></span> 投稿文を生成中…';
     await new Promise(r=>setTimeout(r,100));
     const post=buildPostText(cat,'');
+    if(!post){
+      status.textContent='⚠️ NG商品名が含まれているため投稿候補から除外しました。再取得してください';
+      status.style.color='var(--red)';
+      btn.disabled=false;btn.innerHTML='投稿を生成';
+      return;
+    }
     document.getElementById('autoPostBox').textContent=post;
     document.getElementById('autoPostSection').style.display='block';
     updateAutoCounter(post);runAutoNGCheck(post);
@@ -659,36 +712,40 @@ function buildPostText(cat, extra){
   const nums=['①','②','③'];
   let slotIdx=0;
   const lines=prods.map((p)=>{
-    const rawName=p.name||'';
-    const name=isHighRate?trimHighRateName(rawName):rawName;
-    const checkCat=isHighRate?null:cat;
-    if(checkCat&&!isValidProductName(name,checkCat)){
-      return null; // NG商品はスキップ
-    }
+    // Step1: クリーニング
+    const cleaned=cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');
+    // Step2: バリデーション（高料率は猫なし、通常カテゴリは必須キーワードチェック）
+    if(!isHighRate&&!validateProductForPost(cleaned,cat))return null;
+    if(isHighRate&&!cleaned)return null;
     const num=nums[slotIdx++];
     const comment=comments[slotIdx-1]||'';
-    const nameLine=`${num} ${name||'（商品名未入力）'}${comment?sep+comment:''}`;
+    const nameLine=`${num} ${cleaned||'（商品名未入力）'}${comment?sep+comment:''}`;
     return `${nameLine}\n${p.url||'（URL未入力）'}`;
   }).filter(Boolean).join('\n');
   if(!lines)return null;
   let post=`${intro}\n\n${lines}`;
   if(extra)post+=`\n\n${extra}`;
   post+=tag;
-  const result=autoNG(post);
+  let result=autoNG(post);
+  // Step3: 最終投稿テキスト全体のNGパターンチェック
+  if(!validateFinalPost(result)){
+    return null; // NGが残っていれば投稿を出さない
+  }
   // 280字超の場合はコメントを省略して再構築
   if(xchars(result)>280){
     let si2=0;
     const linesShort=prods.map((p)=>{
-      const rawName=p.name||'';
-      const name=isHighRate?trimHighRateName(rawName):rawName;
-      const checkCat=isHighRate?null:cat;
-      if(checkCat&&!isValidProductName(name,checkCat))return null;
-      return `${nums[si2++]} ${name}\n${p.url||'（URL未入力）'}`;
+      const cleaned=cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');
+      if(!isHighRate&&!validateProductForPost(cleaned,cat))return null;
+      if(isHighRate&&!cleaned)return null;
+      return `${nums[si2++]} ${cleaned}\n${p.url||'（URL未入力）'}`;
     }).filter(Boolean).join('\n');
+    if(!linesShort)return null;
     let postShort=`${intro}\n\n${linesShort}`;
     if(extra)postShort+=`\n\n${extra}`;
     postShort+=tag;
-    return autoNG(postShort);
+    result=autoNG(postShort);
+    if(!validateFinalPost(result))return null;
   }
   return result;
 }
@@ -698,7 +755,7 @@ function generatePost(){
   const extraEl=document.getElementById('extraNote');
   const extra=extraEl?extraEl.value.trim():'';
   const post=buildPostText(cat,extra);
-  if(!post){toast('先にSTEP2で商品を取得してください',true);return;}
+  if(!post){toast('NG商品名が含まれているため投稿候補から除外しました。別商品を選び直してください。',true);return;}
 
   // 高料率: 既出チェック
   const url1=getF('url1');
@@ -765,9 +822,10 @@ async function drawCanvas(canvasId,dlBtnId,cat){
     imageUrl:getF(`imageUrl${i+1}`),
   })).filter(p=>p.name||p.url).reduce((acc,p)=>{
     // 投稿文と同じ整形・バリデーションを適用
-    const displayName=isHighRate?trimHighRateName(p.name||''):p.name||'';
+    const displayName=cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');
     const checkCat=isHighRate?null:cat;
-    if(checkCat&&!isValidProductName(displayName,checkCat))return acc;
+    if(checkCat&&!validateProductForPost(displayName,checkCat))return acc;
+    if(isHighRate&&!displayName)return acc;
     acc.push({...p,name:displayName});
     return acc;
   },[]);
