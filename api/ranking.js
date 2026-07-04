@@ -21,11 +21,17 @@ export default async function handler(req, res) {
     return `https://hb.afl.rakuten.co.jp/ichiba/${affId}/?pc=${encodeURIComponent(itemUrl)}&link_type=text`;
   }
 
+  // スイーツ枠で除外するキーワード（ナッツ・健康食品・おつまみ系）
+  const SWEETS_EXCLUDE = /ミックスナッツ|アーモンド|カシューナッツ|くるみ|ピスタチオ|マカダミア|ナッツ[^ケ]|おつまみ|珍味|ジャーキー|グラノーラ|プロテイン|サプリ|青汁|コラーゲン|ドライフルーツのみ/;
+
+  // スイーツ商品カテゴリキーワード（優先抽出用）
+  const SWEETS_TYPES = ['チーズケーキ','アイスクリーム','アイス','チョコレート','チョコ','プリン','ワッフル','クッキー','焼き菓子','バウムクーヘン','バウム','シュークリーム','タルト','カヌレ','マドレーヌ','マカロン','どら焼き','大福','羊羹','饅頭','和菓子','詰め合わせ','スイーツ','ギフト'];
+
   function cleanTitle(raw) {
     let t = (raw || '').trim();
     // 1. Strip Jina.ai prefix "Image 3: "
     t = t.replace(/^Image\s*\d+[:\s]+/i, '');
-    // 2. Remove ALL bracket/fence content (must be before ！ split)
+    // 2. Remove ALL bracket/fence content
     t = t.replace(/【[^】]*】/g, '');
     t = t.replace(/\[[^\]]*\]/g, '');
     t = t.replace(/＜[^＞]*＞/g, '');
@@ -33,42 +39,44 @@ export default async function handler(req, res) {
     t = t.replace(/＼[^/／]*[/／]/g, '');
     t = t.replace(/「[^」]{0,30}」/g, '');
     t = t.replace(/（[^）]{0,60}）/g, '');
-    // 3. Remove everything up to (and including) the first ！ — promotional text precedes ！
+    // 3. Remove everything up to (and including) the first ！
     t = t.replace(/^[^！]{0,80}！+\s*/g, '');
-    // 4. Remove remaining promotional patterns
+    // 4. Remove promotional patterns
     const promo = [
       /リピ続出中\S*/g, /話題\S*の/g, /大人気\S*/g,
       /楽天[^\s！]{0,15}(1位|ランキング|大賞|受賞|冠|獲得|優良)/g,
-      /累計\S*/g,                        // 累計〇〇突破 → 全削除
-      /送料無料\S*/g, /P\d+倍\S*/g,
-      /クーポン[^\s]{0,15}/g,
-      /今なら\S*/g, /先着\S*/g, /期間限定\S*/g,
+      /累計\S*/g, /送料無料\S*/g, /P\d+倍\S*/g,
+      /クーポン[^\s]{0,15}/g, /今なら\S*/g, /先着\S*/g, /期間限定\S*/g,
       /\S+で(紹介|話題)\S*/g,
       /\d+[\d,\.]*\s*(mAh|ml|kg|g|L|個入|個|枚|本|袋|錠|粒|冊|種類|円相当|円台)\S*/gi,
-      /楽天市場[:：]\s*/ig,
-      /\s*[｜|]\s*.*/g,
+      /楽天市場[:：]\s*/ig, /\s*[｜|]\s*.*/g,
     ];
     promo.forEach(re => { t = t.replace(re, ''); });
     // 5. Normalize punctuation to space
     t = t.replace(/[！!？?。、，・]\s*/g, ' ').replace(/\s{2,}/g, ' ').trim();
-    // 6. 非商品名フィルター（共通・カタカナ抽出前後どちらにも適用）
+
     const NG_NAME = /ポイント|キャンペーン|バナー|クーポン|プレゼント|ギフトセット|お知らせ|楽天市場|ランキング|ベストコスメ|アワード|同梱|注文|配送|お届け|手続き|申し込み/;
-    // ワード境界を考慮した文字数制限（途中で切らない）
     function trimSmart(s, max) {
       if (s.length <= max) return s;
       const cut = s.slice(0, max);
       const lastSp = cut.lastIndexOf(' ');
       return (lastSp > max * 0.5 ? cut.slice(0, lastSp) : cut).trim();
     }
-    // First katakana run ≥5 chars = product category noun
-    const kataMatch = t.match(/[ァ-ヶー]{5,}/);
-    if (kataMatch) {
-      const kata = trimSmart(kataMatch[0], 24);
-      if (NG_NAME.test(kata)) return '';
-      return kata;
+
+    // 6. スイーツ枠専用: 商品カテゴリキーワードを優先抽出して「ブランド + カテゴリ」形式に
+    if (genre === '410899') {
+      const sweetsType = SWEETS_TYPES.find(w => t.includes(w));
+      if (sweetsType) {
+        const idx = t.indexOf(sweetsType);
+        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 12);
+        const brand = before[before.length - 1] || '';
+        // ブランド名がある場合は「ブランド 商品タイプ」形式
+        const result = brand ? `${brand} ${sweetsType}` : sweetsType;
+        return trimSmart(result, 24);
+      }
     }
-    // 7. Fallback: skip leading occasion/brand-like words, take first noun phrase
-    // 注文・説明文の文型（〜で同梱, 〜をご注文 等）は商品名ではない
+
+    // 7. カタカナのみ抽出をやめ、クリーニング後のテキストをそのまま使う
     if (/で同梱|ご注文|お届け|手続き|を.*[申送配]/.test(t)) return '';
     const SKIP = new Set(['父の日','母の日','お中元','お歳暮','バレンタイン','ホワイトデー','ハロウィン','クリスマス','誕生日','ギフト','プレゼント','贈り物','セット']);
     const words = t.split(/\s+/).filter(w => w.length > 0);
@@ -80,7 +88,6 @@ export default async function handler(req, res) {
       else break;
     }
     result = trimSmart(result, 24);
-    // 8. 完全一致・部分一致で非商品名を除外
     const NOT_PRODUCT = /^(キャンペーン|ポイント|バナー|広告|お知らせ|ランキング|楽天市場|楽天|プレゼント|ギフト|ベストコスメ|アワード|campaign|banner|point|PR|Image|sale|SALE|TOP|top)$/i;
     if (NOT_PRODUCT.test(result.replace(/\s/g, ''))) return '';
     if (NG_NAME.test(result)) return '';
@@ -120,6 +127,9 @@ export default async function handler(req, res) {
       const shopMatch = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
       const shop = shopMatch ? shopMatch[1].toLowerCase() : '';
       if (shop && seenShops.has(shop)) continue;
+
+      // スイーツ枠でナッツ・健康食品系を除外
+      if (genre === '410899' && SWEETS_EXCLUDE.test(rawTitle)) continue;
 
       const name = cleanTitle(rawTitle);
       if (!name || name.length < 3) continue;
