@@ -66,43 +66,6 @@ export default async function handler(req, res) {
     return t;
   }
 
-  // 商品ページから完全な商品名を取得（「…」で切れている場合のみ）
-  async function fetchFullName(itemUrl) {
-    try {
-      // URL の妥当性チェック（不正なURLでfetchが例外を投げないよう）
-      new URL(itemUrl);
-      const safeUrl = `https://r.jina.ai/${encodeURI(itemUrl)}`;
-      const r = await fetch(safeUrl, {
-        headers: { 'Accept': 'text/plain', 'X-No-Cache': 'true' },
-        signal: AbortSignal.timeout(5000),
-      });
-      if (!r.ok) return null;
-      const text = await r.text();
-      const lines = text.split('\n');
-      for (const line of lines) {
-        const m = line.match(/^Title:\s*(.+)/i);
-        if (m) {
-          let title = m[1].trim();
-          // 「商品名 | ショップ名 | 楽天市場」の形式からショップ名以降を除去
-          title = title.replace(/\s*[|\|｜]\s*.{1,30}楽天市場.*$/i, '').trim();
-          title = title.replace(/\s*[|\|｜].*$/, '').trim();
-          const cleaned = cleanTitle(title);
-          if (cleaned && cleaned.length > 5 && !cleaned.includes('…')) return cleaned;
-        }
-      }
-      for (const line of lines) {
-        const m = line.match(/^#\s+(.+)/);
-        if (m) {
-          const cleaned = cleanTitle(m[1]);
-          if (cleaned && cleaned.length > 5 && !cleaned.includes('…')) return cleaned;
-        }
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-
   // ランキングページから商品を収集する共通処理
   function parseRankingText(text, genreId) {
     // テキストリンク [商品名](url) から完全名を収集（altより長い場合に優先）
@@ -190,14 +153,6 @@ export default async function handler(req, res) {
       if (!r.ok) throw new Error(`Jina ${r.status}`);
       const text = await r.text();
       const items = parseRankingText(text, '566870');
-      try {
-        for (const item of items) {
-          if (/[…]$|\.{3}$/.test(item.name)) {
-            const full = await fetchFullName(item.itemUrl);
-            if (full) item.name = full;
-          }
-        }
-      } catch (_) { /* ループエラーは無視して取得済みアイテムを返す */ }
       if (items.length >= 1) return res.status(200).json({ items, _src: 'furusato' });
     } catch (e) {
       // fall through
@@ -214,14 +169,6 @@ export default async function handler(req, res) {
     if (!r.ok) throw new Error(`Jina ${r.status}`);
     const text = await r.text();
     const items = parseRankingText(text, genre);
-    try {
-      for (const item of items) {
-        if (/[…]$|\.{3}$/.test(item.name)) {
-          const full = await fetchFullName(item.itemUrl);
-          if (full) item.name = full;
-        }
-      }
-    } catch (_) { /* ループエラーは無視して取得済みアイテムを返す */ }
     if (items.length >= 1) return res.status(200).json({ items, _src: 'jina' });
   } catch (e) {
     // fall through to static pool
