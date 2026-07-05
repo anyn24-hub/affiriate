@@ -5,9 +5,6 @@ export default async function handler(req, res) {
   const { url } = req.query;
   if (!url) return res.status(200).json({ name: null });
 
-  // デバッグ: 常にダミー名を返して endpoint が呼ばれているか確認
-  return res.status(200).json({ name: 'ENDPOINT_OK:' + url.slice(0, 40) });
-
   try {
     const r = await fetch(url, {
       headers: {
