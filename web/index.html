@@ -110,11 +110,16 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
     <!-- 自動取得カテゴリ（スイーツ/ガジェット/美容/ゆる健康） -->
     <div id="autoFetchArea" style="margin-top:4px">
-      <button class="btn btn-pink btn-full" onclick="autoGenerate()" id="autoFetchBtn" style="font-size:16px;padding:15px">⚡ 1クリック全自動生成</button>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:5px">商品取得 → 投稿文 → 画像　すべて自動</div>
+      <button class="btn btn-pink btn-full" onclick="autoGenerate()" id="autoFetchBtn" style="font-size:16px;padding:15px">⚡ 商品を取得する</button>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:5px">楽天ランキングから3商品を自動取得</div>
       <div id="autoFetchStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
       <div id="autoResultArea" style="display:none;margin-top:10px"></div>
-      <!-- 投稿文 + 画像（自動生成後に表示） -->
+      <!-- 確認 → 生成ボタン -->
+      <div id="autoConfirmArea" style="display:none;margin-top:12px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center">商品名を確認・修正してから生成してください</div>
+        <button class="btn btn-purple btn-full" onclick="confirmAndGenerate()" id="autoConfirmBtn" style="font-size:15px;padding:14px">✅ この商品で投稿文・画像を生成</button>
+      </div>
+      <!-- 投稿文 + 画像（確認後に表示） -->
       <div id="autoPostSection" style="display:none;margin-top:4px">
         <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:10px">
           <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">📝 投稿文</div>
@@ -266,6 +271,7 @@ function onCatChange(){
   document.getElementById('highRateArea').style.display=isAuto?'none':'block';
   document.getElementById('sec3').style.display=isAuto?'none':'block';
   document.getElementById('autoResultArea').style.display='none';
+  document.getElementById('autoConfirmArea').style.display='none';
   document.getElementById('autoPostSection').style.display='none';
   document.getElementById('autoFetchStatus').textContent='';
   document.getElementById('parseResult').innerHTML='';
@@ -417,52 +423,102 @@ async function autoGenerate(){
     selectedSubcats.forEach(s => { subcatCounts[s] = (subcatCounts[s]||0)+1; });
     const dupSubcats = Object.entries(subcatCounts).filter(([s,c]) => s!=='other' && c>1);
     const weakItems = items.filter(it => isWeakPostName(it.name||'', cat));
+    const SUBCAT_LABEL={'choco':'チョコ','ice':'アイス','pudding':'プリン','cheesecake':'チーズケーキ',
+      'baked':'焼き菓子','wagashi':'和菓子','jelly':'ゼリー','case':'スマホケース','film':'保護フィルム',
+      'charger':'充電器','cable':'ケーブル','battery':'バッテリー','stand':'スタンド',
+      'earphone':'イヤホン','foundation':'ファンデ','lip':'リップ','hair':'ヘアケア',
+      'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤'};
     if(dupSubcats.length>0){
-      const label={'choco':'チョコ','ice':'アイス','pudding':'プリン','cheesecake':'チーズケーキ',
-        'baked':'焼き菓子','wagashi':'和菓子','jelly':'ゼリー','case':'スマホケース','film':'保護フィルム',
-        'charger':'充電器','cable':'ケーブル','battery':'バッテリー','stand':'スタンド',
-        'earphone':'イヤホン','foundation':'ファンデ','lip':'リップ','hair':'ヘアケア',
-        'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤'};
-      const dupNames=dupSubcats.map(([s])=>label[s]||s).join('・');
-      const warnEl=document.getElementById('autoFetchStatus');
-      warnEl.textContent=`⚠️ 同じ種類が重複（${dupNames}）。投稿用商品名を修正するか再生成してください`;
-      warnEl.style.color='var(--red)';
+      const dupNames=dupSubcats.map(([s])=>SUBCAT_LABEL[s]||s).join('・');
+      status.textContent=`⚠️ 同じ種類が重複（${dupNames}）。商品名を修正してから生成してください`;
+      status.style.color='var(--red)';
     } else if(weakItems.length>0){
-      status.textContent=`⚠️ ${weakItems.length}件の商品名が弱い→上の赤枠欄にブランド名を追加してください`;
+      status.textContent=`⚠️ ${weakItems.length}件の商品名が弱い — 赤枠の欄にブランド名を追加してから生成してください`;
       status.style.color='var(--gold)';
+    } else {
+      status.textContent='✅ 3商品を取得しました。商品名を確認して「投稿文・画像を生成」を押してください';
+      status.style.color='var(--green)';
     }
 
-    // Step 2: 投稿文生成（auto用要素へ）
-    btn.innerHTML='<span class="spinner"></span> 投稿文を生成中…';
-    await new Promise(r=>setTimeout(r,100));
-    const post=buildPostText(cat,'');
-    document.getElementById('autoPostBox').textContent=post;
-    document.getElementById('autoPostSection').style.display='block';
-    updateAutoCounter(post);
-    // NG + 弱い商品名を両方チェック
-    const weakAfter=items.filter(it=>isWeakPostName(it.name||'',cat));
-    const ngBox=document.getElementById('autoNgBox');
-    const ngFound=NG_WORDS.filter(w=>(post||'').includes(w));
-    const warnings=[];
-    if(ngFound.length)warnings.push(`🚫 NGワード: ${ngFound.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`);
-    if(weakAfter.length)warnings.push(`⚠️ 商品名が弱い（${weakAfter.length}件）— 上の赤枠欄にブランド名+カテゴリを入力してから再生成してください`);
-    if(warnings.length){ngBox.className='ng-box show ng-warn';ngBox.innerHTML=warnings.join('<br>');}
-    else{ngBox.className='ng-box show ng-ok';ngBox.textContent='✅ NGワードなし・商品名OK';}
-    currentHistId=Date.now();
-    const itemUrls=items.map(it=>it.itemUrl||it.url||'');
-    saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString(),itemUrls});
-    status.textContent='✅ 投稿文生成完了 → 画像を生成中…';
-
-    // Step 3: 画像生成（autoCanvas へ）
-    btn.innerHTML='<span class="spinner"></span> 画像を生成中…';
-    await new Promise(r=>setTimeout(r,100));
-    await drawCanvas('autoCanvas','autoDlBtn',cat);
-    status.textContent=`✅ 完成！コピーして投稿してください`;
+    // 確認ボタンを表示、投稿セクションを隠す
+    document.getElementById('autoPostSection').style.display='none';
+    document.getElementById('autoConfirmArea').style.display='block';
 
   }catch(e){
     status.textContent='❌ '+e.message;status.style.color='var(--red)';
   }finally{
-    btn.disabled=false;btn.innerHTML='⚡ 1クリック全自動生成';
+    btn.disabled=false;btn.innerHTML='⚡ 商品を取得する';
+  }
+}
+
+// 確認後：投稿文 + 画像を生成
+async function confirmAndGenerate(){
+  const cat=document.getElementById('catSel').value;
+  const btn=document.getElementById('autoConfirmBtn');
+  const status=document.getElementById('autoFetchStatus');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> 生成中…';
+  try{
+    await new Promise(r=>setTimeout(r,80));
+
+    // 現在の商品名でサブカテゴリ重複・弱い名前を再チェック
+    const names=[getF('name1'),getF('name2'),getF('name3')].filter(Boolean);
+    const dupCheck={};
+    names.forEach(n=>{const s=detectSubcat(cat,n);if(s!=='other')dupCheck[s]=(dupCheck[s]||0)+1;});
+    const dups=Object.entries(dupCheck).filter(([s,c])=>c>1);
+    const SUBCAT_LABEL={'choco':'チョコ','ice':'アイス','pudding':'プリン','cheesecake':'チーズケーキ',
+      'baked':'焼き菓子','wagashi':'和菓子','jelly':'ゼリー','case':'スマホケース','film':'保護フィルム',
+      'charger':'充電器','cable':'ケーブル','battery':'バッテリー','stand':'スタンド',
+      'earphone':'イヤホン','foundation':'ファンデ','lip':'リップ','hair':'ヘアケア',
+      'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤'};
+    if(dups.length>0){
+      const dupNames=dups.map(([s])=>SUBCAT_LABEL[s]||s).join('・');
+      if(!confirm(`「${dupNames}」が重複しています。このまま生成しますか？\n（キャンセルして商品名を修正することもできます）`)){
+        btn.disabled=false;btn.innerHTML='✅ この商品で投稿文・画像を生成';
+        return;
+      }
+    }
+
+    // Step 2: 投稿文生成
+    const post=buildPostText(cat,'');
+    if(!post){
+      status.textContent='⚠️ 投稿文を生成できませんでした。商品名を確認してください';
+      status.style.color='var(--red)';
+      btn.disabled=false;btn.innerHTML='✅ この商品で投稿文・画像を生成';
+      return;
+    }
+    document.getElementById('autoPostBox').textContent=post;
+    document.getElementById('autoPostSection').style.display='block';
+    updateAutoCounter(post);
+
+    // NG + 弱い商品名チェック
+    const ngBox=document.getElementById('autoNgBox');
+    const ngFound=NG_WORDS.filter(w=>(post||'').includes(w));
+    const weakAfter=names.filter(n=>isWeakPostName(n,cat));
+    const warnings=[];
+    if(ngFound.length)warnings.push(`🚫 NGワード: ${ngFound.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`);
+    if(weakAfter.length)warnings.push(`⚠️ 商品名が弱い（${weakAfter.length}件）— 投稿用商品名を修正してください`);
+    if(warnings.length){ngBox.className='ng-box show ng-warn';ngBox.innerHTML=warnings.join('<br>');}
+    else{ngBox.className='ng-box show ng-ok';ngBox.textContent='✅ NGワードなし・商品名OK';}
+
+    currentHistId=Date.now();
+    const itemUrls=[getF('url1'),getF('url2'),getF('url3')].filter(Boolean);
+    saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString(),itemUrls});
+    status.textContent='✅ 投稿文生成完了 → 画像を生成中…';status.style.color='var(--green)';
+
+    // Step 3: 画像生成
+    btn.innerHTML='<span class="spinner"></span> 画像を生成中…';
+    await new Promise(r=>setTimeout(r,80));
+    await drawCanvas('autoCanvas','autoDlBtn',cat);
+    status.textContent='✅ 完成！投稿文をコピーして投稿してください';
+
+    // 投稿文エリアまでスクロール
+    document.getElementById('autoPostSection').scrollIntoView({behavior:'smooth',block:'start'});
+
+  }catch(e){
+    status.textContent='❌ '+e.message;status.style.color='var(--red)';
+  }finally{
+    btn.disabled=false;btn.innerHTML='✅ この商品で投稿文・画像を生成';
   }
 }
 
