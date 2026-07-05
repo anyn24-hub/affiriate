@@ -400,14 +400,6 @@ async function fetchRankingItems(genre){
   if(data._error)throw new Error(data._error);
   const items=data.items||[];
   if(!items.length)throw new Error('商品を取得できませんでした');
-  // 商品名を個別ページから補完（上位4件・条件なしで常に実行）
-  for(const item of items.slice(0,4)){
-    try{
-      const fr=await fetch(`/api/fullname?url=${encodeURIComponent(item.itemUrl)}`);
-      const fd=await fr.json();
-      if(fd.name)item.name=fd.name;
-    }catch(_){}
-  }
   return items;
 }
 
