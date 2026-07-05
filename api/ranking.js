@@ -9,7 +9,8 @@ export default async function handler(req, res) {
     '410899': '551167', // スイーツ・お菓子
     '100044': '564500', // スマートフォン・タブレット（ガジェット）
     '216131': '100939', // 美容・コスメ・香水
-    '100533': '100938', // ダイエット・健康
+    '100533': '100938', // ダイエット・健康（非表示・バックエンドのみ）
+    '566870': '566870', // ふるさと納税
   };
 
   const rankingId = GENRE_RANKING_ID[genre];
@@ -33,6 +34,7 @@ export default async function handler(req, res) {
     '410899': /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
     '216131': /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア/,
     '100533': /炭酸水|ナッツ|入浴剤|アイマスク|お茶|プロテイン|サプリ|ビタミン|マルチ|ストレッチ|乳酸菌|酵素|食物繊維|ヨーグルト|ノンカフェイン|グルコサミン|コエンザイム/,
+    '566870': /米|肉|牛|豚|鶏|魚|海老|カニ|ホタテ|イクラ|鮭|サーモン|フルーツ|みかん|りんご|苺|いちご|桃|メロン|スイーツ|お菓子|菓子|洗剤|ティッシュ/,
   };
 
   // ジャンル別: この語が入っていたら除外
@@ -56,6 +58,9 @@ export default async function handler(req, res) {
 
   // スイーツ商品カテゴリキーワード（優先抽出用）
   const SWEETS_TYPES = ['チーズケーキ','アイスクリーム','アイス','チョコレート','チョコ','プリン','ワッフル','クッキー','焼き菓子','バウムクーヘン','バウム','シュークリーム','タルト','カヌレ','マドレーヌ','マカロン','どら焼き','大福','羊羹','饅頭','和菓子','詰め合わせ','スイーツ','ゼリー','フルーツゼリー','お菓子'];
+
+  // ふるさと納税 商品キーワード（産地名付きで保持するため短い語を優先）
+  const FURUSATO_TYPES = ['ホタテ','イクラ','カニ','海老','えび','鮭','サーモン','牛肉','豚肉','鶏肉','ステーキ','焼き肉','白米','玄米','みかん','りんご','いちご','苺','メロン','桃','ぶどう','フルーツ'];
 
   // 美容商品カテゴリキーワード（優先抽出用）
   const BEAUTY_TYPES = ['美容液','化粧水','クリーム','乳液','シャンプー','トリートメント','コンディショナー','洗顔','日焼け止め','ヘアオイル','ヘアマスク','ファンデーション','リップ','アイクリーム','ヘアケアセット','スキンケアセット','ヘアケア','スキンケア','美容'];
@@ -133,6 +138,18 @@ export default async function handler(req, res) {
         const brand = extractBrand(before);
         return trimSmart(brand ? `${brand} ${beautyType}` : beautyType, 24);
       }
+    }
+
+    // 8b. ふるさと納税枠専用: 「産地名 + 商品名」形式で保持（ブランドなし）
+    if (genre === '566870') {
+      const furusatoType = FURUSATO_TYPES.find(w => t.includes(w));
+      if (furusatoType) {
+        const idx = t.indexOf(furusatoType);
+        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 10);
+        const origin = before[0] || '';
+        return trimSmart(origin ? `${origin} ${furusatoType}` : furusatoType, 24);
+      }
+      return trimSmart(t, 24);
     }
 
     // 8. ガジェット枠専用: 「ブランド + カテゴリ」形式に
@@ -252,6 +269,11 @@ export default async function handler(req, res) {
       { url: 'https://item.rakuten.co.jp/dhcshop-2/8000002144/', title: 'DHC マルチビタミン 徳用90日分', image: 'https://shop.r10s.jp/dhcshop-2/cabinet/pic/8000002144.jpg' },
       { url: 'https://item.rakuten.co.jp/dhcshop-2/8000002221/', title: 'DHC 濃縮紅麹 30日分', image: 'https://shop.r10s.jp/gold/dhcshop-2/pic/8000002221.jpg' },
       { url: 'https://item.rakuten.co.jp/kenkocom/10098/', title: 'ビタミンC タケダ 300錠', image: 'https://shop.r10s.jp/kenkocom/cabinet/098/10098.jpg' },
+    ],
+    '566870': [
+      { url: 'https://item.rakuten.co.jp/f251210-higashimatsushima/hokkaido-hotate/', title: '北海道産 ホタテ', image: '' },
+      { url: 'https://item.rakuten.co.jp/f012090-maibara/omi-beef-set/', title: '近江牛 ステーキ', image: '' },
+      { url: 'https://item.rakuten.co.jp/f014020-ureshino/ureshino-premium/', title: '嬉野産 白米', image: '' },
     ],
   };
 

@@ -90,7 +90,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <option value="ガジェット">📱 ガジェット</option>
         <option value="スイーツ">🍰 スイーツ</option>
         <option value="美容">💄 美容</option>
-        <option value="ゆる健康">🌿 ゆる健康</option>
+        <option value="ふるさと納税">🎁 ふるさと納税</option>
         <option value="高料率①">💰 高料率①</option>
         <option value="高料率②">💎 高料率②</option>
       </select>
@@ -212,23 +212,23 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
 <script>
 // ═══ CONSTANTS ════════════════════════════════════════════════
-const RANK_AUTO_CATS = ['スイーツ','ガジェット','美容','ゆる健康'];
-const CAT_GENRE = {'スイーツ':'410899','ガジェット':'100044','美容':'216131','ゆる健康':'100533'};
+const RANK_AUTO_CATS = ['ガジェット','スイーツ','美容','ふるさと納税'];
+const CAT_GENRE = {'スイーツ':'410899','ガジェット':'100044','美容':'216131','ふるさと納税':'566870'};
 const CAT_TIME = {
-  'ガジェット': '⏰ 平日・土日: 6:00 / 9:00',
-  'スイーツ':   '⏰ 平日・土日: 12:00 / 13:00',
-  '美容':       '⏰ 平日・土日: 18:00',
-  'ゆる健康':   '⏰ 平日・土日: 21:00',
-  '高料率①':   '⏰ 平日・土日: 9:00 / 11:00',
-  '高料率②':   '⏰ 平日・土日: 15:00',
+  'ガジェット':   '⏰ 07:00',
+  'スイーツ':     '⏰ 12:00',
+  '高料率①':     '⏰ 15:00',
+  '美容':         '⏰ 18:00',
+  'ふるさと納税': '⏰ 20:00',
+  '高料率②':     '⏰ 22:00',
 };
 const INTRO = {
-  'スイーツ':  '甘いものを少し楽しみたい人向け。\n\n自分用にもギフトにも良さそうなスイーツを3つ選びました。',
-  'ガジェット':'スマホまわりを整えたい人向け。\n\nケース・フィルム・充電まわりで、使いやすそうなものを3つ選びました。',
-  '美容':      '清潔感を整えたい人向け。\n\nスキンケア・ヘアケア・リップまわりで、毎日使いやすそうなものを3つ選びました。',
-  'ゆる健康':  'ゆるく健康を気にしたい人向け。\n\n無理なく続けやすそうな、日常に取り入れやすいものを3つ選びました。',
-  '高料率①':  '買い回りついでにチェックしたい、気になるアイテム。\n\nレビュー・価格を見て選びました。',
-  '高料率②':  '買い回りついでにチェックしたい、気になるアイテム。\n\nレビュー・価格を見て選びました。',
+  'スイーツ':     '甘いものを少し楽しみたい人向け。\n\n自分用にもギフトにも良さそうなスイーツを3つ選びました。',
+  'ガジェット':   'スマホまわりを整えたい人向け。\n\nケース・フィルム・充電まわりで、使いやすそうなものを3つ選びました。',
+  '美容':         '清潔感を整えたい人向け。\n\nスキンケア・ヘアケア・リップまわりで、毎日使いやすそうなものを3つ選びました。',
+  'ふるさと納税': 'ふるさと納税で返礼品を探している人向け。\n\n食品・日用品の中から、使いやすそうな返礼品を3つ選びました。',
+  '高料率①':     '買い回りついでにチェックしたい、気になるアイテム。\n\nレビュー・価格を見て選びました。',
+  '高料率②':     '買い回りついでにチェックしたい、気になるアイテム。\n\nレビュー・価格を見て選びました。',
 };
 // 高料率: 商品ジャンル別冒頭テンプレート
 const INTRO_HIGH_RATE = {
@@ -320,10 +320,10 @@ function validateProductForPost(name, cat) {
   if (cat==='美容' && /美顔器|美容機器|リフトアップ|ナノアクション/.test(name)) return false;
   // カテゴリ別必須キーワード
   const CAT_KEYWORDS = {
-    'ガジェット': /ケース|フィルム|充電器|ケーブル|バッテリー|スタンド|カバー|保護|ハブ|イヤホン|ヘッドホン|ルーター|マウス|キーボード|USB|モバイルバッテリー/,
-    'スイーツ':   /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
-    '美容':       /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア|アイブロウ/,
-    'ゆる健康':   /炭酸水|ナッツ|入浴剤|アイマスク|お茶|プロテイン|サプリ|ビタミン|マルチ|ストレッチ|乳酸菌|酵素|食物繊維|ヨーグルト|ノンカフェイン|グルコサミン/,
+    'ガジェット':   /ケース|フィルム|充電器|ケーブル|バッテリー|スタンド|カバー|保護|ハブ|イヤホン|ヘッドホン|ルーター|マウス|キーボード|USB|モバイルバッテリー/,
+    'スイーツ':     /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
+    '美容':         /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア|アイブロウ/,
+    'ふるさと納税': /米|肉|魚|海老|カニ|ホタテ|イクラ|鮭|フルーツ|みかん|りんご|苺|いちご|牛|豚|鶏|海鮮|スイーツ|お菓子|洗剤|ティッシュ/,
   };
   const kw = CAT_KEYWORDS[cat];
   if (kw && !kw.test(name)) return false;
@@ -531,7 +531,9 @@ async function autoGenerate(){
       'baked':'焼き菓子','wagashi':'和菓子','jelly':'ゼリー','case':'スマホケース','film':'保護フィルム',
       'charger':'充電器','cable':'ケーブル','battery':'バッテリー','stand':'スタンド',
       'earphone':'イヤホン','foundation':'ファンデ','lip':'リップ','hair':'ヘアケア',
-      'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤'};
+      'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤',
+      'furusato_rice':'米','furusato_meat':'肉','furusato_seafood':'海鮮','furusato_fruit':'フルーツ',
+      'furusato_sweet':'スイーツ','furusato_daily':'日用品','furusato_other':'その他'};
     if(dupSubcats.length>0){
       const dupNames=dupSubcats.map(([s])=>SUBCAT_LABEL[s]||s).join('・');
       status.textContent=`⚠️ 同じ種類が重複（${dupNames}）。商品名を修正してから生成してください`;
@@ -574,7 +576,9 @@ async function confirmAndGenerate(){
       'baked':'焼き菓子','wagashi':'和菓子','jelly':'ゼリー','case':'スマホケース','film':'保護フィルム',
       'charger':'充電器','cable':'ケーブル','battery':'バッテリー','stand':'スタンド',
       'earphone':'イヤホン','foundation':'ファンデ','lip':'リップ','hair':'ヘアケア',
-      'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤'};
+      'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤',
+      'furusato_rice':'米','furusato_meat':'肉','furusato_seafood':'海鮮','furusato_fruit':'フルーツ',
+      'furusato_sweet':'スイーツ','furusato_daily':'日用品','furusato_other':'その他'};
     if(dups.length>0){
       const dupNames=dups.map(([s])=>SUBCAT_LABEL[s]||s).join('・');
       if(!confirm(`「${dupNames}」が重複しています。このまま生成しますか？\n（キャンセルして商品名を修正することもできます）`)){
@@ -792,11 +796,59 @@ function trimHighRateName(raw){
   return t||raw.slice(0,32);
 }
 
+const SUBCAT_REASON_MAP = {
+  // ガジェット
+  'film':            ['画面保護に良さそう','スマホ画面を守りたい人向け','貼り替え候補に良さそう'],
+  'case':            ['スマホまわりを整えたい人向け','デイリー使いしやすそう','ケースを見直したい人向け'],
+  'cable':           ['充電まわりを整えたい人向け','予備ケーブルに良さそう','デスクや持ち歩き用にも使いやすそう'],
+  'charger':         ['充電まわりを整えたい人向け','デスク用にも良さそう','買い替え候補に良さそう'],
+  'battery':         ['外出用にも使いやすそう','持ち歩き用に良さそう','スマホの充電切れ対策に良さそう'],
+  'stand':           ['デスク周りに良さそう','動画視聴や作業用に使いやすそう','置き場所を整えたい人向け'],
+  'hub':             ['デスク周りに良さそう','ケーブル整理に良さそう','持ち歩き用にも使いやすそう'],
+  'earphone':        ['音楽をラクに楽しみたい人向け','外出用にも使いやすそう','デイリー使いしやすそう'],
+  // スイーツ
+  'choco':           ['ギフトにも使いやすそう','甘いもの好きに良さそう','自分用にも良さそう'],
+  'ice':             ['夏のご褒美に良さそう','自分用にも良さそう','冷凍庫にあると嬉しそう'],
+  'pudding':         ['自分用にも良さそう','食後の楽しみに良さそう','甘いものを少し楽しみたい人向け'],
+  'baked':           ['個包装で食べやすそう','ギフトにも使いやすそう','手土産候補に良さそう'],
+  'cheesecake':      ['自分用にもギフトにも良さそう','甘いもの好きに良さそう','ご褒美スイーツに良さそう'],
+  'wagashi':         ['お茶時間に良さそう','手土産候補に良さそう','家族でも使いやすそう'],
+  'jelly':           ['夏のギフトにも良さそう','さっぱり楽しめそう','自分用にも良さそう'],
+  // 美容
+  'foundation':      ['ベースメイクに使いやすそう','毎日のメイクに良さそう','身だしなみを整えたい人向け'],
+  'lip':             ['口元の印象を整えたい人向け','デイリー使いしやすそう','ギフトにも良さそう'],
+  'hair':            ['髪まわりを整えたい人向け','毎日のヘアケアに良さそう','香りケアにも良さそう'],
+  'cleanse':         ['毎日のケアに使いやすそう','清潔感を整えたい人向け','朝晩のケアに良さそう'],
+  'suncare':         ['外出前のケアに良さそう','毎日使いやすそう','季節的に見ておきたい'],
+  'eyebrow':         ['眉まわりを整えたい人向け','身だしなみを整えたい人向け'],
+  'skincare':        ['スキンケアを見直したい人向け','毎日のケアに使いやすそう','レビュー多めで気になる'],
+  'general':         ['デイリー使いしやすそう','毎日のケアに使いやすそう','清潔感を整えたい人向け'],
+  // ふるさと納税
+  'furusato_rice':   ['家で使いやすそう','毎日の食卓に良さそう','ストック用にも良さそう'],
+  'furusato_meat':   ['家族でも使いやすそう','冷凍庫にあると便利そう','夕食用にも良さそう'],
+  'furusato_seafood':['冷凍庫にあると便利そう','ごはんのお供にも良さそう','家で使いやすそう'],
+  'furusato_fruit':  ['季節の楽しみに良さそう','自分用にもギフトにも良さそう','家族でも使いやすそう'],
+  'furusato_sweet':  ['自分用にも良さそう','家族で楽しみやすそう','返礼品選びの候補に良さそう'],
+  'furusato_daily':  ['日用品として助かりそう','まとめ買い感覚で良さそう','家で使いやすそう'],
+  'furusato_other':  ['返礼品選びの候補に良さそう','レビュー多めで気になる','年末に向けて見ておきたい'],
+};
+
+function getReasonForSubcat(cat, name) {
+  const sub = detectSubcat(cat, name);
+  const pool = SUBCAT_REASON_MAP[sub];
+  if (pool && pool.length) return pool[Math.floor(Math.random() * pool.length)];
+  // fallback per category
+  const fallback = {
+    'ガジェット':   ['スマホまわりを整えたい人向け','デイリー使いしやすそう'],
+    'スイーツ':     ['自分用にもギフトにも良さそう','お茶時間に良さそう'],
+    '美容':         ['毎日のケアに使いやすそう','デイリー使いしやすそう'],
+    'ふるさと納税': ['返礼品選びの候補に良さそう','家で使いやすそう'],
+  };
+  const fb = fallback[cat] || ['良さそう'];
+  return fb[Math.floor(Math.random() * fb.length)];
+}
+
 const CAT_COMMENT = {
-  'スイーツ':  ['ギフトにも使いやすそう','自分用にも良さそう','個包装で食べやすそう','夏のご褒美に良さそう'],
-  'ガジェット':['画面保護に良さそう','外出用にも使いやすそう','充電まわりを整えたい人向け','デスク周りに良さそう'],
-  '美容':      ['毎日のケアに使いやすそう','デイリー使いしやすそう','清潔感を整えたい人向け','レビュー多めで気になる'],
-  'ゆる健康':  ['毎日取り入れやすそう','間食にも良さそう','リラックス時間に使いやすそう','無理なく続けやすそう'],
   '高料率①':  ['口コミ多めで気になる','価格が手に取りやすい','買い回り候補に良さそう'],
   '高料率②':  ['レビュー多めで気になる','自分用にも良さそう','ギフトにも使いやすそう'],
 };
@@ -864,25 +916,24 @@ function detectSubcat(cat, name) {
     if (/ハブ|USB/.test(name)) return 'hub';
     return 'other';
   }
-  if (cat === 'ゆる健康') {
-    if (/炭酸水/.test(name)) return 'sparkling';
-    if (/ナッツ/.test(name)) return 'nuts';
-    if (/入浴剤|バスソルト/.test(name)) return 'bath';
-    if (/アイマスク/.test(name)) return 'eyemask';
-    if (/お茶|緑茶|紅茶|ハーブティ/.test(name)) return 'tea';
-    if (/プロテイン/.test(name)) return 'protein';
-    if (/サプリ|ビタミン|乳酸菌|酵素|コエンザイム|グルコサミン/.test(name)) return 'supplement';
-    return 'other';
+  if (cat === 'ふるさと納税') {
+    if (/米|ご飯|白米|玄米/.test(name)) return 'furusato_rice';
+    if (/牛肉|豚肉|鶏肉|焼き肉|ステーキ|ハンバーグ|肉/.test(name)) return 'furusato_meat';
+    if (/魚|海老|カニ|ホタテ|イクラ|鮭|サーモン|刺身|海鮮/.test(name)) return 'furusato_seafood';
+    if (/フルーツ|果物|みかん|りんご|苺|いちご|桃|メロン|ぶどう|梨/.test(name)) return 'furusato_fruit';
+    if (/スイーツ|お菓子|チョコ|ケーキ|アイス|菓子/.test(name)) return 'furusato_sweet';
+    if (/洗剤|ティッシュ|トイレ|シャンプー|日用品|石鹸/.test(name)) return 'furusato_daily';
+    return 'furusato_other';
   }
   return 'other';
 }
 
 // ─── 弱い商品名チェック（一般名詞のみ = true） ───────────────────
 const WEAK_NAMES = {
-  'スイーツ':  /^(スイーツ|お菓子|菓子|ギフト|セット|詰め合わせ|アイス|チョコ|プリン|ケーキ|和菓子)$/,
-  'ガジェット':/^(ケース|フィルム|充電器|ケーブル|スタンド|保護|バッテリー|カバー|シール|マウス|キーボード)$/,
-  '美容':      /^(化粧水|美容液|クリーム|リップ|スキンケア|ヘアケア|シャンプー|乳液|洗顔|日焼け止め|ファンデ|ファンデーション|美容|トリートメント)$/,
-  'ゆる健康':  /^(サプリ|お茶|ナッツ|入浴剤|プロテイン)$/,
+  'スイーツ':     /^(スイーツ|お菓子|菓子|ギフト|セット|詰め合わせ|アイス|チョコ|プリン|ケーキ|和菓子)$/,
+  'ガジェット':   /^(ケース|フィルム|充電器|ケーブル|スタンド|保護|バッテリー|カバー|シール|マウス|キーボード)$/,
+  '美容':         /^(化粧水|美容液|クリーム|リップ|スキンケア|ヘアケア|シャンプー|乳液|洗顔|日焼け止め|ファンデ|ファンデーション|美容|トリートメント)$/,
+  'ふるさと納税': /^(返礼品|セット|詰め合わせ|ギフト|食品|肉|魚)$/,
 };
 function isWeakPostName(name, cat) {
   if (!name || name.length < 2) return true;
@@ -907,24 +958,24 @@ function buildPostText(cat, extra){
   })).filter(p=>p.name||p.url);
   if(!prods.length)return null;
 
+  const isFurusato=cat==='ふるさと納税';
   let intro, comments;
   if(isBeauty){
     const names=prods.map(p=>p.name||'');
     intro=detectBeautyIntro(names);
-    comments=names.map(n=>{
-      const sub=detectBeautySubcat(n);
-      const pool=BEAUTY_SUBCAT_COMMENT[sub]||BEAUTY_SUBCAT_COMMENT.general;
-      return pool[Math.floor(Math.random()*pool.length)];
-    });
-  }else{
+    comments=names.map(n=>getReasonForSubcat(cat,n));
+  }else if(isHighRate){
     intro=INTRO[cat]||INTRO['高料率①'];
     comments=CAT_COMMENT[cat]||[];
+  }else{
+    intro=INTRO[cat]||INTRO['高料率①'];
+    comments=prods.map(p=>getReasonForSubcat(cat,p.name||''));
   }
 
   const sep=isHighRate?'｜':' ▷ ';
-  const tag='\n\n#PR #楽天市場';
+  const tag=isFurusato?'\n\n#PR #楽天市場 #ふるさと納税':'\n\n#PR #楽天市場';
   const lines=prods.map((p,i)=>{
-    const comment=isBeauty?comments[i]:comments[i]||'';
+    const comment=isHighRate?comments[i]||'':comments[i]||'';
     const rawName=isHighRate?trimHighRateName(p.name||''):p.name||'';
     const name=rawName||'（商品名未入力）';
     const nameLine=`${['①','②','③'][i]} ${name}${comment?sep+comment:''}`;
