@@ -1017,6 +1017,22 @@ function buildPostText(cat, extra){
     result=autoNG(postShort);
     if(!validateFinalPost(result))return null;
   }
+  // それでも280字超なら商品名を26文字に切る
+  if(xchars(result)>280){
+    function trimName(n){ return n.length>26?n.slice(0,26).trimEnd()+'…':n; }
+    let si3=0;
+    const linesTrim=prods.map((p)=>{
+      const cleaned=trimName(cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||''));
+      if(!cleaned)return null;
+      return `${nums[si3++]} ${cleaned}\n${p.url||'（URL未入力）'}`;
+    }).filter(Boolean).join('\n');
+    if(!linesTrim)return null;
+    let postTrim=`${intro}\n\n${linesTrim}`;
+    if(extra)postTrim+=`\n\n${extra}`;
+    postTrim+=tag;
+    result=autoNG(postTrim);
+    if(!validateFinalPost(result))return null;
+  }
   return result;
 }
 
