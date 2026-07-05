@@ -421,15 +421,15 @@ ${companies}
 ・URLを推測・作成することは禁止（存在しないURLは必ず404になります）
 ・まだ決算期が到来していない／未公開の場合は「未発表」と回答
 
-・日本株の検索手順（この順番で試すこと）：
-　① Google検索「会社名 証券コード 決算短信 filetype:pdf」でPDF直リンクを探す
-　② 企業の公式IRページ（例：example.co.jp/ir）を Browse して決算短信PDFを探す
-　③ TDnet（https://www.release.tdnet.info）で会社名または証券コードを検索してPDFを探す
-　④ ①〜③で実際のPDF URLが取得できた場合 → そのURLを回答
-　⑤ PDF URLが見つからない場合 → TDnet企業別ページURLを回答
+・日本株の検索方法（以下を同時並行で調べ、最初に見つかったPDF URLを回答）：
+　A. Google検索「会社名 証券コード 決算短信 filetype:pdf」
+　B. 企業の公式IRページ（example.co.jp/ir など）を Browse して決算短信PDFを探す
+　C. TDnet（https://www.release.tdnet.info）で会社名または証券コードを検索
+　→ A・B・C いずれかで実際のPDF URLが確認できた場合 → そのURLを回答
+　→ どこにもPDF URLが見つからない場合 → TDnet企業別ページURLを回答
 　　 例：アスクル（2678）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
 
-・米国・中国・香港株：「会社名 annual results press release filetype:pdf」でGoogle検索し、企業IRページのプレスリリースPDFを回答（Annual Reportは不要）
+・米国・中国・香港株：「会社名 annual results press release filetype:pdf」でGoogle検索 かつ 企業IRページも Browse し、プレスリリースPDFを回答（Annual Reportは不要）
 ・Annual Report（年次報告書）は不要
 ・URLが確認できない場合は「不明」と記載
 ・説明文・補足は不要`;
