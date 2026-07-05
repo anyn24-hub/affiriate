@@ -323,7 +323,7 @@ function validateProductForPost(name, cat) {
     'ガジェット':   /ケース|フィルム|充電器|ケーブル|バッテリー|スタンド|カバー|保護|ハブ|イヤホン|ヘッドホン|ルーター|マウス|キーボード|USB|モバイルバッテリー/,
     'スイーツ':     /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
     '美容':         /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア|アイブロウ/,
-    'ふるさと納税': /米|肉|魚|海老|カニ|ホタテ|イクラ|鮭|フルーツ|みかん|りんご|苺|いちご|牛|豚|鶏|海鮮|スイーツ|お菓子|洗剤|ティッシュ/,
+    // ふるさと納税: キーワード必須チェックなし（多様な返礼品を許容）
   };
   const kw = CAT_KEYWORDS[cat];
   if (kw && !kw.test(name)) return false;
@@ -1161,9 +1161,9 @@ async function drawCanvas(canvasId,dlBtnId,cat){
     // Product name
     const nameX=textX+circR*2+14;
     const nameW=W-PAD-nameX-10;
-    const fs=ROWS===1?46:40;
-    const lh=fs+10;
-    const maxLines=ROWS===1?5:2;
+    const fs=ROWS===1?46:34;
+    const lh=fs+12;
+    const maxLines=ROWS===1?5:3;
     const nameY=cy-lh*(maxLines-1)/2;
     ctx.font=`bold ${fs}px sans-serif`;ctx.fillStyle='#f0f0f5';ctx.textAlign='left';
     wrapText(ctx,p.name,nameX,nameY,nameW,lh,maxLines);

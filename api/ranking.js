@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     '410899': /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
     '216131': /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア/,
     '100533': /炭酸水|ナッツ|入浴剤|アイマスク|お茶|プロテイン|サプリ|ビタミン|マルチ|ストレッチ|乳酸菌|酵素|食物繊維|ヨーグルト|ノンカフェイン|グルコサミン|コエンザイム/,
-    '566870': /米|肉|牛|豚|鶏|魚|海老|カニ|ホタテ|イクラ|鮭|サーモン|フルーツ|みかん|りんご|苺|いちご|桃|メロン|スイーツ|お菓子|菓子|洗剤|ティッシュ/,
+    // ふるさと納税: 商品名チェックなし（多様な返礼品を許容）
   };
 
   // ジャンル別: この語が入っていたら除外
@@ -67,63 +67,25 @@ export default async function handler(req, res) {
 
   function cleanTitle(raw) {
     let t = (raw || '').trim();
-    // 1. Strip Jina.ai prefix "Image 3: "
+    // 1. Jina.ai prefix "Image 3: " を除去
     t = t.replace(/^Image\s*\d+[:\s]+/i, '');
-    // 2. Remove ALL bracket/fence content (including ≪≫《》)
+    // 2. 楽天ランキング装飾記号（≪≫《》【】）の中身を除去（販促タグのみ）
     t = t.replace(/≪[^≫]{0,60}≫/g, '');
     t = t.replace(/《[^》]{0,60}》/g, '');
-    t = t.replace(/[≪≫《》]/g, ''); // 未閉じ記号も除去
+    t = t.replace(/[≪≫《》]/g, '');
     t = t.replace(/【[^】]*】/g, '');
-    t = t.replace(/\[[^\]]*\]/g, '');
-    t = t.replace(/＜[^＞]*＞/g, '');
-    t = t.replace(/〔[^〕]*〕/g, '');
-    t = t.replace(/＼[^/／]*[/／]/g, '');
-    t = t.replace(/「[^」]{0,30}」/g, '');
-    t = t.replace(/（[^）]{0,60}）/g, '');
-    // 3. Remove everything up to (and including) the first ！
-    t = t.replace(/^[^！]{0,80}！+\s*/g, '');
-    // 4. Remove promotional patterns
-    const promo = [
-      /本日\d+時まで[^\s]{0,10}/g, /楽天限定[^\s]{0,10}/g,
-      /20\d{2}年?\s*/g,
-      /リピ続出中\S*/g, /話題\S*の/g, /大人気\S*/g,
-      /楽天[^\s！]{0,15}(1位|ランキング|大賞|受賞|冠|獲得|優良)/g,
-      /累計\S*/g, /送料無料\S*/g, /P\d+倍\S*/g,
-      /クーポン[^\s]{0,15}/g, /今なら\S*/g, /先着\S*/g, /期間限定\S*/g,
-      /\S+で(紹介|話題)\S*/g,
-      /[♪★☆♦♥♡✨🎁🔥💥👑⭐✅]/g,
-      /\d+[\d,\.]*\s*(mAh|ml|kg|g|L|個入|個|枚|本|袋|錠|粒|冊|種類|円相当|円台)\S*/gi,
-      /楽天市場[:：]\s*/ig, /\s*[｜|]\s*.*/g,
-    ];
-    promo.forEach(re => { t = t.replace(re, ''); });
-    // 5. Normalize punctuation to space + letter normalization (M A C → MAC)
-    t = t.replace(/[！!？?。、，・]\s*/g, ' ').replace(/\s{2,}/g, ' ').trim();
-    t = t.replace(/\b([A-Za-z]) ([A-Za-z]) ([A-Za-z])\b/g, '$1$2$3');
-    t = t.replace(/\b([A-Za-z]) ([A-Za-z])\b/g, '$1$2');
-    // Remove trailing open brackets/punct
-    t = t.replace(/[（(「『【≪《,、。\s]+$/, '').trim();
+    // 3. 装飾記号を除去（商品名には含まれない）
+    t = t.replace(/[♪★☆♦♥♡✨🎁🔥💥👑⭐✅]/g, '');
+    t = t.replace(/[\u{1F300}-\u{1FFFF}]/gu, '');
+    // 4. 空白正規化・末尾トリム
+    t = t.replace(/\s{2,}/g, ' ').trim();
+    t = t.replace(/[,、。\s]+$/, '').trim();
 
-    const NG_NAME = /ポイント|キャンペーン|バナー|クーポン|プレゼント|ギフトセット|お知らせ|楽天市場|ランキング|ベストコスメ|アワード|同梱|注文|配送|お届け|手続き|申し込み/;
-    function trimSmart(s, max) {
-      if (s.length <= max) return s;
-      const cut = s.slice(0, max);
-      const lastSp = cut.lastIndexOf(' ');
-      return (lastSp > max * 0.5 ? cut.slice(0, lastSp) : cut).trim();
-    }
-    // ブランド名抽出: 先頭1〜2語（英字2語連続はブランドとして結合: TOM FORD等）
-    function extractBrand(before) {
-      const f = before[0] || '';
-      const s = before[1] || '';
-      if (f && /^[A-Za-z]/.test(f) && s && /^[A-Za-z]/.test(s)) return `${f} ${s}`;
-      return f;
-    }
-
-    // 6. クリーニング後のテキストをそのまま返す（販売名を保持）
-    if (/で同梱|ご注文|お届け|手続き|を.*[申送配]/.test(t)) return '';
-    const NOT_PRODUCT = /^(キャンペーン|ポイント|バナー|広告|お知らせ|ランキング|楽天市場|楽天|プレゼント|ギフト|ベストコスメ|アワード|campaign|banner|point|PR|Image|sale|SALE|TOP|top)$/i;
-    if (NOT_PRODUCT.test(t.replace(/\s/g, ''))) return '';
-    if (NG_NAME.test(t)) return '';
-    return trimSmart(t, 50);
+    const NG_NAME = /^(キャンペーン|ポイント|バナー|クーポン|お知らせ|楽天市場|ランキング|ベストコスメ|アワード|campaign|banner|PR|Image|TOP)$/i;
+    if (!t || t.length < 3) return '';
+    if (NG_NAME.test(t.replace(/\s/g, ''))) return '';
+    if (/で同梱|ご注文|お届け手続き/.test(t)) return '';
+    return t;
   }
 
   // ── Jina.ai reader → Rakuten ranking page (no API key needed) ───────────
