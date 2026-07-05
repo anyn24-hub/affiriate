@@ -986,7 +986,7 @@ function buildPostText(cat, extra){
   const sep=isHighRate?'｜':' ▷ ';
   const tag=isFurusato?'\n\n#PR #楽天市場 #ふるさと納税':'\n\n#PR #楽天市場';
   const lines=prods.map((p,i)=>{
-    const comment=isHighRate?comments[i]||'':comments[i]||'';
+    const comment=isHighRate?comments[i]||'':'';
     const rawName=isHighRate?trimHighRateName(p.name||''):p.name||'';
     const name=rawName||'（商品名未入力）';
     const nameLine=`${['①','②','③'][i]} ${name}${comment?sep+comment:''}`;
