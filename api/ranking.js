@@ -118,68 +118,12 @@ export default async function handler(req, res) {
       return f;
     }
 
-    // 6. スイーツ枠専用: 「ブランド + カテゴリ」形式に
-    if (genre === '410899') {
-      const sweetsType = SWEETS_TYPES.find(w => t.includes(w));
-      if (sweetsType) {
-        const idx = t.indexOf(sweetsType);
-        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 12);
-        const brand = extractBrand(before);
-        return trimSmart(brand ? `${brand} ${sweetsType}` : sweetsType, 24);
-      }
-    }
-
-    // 7. 美容枠専用: 「ブランド + カテゴリ」形式に
-    if (genre === '216131') {
-      const beautyType = BEAUTY_TYPES.find(w => t.includes(w));
-      if (beautyType) {
-        const idx = t.indexOf(beautyType);
-        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 14);
-        const brand = extractBrand(before);
-        return trimSmart(brand ? `${brand} ${beautyType}` : beautyType, 24);
-      }
-    }
-
-    // 8b. ふるさと納税枠専用: 「産地名 + 商品名」形式で保持（ブランドなし）
-    if (genre === '566870') {
-      const furusatoType = FURUSATO_TYPES.find(w => t.includes(w));
-      if (furusatoType) {
-        const idx = t.indexOf(furusatoType);
-        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 10);
-        const origin = before[0] || '';
-        return trimSmart(origin ? `${origin} ${furusatoType}` : furusatoType, 24);
-      }
-      return trimSmart(t, 24);
-    }
-
-    // 8. ガジェット枠専用: 「ブランド + カテゴリ」形式に
-    if (genre === '100044') {
-      const GADGET_TYPES = ['モバイルバッテリー','ワイヤレスイヤホン','ヘッドホン','ガラスフィルム','スマホケース','充電ケーブル','ワイヤレス充電器','充電器','USBハブ','マウス','キーボード','ルーター','スタンド','ケース','フィルム','ケーブル','バッテリー','カバー','イヤホン'];
-      const gadgetType = GADGET_TYPES.find(w => t.includes(w));
-      if (gadgetType) {
-        const idx = t.indexOf(gadgetType);
-        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 14);
-        const brand = extractBrand(before);
-        return trimSmart(brand ? `${brand} ${gadgetType}` : gadgetType, 24);
-      }
-    }
-
-    // 9. クリーニング後のテキストをそのまま使う
+    // 6. クリーニング後のテキストをそのまま返す（販売名を保持）
     if (/で同梱|ご注文|お届け|手続き|を.*[申送配]/.test(t)) return '';
-    const SKIP = new Set(['父の日','母の日','お中元','お歳暮','バレンタイン','ホワイトデー','ハロウィン','クリスマス','誕生日','ギフト','プレゼント','贈り物','セット']);
-    const words = t.split(/\s+/).filter(w => w.length > 0);
-    while (words.length > 1 && SKIP.has(words[0])) words.shift();
-    let result = '';
-    for (const w of words) {
-      if (!result) { result = w; }
-      else if (result.replace(/[a-zA-Z0-9\s]/g, '').length < 4) { result += ' ' + w; }
-      else break;
-    }
-    result = trimSmart(result, 24);
     const NOT_PRODUCT = /^(キャンペーン|ポイント|バナー|広告|お知らせ|ランキング|楽天市場|楽天|プレゼント|ギフト|ベストコスメ|アワード|campaign|banner|point|PR|Image|sale|SALE|TOP|top)$/i;
-    if (NOT_PRODUCT.test(result.replace(/\s/g, ''))) return '';
-    if (NG_NAME.test(result)) return '';
-    return result;
+    if (NOT_PRODUCT.test(t.replace(/\s/g, ''))) return '';
+    if (NG_NAME.test(t)) return '';
+    return trimSmart(t, 50);
   }
 
   // ── Jina.ai reader → Rakuten ranking page (no API key needed) ───────────
@@ -270,11 +214,7 @@ export default async function handler(req, res) {
       { url: 'https://item.rakuten.co.jp/dhcshop-2/8000002221/', title: 'DHC 濃縮紅麹 30日分', image: 'https://shop.r10s.jp/gold/dhcshop-2/pic/8000002221.jpg' },
       { url: 'https://item.rakuten.co.jp/kenkocom/10098/', title: 'ビタミンC タケダ 300錠', image: 'https://shop.r10s.jp/kenkocom/cabinet/098/10098.jpg' },
     ],
-    '566870': [
-      { url: 'https://item.rakuten.co.jp/f251210-higashimatsushima/hokkaido-hotate/', title: '北海道産 ホタテ', image: '' },
-      { url: 'https://item.rakuten.co.jp/f012090-maibara/omi-beef-set/', title: '近江牛 ステーキ', image: '' },
-      { url: 'https://item.rakuten.co.jp/f014020-ureshino/ureshino-premium/', title: '嬉野産 白米', image: '' },
-    ],
+    '566870': [],
   };
 
   const pool = POOL[genre] || [];
