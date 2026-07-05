@@ -1,14 +1,6 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  try {
-    return await _handler(req, res);
-  } catch (e) {
-    return res.status(200).json({ items: [], _error: `システムエラー: ${e.message}` });
-  }
-}
-
-async function _handler(req, res) {
 
   const { genre = '' } = req.query;
 
@@ -72,31 +64,6 @@ async function _handler(req, res) {
     if (NG_NAME.test(t.replace(/\s/g, ''))) return '';
     if (/で同梱|ご注文|お届け手続き/.test(t)) return '';
     return t;
-  }
-
-  // 商品ページから完全な商品名を取得（「…」で切れている場合のみ）
-  async function fetchFullName(itemUrl) {
-    try {
-      const r = await fetch(`https://r.jina.ai/${itemUrl}`, {
-        headers: { 'Accept': 'text/plain', 'X-No-Cache': 'true' },
-        signal: AbortSignal.timeout(4000),
-      });
-      if (!r.ok) return null;
-      const text = await r.text();
-      for (const line of text.split('\n')) {
-        const m = line.match(/^Title:\s*(.+)/i);
-        if (m) {
-          const title = m[1].trim()
-            .replace(/\s*[|｜]\s*.{1,40}楽天市場.*$/i, '')
-            .replace(/\s*[|｜].*$/, '');
-          const cleaned = cleanTitle(title);
-          if (cleaned && cleaned.length > 5) return cleaned;
-        }
-      }
-      return null;
-    } catch (_) {
-      return null;
-    }
   }
 
   // ランキングページから商品を収集する共通処理
@@ -186,14 +153,6 @@ async function _handler(req, res) {
       if (!r.ok) throw new Error(`Jina ${r.status}`);
       const text = await r.text();
       const items = parseRankingText(text, '566870');
-      let n = 0;
-      for (const item of items) {
-        if (n >= 4) break;
-        if (item.name.endsWith('…') || item.name.endsWith('...')) {
-          const full = await fetchFullName(item.itemUrl);
-          if (full) { item.name = full; n++; }
-        }
-      }
       if (items.length >= 1) return res.status(200).json({ items, _src: 'furusato' });
     } catch (e) {
       // fall through
@@ -210,14 +169,6 @@ async function _handler(req, res) {
     if (!r.ok) throw new Error(`Jina ${r.status}`);
     const text = await r.text();
     const items = parseRankingText(text, genre);
-    let n = 0;
-    for (const item of items) {
-      if (n >= 4) break;
-      if (item.name.endsWith('…') || item.name.endsWith('...')) {
-        const full = await fetchFullName(item.itemUrl);
-        if (full) { item.name = full; n++; }
-      }
-    }
     if (items.length >= 1) return res.status(200).json({ items, _src: 'jina' });
   } catch (e) {
     // fall through to static pool
