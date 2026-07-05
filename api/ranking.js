@@ -66,6 +66,31 @@ export default async function handler(req, res) {
     return t;
   }
 
+  // 商品ページから完全な商品名を取得（「…」で切れている場合のみ）
+  async function fetchFullName(itemUrl) {
+    try {
+      const r = await fetch(`https://r.jina.ai/${itemUrl}`, {
+        headers: { 'Accept': 'text/plain', 'X-No-Cache': 'true' },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!r.ok) return null;
+      const text = await r.text();
+      for (const line of text.split('\n')) {
+        const m = line.match(/^Title:\s*(.+)/i);
+        if (m) {
+          const title = m[1].trim()
+            .replace(/\s*[|｜]\s*.{1,40}楽天市場.*$/i, '')
+            .replace(/\s*[|｜].*$/, '');
+          const cleaned = cleanTitle(title);
+          if (cleaned && cleaned.length > 5) return cleaned;
+        }
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ランキングページから商品を収集する共通処理
   function parseRankingText(text, genreId) {
     // テキストリンク [商品名](url) から完全名を収集（altより長い場合に優先）
@@ -153,6 +178,14 @@ export default async function handler(req, res) {
       if (!r.ok) throw new Error(`Jina ${r.status}`);
       const text = await r.text();
       const items = parseRankingText(text, '566870');
+      let n = 0;
+      for (const item of items) {
+        if (n >= 4) break;
+        if (item.name.endsWith('…') || item.name.endsWith('...')) {
+          const full = await fetchFullName(item.itemUrl);
+          if (full) { item.name = full; n++; }
+        }
+      }
       if (items.length >= 1) return res.status(200).json({ items, _src: 'furusato' });
     } catch (e) {
       // fall through
@@ -169,6 +202,14 @@ export default async function handler(req, res) {
     if (!r.ok) throw new Error(`Jina ${r.status}`);
     const text = await r.text();
     const items = parseRankingText(text, genre);
+    let n = 0;
+    for (const item of items) {
+      if (n >= 4) break;
+      if (item.name.endsWith('…') || item.name.endsWith('...')) {
+        const full = await fetchFullName(item.itemUrl);
+        if (full) { item.name = full; n++; }
+      }
+    }
     if (items.length >= 1) return res.status(200).json({ items, _src: 'jina' });
   } catch (e) {
     // fall through to static pool
