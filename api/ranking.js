@@ -70,7 +70,7 @@ export default async function handler(req, res) {
   function parseRankingText(text, genreId) {
     // テキストリンク [商品名](url) から完全名を収集（altより長い場合に優先）
     const textNameMap = new Map();
-    const reTxt = /\[([^\]]{5,200})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+    const reTxt = /\[([^\]]{5,})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
     let mt;
     while ((mt = reTxt.exec(text)) !== null) {
       const txt = mt[1].trim();
@@ -120,7 +120,7 @@ export default async function handler(req, res) {
 
     // 画像なしのテキストリンクだけの場合も収集（ふるさと納税など）
     if (items.length < 3) {
-      const re2 = /\[([^\]]{5,200})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+      const re2 = /\[([^\]]{5,})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
       let m2;
       while ((m2 = re2.exec(text)) !== null && items.length < 15) {
         if (/^!/.test(m2[1])) continue;
