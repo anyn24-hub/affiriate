@@ -105,32 +105,49 @@ export default async function handler(req, res) {
       const lastSp = cut.lastIndexOf(' ');
       return (lastSp > max * 0.5 ? cut.slice(0, lastSp) : cut).trim();
     }
+    // ブランド名抽出: 先頭1〜2語（英字2語連続はブランドとして結合: TOM FORD等）
+    function extractBrand(before) {
+      const f = before[0] || '';
+      const s = before[1] || '';
+      if (f && /^[A-Za-z]/.test(f) && s && /^[A-Za-z]/.test(s)) return `${f} ${s}`;
+      return f;
+    }
 
-    // 6. スイーツ枠専用: 商品カテゴリキーワードを優先抽出して「ブランド + カテゴリ」形式に
+    // 6. スイーツ枠専用: 「ブランド + カテゴリ」形式に
     if (genre === '410899') {
       const sweetsType = SWEETS_TYPES.find(w => t.includes(w));
       if (sweetsType) {
         const idx = t.indexOf(sweetsType);
         const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 12);
-        const brand = before[before.length - 1] || '';
-        const result = brand ? `${brand} ${sweetsType}` : sweetsType;
-        return trimSmart(result, 24);
+        const brand = extractBrand(before);
+        return trimSmart(brand ? `${brand} ${sweetsType}` : sweetsType, 24);
       }
     }
 
-    // 7. 美容枠専用: 商品カテゴリキーワードを優先抽出して「ブランド + カテゴリ」形式に
+    // 7. 美容枠専用: 「ブランド + カテゴリ」形式に
     if (genre === '216131') {
       const beautyType = BEAUTY_TYPES.find(w => t.includes(w));
       if (beautyType) {
         const idx = t.indexOf(beautyType);
         const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 14);
-        const brand = before[before.length - 1] || '';
-        const result = brand ? `${brand} ${beautyType}` : beautyType;
-        return trimSmart(result, 24);
+        const brand = extractBrand(before);
+        return trimSmart(brand ? `${brand} ${beautyType}` : beautyType, 24);
       }
     }
 
-    // 8. クリーニング後のテキストをそのまま使う
+    // 8. ガジェット枠専用: 「ブランド + カテゴリ」形式に
+    if (genre === '100044') {
+      const GADGET_TYPES = ['モバイルバッテリー','ワイヤレスイヤホン','ヘッドホン','ガラスフィルム','スマホケース','充電ケーブル','ワイヤレス充電器','充電器','USBハブ','マウス','キーボード','ルーター','スタンド','ケース','フィルム','ケーブル','バッテリー','カバー','イヤホン'];
+      const gadgetType = GADGET_TYPES.find(w => t.includes(w));
+      if (gadgetType) {
+        const idx = t.indexOf(gadgetType);
+        const before = t.slice(0, idx).trim().split(/\s+/).filter(w => w.length >= 2 && w.length <= 14);
+        const brand = extractBrand(before);
+        return trimSmart(brand ? `${brand} ${gadgetType}` : gadgetType, 24);
+      }
+    }
+
+    // 9. クリーニング後のテキストをそのまま使う
     if (/で同梱|ご注文|お届け|手続き|を.*[申送配]/.test(t)) return '';
     const SKIP = new Set(['父の日','母の日','お中元','お歳暮','バレンタイン','ホワイトデー','ハロウィン','クリスマス','誕生日','ギフト','プレゼント','贈り物','セット']);
     const words = t.split(/\s+/).filter(w => w.length > 0);

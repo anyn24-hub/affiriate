@@ -110,11 +110,16 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
     <!-- 自動取得カテゴリ（スイーツ/ガジェット/美容/ゆる健康） -->
     <div id="autoFetchArea" style="margin-top:4px">
-      <button class="btn btn-pink btn-full" onclick="autoGenerate()" id="autoFetchBtn" style="font-size:16px;padding:15px">⚡ 1クリック全自動生成</button>
-      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:5px">商品取得 → 投稿文 → 画像　すべて自動</div>
+      <button class="btn btn-pink btn-full" onclick="autoGenerate()" id="autoFetchBtn" style="font-size:16px;padding:15px">⚡ 商品を取得する</button>
+      <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:5px">楽天ランキングから3商品を自動取得</div>
       <div id="autoFetchStatus" style="text-align:center;font-size:12px;color:var(--muted);margin-top:6px"></div>
       <div id="autoResultArea" style="display:none;margin-top:10px"></div>
-      <!-- 投稿文 + 画像（自動生成後に表示） -->
+      <!-- 確認 → 生成ボタン -->
+      <div id="autoConfirmArea" style="display:none;margin-top:12px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center">商品名を確認・修正してから生成してください</div>
+        <button class="btn btn-purple btn-full" onclick="confirmAndGenerate()" id="autoConfirmBtn" style="font-size:15px;padding:14px">✅ この商品で投稿文・画像を生成</button>
+      </div>
+      <!-- 投稿文 + 画像（確認後に表示） -->
       <div id="autoPostSection" style="display:none;margin-top:4px">
         <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:10px">
           <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">📝 投稿文</div>
@@ -222,6 +227,8 @@ const INTRO = {
   'ガジェット':'スマホまわりを整えたい人向け。\n\nケース・フィルム・充電まわりで、使いやすそうなものを3つ選びました。',
   '美容':      '清潔感を整えたい人向け。\n\nスキンケア・ヘアケア・リップまわりで、毎日使いやすそうなものを3つ選びました。',
   'ゆる健康':  'ゆるく健康を気にしたい人向け。\n\n無理なく続けやすそうな、日常に取り入れやすいものを3つ選びました。',
+  '高料率①':  '買い回りついでにチェックしたい、気になるアイテム。\n\nレビュー・価格を見て選びました。',
+  '高料率②':  '買い回りついでにチェックしたい、気になるアイテム。\n\nレビュー・価格を見て選びました。',
 };
 // 高料率: 商品ジャンル別冒頭テンプレート
 const INTRO_HIGH_RATE = {
@@ -363,6 +370,7 @@ function onCatChange(){
   document.getElementById('autoFetchArea').style.display=isAuto?'block':'none';
   document.getElementById('highRateArea').style.display=isAuto?'none':'block';
   document.getElementById('autoResultArea').style.display='none';
+  document.getElementById('autoConfirmArea').style.display='none';
   document.getElementById('autoPostSection').style.display='none';
   document.getElementById('autoFetchStatus').textContent='';
   document.getElementById('parseResult').innerHTML='';
@@ -395,7 +403,7 @@ async function fetchRankingItems(genre){
   return items;
 }
 
-function populateProducts(items){
+function populateProducts(items, cat){
   for(let i=0;i<items.length;i++){
     const n=i+1,it=items[i];
     setF(`name${n}`,it.name);
@@ -404,18 +412,26 @@ function populateProducts(items){
   }
   const ra=document.getElementById('autoResultArea');
   ra.style.display='block';
-  ra.innerHTML=items.map((it,i)=>`
+  ra.innerHTML=items.map((it,i)=>{
+    const weak=isWeakPostName(it.name||'', cat||'');
+    const borderStyle=weak?'border-color:rgba(248,113,113,.55)':'';
+    return `
     <div style="background:var(--card2);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:10px 12px;margin-top:8px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <span style="background:var(--purple);color:#fff;border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">${i+1}</span>
         <a href="${escH(it.url||it.itemUrl||'#')}" target="_blank" rel="noopener"
           style="font-size:11px;color:var(--muted);text-decoration:underline;flex:1;word-break:break-all">楽天で開く ↗</a>
         ${it.imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(it.imageUrl)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:``}
       </div>
-      <input class="finput" style="font-size:13px;padding:9px 11px" value="${escH(it.name||'')}"
-        placeholder="商品名（短く編集可）"
-        oninput="setF('name${i+1}',this.value)">
-    </div>`).join('');
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">
+        投稿用商品名
+        <span id="namewarn${i+1}" style="color:var(--red);margin-left:6px;display:${weak?'inline':'none'}">⚠ ブランド名を追加してください</span>
+      </div>
+      <input class="finput" style="font-size:13px;padding:9px 11px;${borderStyle}" value="${escH(it.name||'')}"
+        placeholder="ブランド名 + 商品カテゴリ（例: TOM FORD リップ）"
+        oninput="setF('name${i+1}',this.value);updateNameWarn(this,${i+1})">
+    </div>`;
+  }).join('');
 }
 
 async function autoGenerate(){
@@ -463,11 +479,26 @@ async function autoGenerate(){
     // 未使用をシャッフル優先、不足分は使用済みシャッフルで補完して必ず3件確保
     const fresh=shuffle(allItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
     const used=shuffle(allItems.filter(it=>usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
-    // ショップ重複を避けながら3件選ぶ
-    function pickUniqShops(pool,n){
-      const result=[];const shops=new Set();
+
+    // ショップ重複 + サブカテゴリ重複を避けながら3件選ぶ（2パス：多様性優先→補完）
+    function pickDiverseProducts(pool, n, cat) {
+      const result=[]; const shops=new Set(); const subcats=new Set();
+      // 1st pass: サブカテゴリ多様性を優先
       for(const it of pool){
         if(result.length>=n)break;
+        const sm=(it.itemUrl||it.url||'').match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
+        const shop=sm?sm[1].toLowerCase():'';
+        if(shop&&shops.has(shop))continue;
+        const sub=detectSubcat(cat, it.name||'');
+        if(sub!=='other'&&subcats.has(sub))continue;
+        if(shop)shops.add(shop);
+        if(sub!=='other')subcats.add(sub);
+        result.push(it);
+      }
+      // 2nd pass: 不足分を埋める（ショップ重複のみ避ける）
+      for(const it of pool){
+        if(result.length>=n)break;
+        if(result.includes(it))continue;
         const sm=(it.itemUrl||it.url||'').match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
         const shop=sm?sm[1].toLowerCase():'';
         if(shop&&shops.has(shop))continue;
@@ -476,7 +507,7 @@ async function autoGenerate(){
       }
       return result;
     }
-    const items=pickUniqShops([...fresh,...used],3);
+    const items=pickDiverseProducts([...fresh,...used], 3, cat);
 
     if(fresh.length===0){
       status.textContent=`⚠️ 未使用商品なし（上位${allItems.length}件がすべて既出）。ランダムで生成します`;
@@ -488,36 +519,110 @@ async function autoGenerate(){
       status.textContent='✅ 商品取得完了 → 投稿文を生成中…';status.style.color='var(--green)';
     }
 
-    populateProducts(items);
+    populateProducts(items, cat);
 
-    // Step 2: 投稿文生成（auto用要素へ）
-    btn.innerHTML='<span class="spinner"></span> 投稿文を生成中…';
-    await new Promise(r=>setTimeout(r,100));
-    const post=buildPostText(cat,'');
-    if(!post){
-      status.textContent='⚠️ NG商品名が含まれているため投稿候補から除外しました。再取得してください';
+    // サブカテゴリ重複チェック → 警告
+    const selectedSubcats = items.map(it => detectSubcat(cat, it.name||''));
+    const subcatCounts = {};
+    selectedSubcats.forEach(s => { subcatCounts[s] = (subcatCounts[s]||0)+1; });
+    const dupSubcats = Object.entries(subcatCounts).filter(([s,c]) => s!=='other' && c>1);
+    const weakItems = items.filter(it => isWeakPostName(it.name||'', cat));
+    const SUBCAT_LABEL={'choco':'チョコ','ice':'アイス','pudding':'プリン','cheesecake':'チーズケーキ',
+      'baked':'焼き菓子','wagashi':'和菓子','jelly':'ゼリー','case':'スマホケース','film':'保護フィルム',
+      'charger':'充電器','cable':'ケーブル','battery':'バッテリー','stand':'スタンド',
+      'earphone':'イヤホン','foundation':'ファンデ','lip':'リップ','hair':'ヘアケア',
+      'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤'};
+    if(dupSubcats.length>0){
+      const dupNames=dupSubcats.map(([s])=>SUBCAT_LABEL[s]||s).join('・');
+      status.textContent=`⚠️ 同じ種類が重複（${dupNames}）。商品名を修正してから生成してください`;
       status.style.color='var(--red)';
-      btn.disabled=false;btn.innerHTML='投稿を生成';
-      return;
+    } else if(weakItems.length>0){
+      status.textContent=`⚠️ ${weakItems.length}件の商品名が弱い — 赤枠の欄にブランド名を追加してから生成してください`;
+      status.style.color='var(--gold)';
+    } else {
+      status.textContent='✅ 3商品を取得しました。商品名を確認して「投稿文・画像を生成」を押してください';
+      status.style.color='var(--green)';
     }
-    document.getElementById('autoPostBox').textContent=post;
-    document.getElementById('autoPostSection').style.display='block';
-    updateAutoCounter(post);runAutoNGCheck(post);
-    currentHistId=Date.now();
-    const itemUrls=items.map(it=>it.itemUrl||it.url||'');
-    saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString(),itemUrls});
-    status.textContent='✅ 投稿文生成完了 → 画像を生成中…';
 
-    // Step 3: 画像生成（autoCanvas へ）
-    btn.innerHTML='<span class="spinner"></span> 画像を生成中…';
-    await new Promise(r=>setTimeout(r,100));
-    await drawCanvas('autoCanvas','autoDlBtn',cat);
-    status.textContent=`✅ 完成！コピーして投稿してください`;
+    // 確認ボタンを表示、投稿セクションを隠す
+    document.getElementById('autoPostSection').style.display='none';
+    document.getElementById('autoConfirmArea').style.display='block';
 
   }catch(e){
     status.textContent='❌ '+e.message;status.style.color='var(--red)';
   }finally{
-    btn.disabled=false;btn.innerHTML='⚡ 1クリック全自動生成';
+    btn.disabled=false;btn.innerHTML='⚡ 商品を取得する';
+  }
+}
+
+// 確認後：投稿文 + 画像を生成
+async function confirmAndGenerate(){
+  const cat=document.getElementById('catSel').value;
+  const btn=document.getElementById('autoConfirmBtn');
+  const status=document.getElementById('autoFetchStatus');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> 生成中…';
+  try{
+    await new Promise(r=>setTimeout(r,80));
+
+    // 現在の商品名でサブカテゴリ重複・弱い名前を再チェック
+    const names=[getF('name1'),getF('name2'),getF('name3')].filter(Boolean);
+    const dupCheck={};
+    names.forEach(n=>{const s=detectSubcat(cat,n);if(s!=='other')dupCheck[s]=(dupCheck[s]||0)+1;});
+    const dups=Object.entries(dupCheck).filter(([s,c])=>c>1);
+    const SUBCAT_LABEL={'choco':'チョコ','ice':'アイス','pudding':'プリン','cheesecake':'チーズケーキ',
+      'baked':'焼き菓子','wagashi':'和菓子','jelly':'ゼリー','case':'スマホケース','film':'保護フィルム',
+      'charger':'充電器','cable':'ケーブル','battery':'バッテリー','stand':'スタンド',
+      'earphone':'イヤホン','foundation':'ファンデ','lip':'リップ','hair':'ヘアケア',
+      'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤'};
+    if(dups.length>0){
+      const dupNames=dups.map(([s])=>SUBCAT_LABEL[s]||s).join('・');
+      if(!confirm(`「${dupNames}」が重複しています。このまま生成しますか？\n（キャンセルして商品名を修正することもできます）`)){
+        btn.disabled=false;btn.innerHTML='✅ この商品で投稿文・画像を生成';
+        return;
+      }
+    }
+
+    // Step 2: 投稿文生成
+    const post=buildPostText(cat,'');
+    if(!post){
+      status.textContent='⚠️ 投稿文を生成できませんでした。商品名を確認してください';
+      status.style.color='var(--red)';
+      btn.disabled=false;btn.innerHTML='✅ この商品で投稿文・画像を生成';
+      return;
+    }
+    document.getElementById('autoPostBox').textContent=post;
+    document.getElementById('autoPostSection').style.display='block';
+    updateAutoCounter(post);
+
+    // NG + 弱い商品名チェック
+    const ngBox=document.getElementById('autoNgBox');
+    const ngFound=NG_WORDS.filter(w=>(post||'').includes(w));
+    const weakAfter=names.filter(n=>isWeakPostName(n,cat));
+    const warnings=[];
+    if(ngFound.length)warnings.push(`🚫 NGワード: ${ngFound.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`);
+    if(weakAfter.length)warnings.push(`⚠️ 商品名が弱い（${weakAfter.length}件）— 投稿用商品名を修正してください`);
+    if(warnings.length){ngBox.className='ng-box show ng-warn';ngBox.innerHTML=warnings.join('<br>');}
+    else{ngBox.className='ng-box show ng-ok';ngBox.textContent='✅ NGワードなし・商品名OK';}
+
+    currentHistId=Date.now();
+    const itemUrls=[getF('url1'),getF('url2'),getF('url3')].filter(Boolean);
+    saveHistory({id:currentHistId,cat,postText:post,imageDataUrl:null,ts:new Date().toISOString(),itemUrls});
+    status.textContent='✅ 投稿文生成完了 → 画像を生成中…';status.style.color='var(--green)';
+
+    // Step 3: 画像生成
+    btn.innerHTML='<span class="spinner"></span> 画像を生成中…';
+    await new Promise(r=>setTimeout(r,80));
+    await drawCanvas('autoCanvas','autoDlBtn',cat);
+    status.textContent='✅ 完成！投稿文をコピーして投稿してください';
+
+    // 投稿文エリアまでスクロール
+    document.getElementById('autoPostSection').scrollIntoView({behavior:'smooth',block:'start'});
+
+  }catch(e){
+    status.textContent='❌ '+e.message;status.style.color='var(--red)';
+  }finally{
+    btn.disabled=false;btn.innerHTML='✅ この商品で投稿文・画像を生成';
   }
 }
 
@@ -690,43 +795,139 @@ function trimHighRateName(raw){
 const CAT_COMMENT = {
   'スイーツ':  ['ギフトにも使いやすそう','自分用にも良さそう','個包装で食べやすそう','夏のご褒美に良さそう'],
   'ガジェット':['画面保護に良さそう','外出用にも使いやすそう','充電まわりを整えたい人向け','デスク周りに良さそう'],
-  '美容':      ['毎日のケアに使いやすそう','髪まわりを整えたい人向け','デイリー使いしやすそう','清潔感を整えたい人向け'],
+  '美容':      ['毎日のケアに使いやすそう','デイリー使いしやすそう','清潔感を整えたい人向け','レビュー多めで気になる'],
   'ゆる健康':  ['毎日取り入れやすそう','間食にも良さそう','リラックス時間に使いやすそう','無理なく続けやすそう'],
   '高料率①':  ['口コミ多めで気になる','価格が手に取りやすい','買い回り候補に良さそう'],
   '高料率②':  ['レビュー多めで気になる','自分用にも良さそう','ギフトにも使いやすそう'],
 };
 
+const BEAUTY_SUBCAT_COMMENT = {
+  foundation: ['ベースメイクに使いやすそう','毎日のメイクに良さそう','身だしなみを整えたい人向け'],
+  lip:        ['口元の印象を整えたい人向け','デイリー使いしやすそう','ギフトにも良さそう'],
+  hair:       ['髪まわりを整えたい人向け','毎日のヘアケアに良さそう','香りケアにも良さそう'],
+  cleanse:    ['毎日のケアに使いやすそう','清潔感を整えたい人向け','朝晩のケアに良さそう'],
+  suncare:    ['外出前のケアに良さそう','毎日使いやすそう','季節的に見ておきたい'],
+  eyebrow:    ['眉まわりを整えたい人向け','身だしなみを整えたい人向け'],
+  skincare:   ['スキンケアを見直したい人向け','毎日のケアに使いやすそう','レビュー多めで気になる'],
+  general:    ['デイリー使いしやすそう','毎日のケアに使いやすそう','清潔感を整えたい人向け'],
+};
+
+function detectBeautySubcat(name) {
+  if (!name) return 'general';
+  if (/ファンデ|ファンデーション|BBクリーム|CCクリーム|コンシーラー/.test(name)) return 'foundation';
+  if (/リップ|口紅|グロス|リップケア/.test(name)) return 'lip';
+  if (/シャンプー|トリートメント|コンディショナー|ヘアオイル|ヘアマスク|ヘアケア/.test(name)) return 'hair';
+  if (/洗顔|クレンジング/.test(name)) return 'cleanse';
+  if (/日焼け止め|サンスクリーン|UV/.test(name)) return 'suncare';
+  if (/アイブロウ|眉|マスカラ/.test(name)) return 'eyebrow';
+  if (/化粧水|美容液|乳液|クリーム|スキンケア|アイクリーム/.test(name)) return 'skincare';
+  return 'general';
+}
+
+function detectBeautyIntro(names) {
+  const subcats = names.map(n => detectBeautySubcat(n));
+  const hasHair = subcats.some(s => s === 'hair');
+  const hasMakeup = subcats.some(s => s === 'foundation' || s === 'lip' || s === 'eyebrow');
+  const hasSkin = subcats.some(s => s === 'skincare' || s === 'cleanse' || s === 'suncare');
+  const parts = [];
+  if (hasMakeup) parts.push('メイク');
+  if (hasSkin) parts.push('スキンケア');
+  if (hasHair) parts.push('ヘアケア');
+  if (parts.length === 0) parts.push('スキンケア・ヘアケア・リップまわり');
+  return `清潔感を整えたい人向け。\n\n${parts.join('・')}で、毎日使いやすそうなものを3つ選びました。`;
+}
+
+// ─── サブカテゴリ検出（全カテゴリ共通） ─────────────────────────
+function detectSubcat(cat, name) {
+  if (!name) return 'other';
+  if (cat === '美容') return detectBeautySubcat(name);
+  if (cat === 'スイーツ') {
+    if (/チョコ/.test(name)) return 'choco';
+    if (/アイス|ジェラート/.test(name)) return 'ice';
+    if (/プリン/.test(name)) return 'pudding';
+    if (/チーズケーキ/.test(name)) return 'cheesecake';
+    if (/焼き菓子|クッキー|バウム|カヌレ|マドレーヌ|マカロン|ワッフル|タルト|シュークリーム/.test(name)) return 'baked';
+    if (/和菓子|大福|羊羹|饅頭|どら/.test(name)) return 'wagashi';
+    if (/ゼリー/.test(name)) return 'jelly';
+    return 'other';
+  }
+  if (cat === 'ガジェット') {
+    if (/ケース|カバー/.test(name)) return 'case';
+    if (/フィルム|ガラス|保護|シール/.test(name)) return 'film';
+    if (/充電器|ワイヤレス充電/.test(name)) return 'charger';
+    if (/ケーブル/.test(name)) return 'cable';
+    if (/バッテリー/.test(name)) return 'battery';
+    if (/スタンド|ホルダー/.test(name)) return 'stand';
+    if (/イヤホン|ヘッドホン/.test(name)) return 'earphone';
+    if (/マウス/.test(name)) return 'mouse';
+    if (/キーボード/.test(name)) return 'keyboard';
+    if (/ハブ|USB/.test(name)) return 'hub';
+    return 'other';
+  }
+  if (cat === 'ゆる健康') {
+    if (/炭酸水/.test(name)) return 'sparkling';
+    if (/ナッツ/.test(name)) return 'nuts';
+    if (/入浴剤|バスソルト/.test(name)) return 'bath';
+    if (/アイマスク/.test(name)) return 'eyemask';
+    if (/お茶|緑茶|紅茶|ハーブティ/.test(name)) return 'tea';
+    if (/プロテイン/.test(name)) return 'protein';
+    if (/サプリ|ビタミン|乳酸菌|酵素|コエンザイム|グルコサミン/.test(name)) return 'supplement';
+    return 'other';
+  }
+  return 'other';
+}
+
+// ─── 弱い商品名チェック（一般名詞のみ = true） ───────────────────
+const WEAK_NAMES = {
+  'スイーツ':  /^(スイーツ|お菓子|菓子|ギフト|セット|詰め合わせ|アイス|チョコ|プリン|ケーキ|和菓子)$/,
+  'ガジェット':/^(ケース|フィルム|充電器|ケーブル|スタンド|保護|バッテリー|カバー|シール|マウス|キーボード)$/,
+  '美容':      /^(化粧水|美容液|クリーム|リップ|スキンケア|ヘアケア|シャンプー|乳液|洗顔|日焼け止め|ファンデ|ファンデーション|美容|トリートメント)$/,
+  'ゆる健康':  /^(サプリ|お茶|ナッツ|入浴剤|プロテイン)$/,
+};
+function isWeakPostName(name, cat) {
+  if (!name || name.length < 2) return true;
+  const re = WEAK_NAMES[cat];
+  if (re && re.test((name || '').trim())) return true;
+  return false;
+}
+function updateNameWarn(el, idx) {
+  const cat = document.getElementById('catSel').value;
+  const weak = isWeakPostName(el.value.trim(), cat);
+  el.style.borderColor = weak ? 'rgba(248,113,113,.55)' : '';
+  const warnEl = document.getElementById(`namewarn${idx}`);
+  if (warnEl) warnEl.style.display = weak ? 'inline' : 'none';
+}
+
 function buildPostText(cat, extra){
   const isHighRate=cat==='高料率①'||cat==='高料率②';
-  let intro, comments;
-  if(isHighRate){
-    const hCat=detectHighRateCat(getF('name1'));
-    const pool=INTRO_HIGH_RATE[hCat]||INTRO_HIGH_RATE.daily;
-    intro=pool[Math.floor(Math.random()*pool.length)];
-    const cPool=COMMENT_HIGH_RATE[hCat]||COMMENT_HIGH_RATE.daily;
-    comments=[cPool[Math.floor(Math.random()*cPool.length)]];
-  }else{
-    intro=INTRO[cat]||INTRO['スイーツ'];
-    comments=CAT_COMMENT[cat]||[];
-  }
+  const isBeauty=cat==='美容';
   const maxSlots=isHighRate?1:3;
   const prods=Array.from({length:maxSlots},(_,i)=>({
     name:getF(`name${i+1}`),url:getF(`url${i+1}`)
   })).filter(p=>p.name||p.url);
   if(!prods.length)return null;
+
+  let intro, comments;
+  if(isBeauty){
+    const names=prods.map(p=>p.name||'');
+    intro=detectBeautyIntro(names);
+    comments=names.map(n=>{
+      const sub=detectBeautySubcat(n);
+      const pool=BEAUTY_SUBCAT_COMMENT[sub]||BEAUTY_SUBCAT_COMMENT.general;
+      return pool[Math.floor(Math.random()*pool.length)];
+    });
+  }else{
+    intro=INTRO[cat]||INTRO['高料率①'];
+    comments=CAT_COMMENT[cat]||[];
+  }
+
   const sep=isHighRate?'｜':' ▷ ';
   const tag='\n\n#PR #楽天市場';
-  const nums=['①','②','③'];
-  let slotIdx=0;
-  const lines=prods.map((p)=>{
-    // Step1: クリーニング
-    const cleaned=cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');
-    // Step2: バリデーション（高料率は猫なし、通常カテゴリは必須キーワードチェック）
-    if(!isHighRate&&!validateProductForPost(cleaned,cat))return null;
-    if(isHighRate&&!cleaned)return null;
-    const num=nums[slotIdx++];
-    const comment=comments[slotIdx-1]||'';
-    const nameLine=`${num} ${cleaned||'（商品名未入力）'}${comment?sep+comment:''}`;
+  const lines=prods.map((p,i)=>{
+    const comment=isBeauty?comments[i]:comments[i]||'';
+    const rawName=isHighRate?trimHighRateName(p.name||''):p.name||'';
+    const name=rawName||'（商品名未入力）';
+    const nameLine=`${['①','②','③'][i]} ${name}${comment?sep+comment:''}`;
     return `${nameLine}\n${p.url||'（URL未入力）'}`;
   }).filter(Boolean).join('\n');
   if(!lines)return null;
