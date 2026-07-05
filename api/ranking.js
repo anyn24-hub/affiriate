@@ -103,11 +103,25 @@ export default async function handler(req, res) {
       const seenShops = new Set();
       const items = [];
 
+      // テキストリンクから完全商品名を収集
+      const textNameMapF = new Map();
+      const reTxtF = /\[([^\]]{5,120})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+      let mtf;
+      while ((mtf = reTxtF.exec(text)) !== null) {
+        const txt = mtf[1].trim();
+        const url = mtf[2].split('?')[0].replace(/\/$/, '') + '/';
+        if (/^!/.test(txt)) continue;
+        const existing = textNameMapF.get(url) || '';
+        if (txt.length > existing.length) textNameMapF.set(url, txt);
+      }
+
       // パターン1: [![alt](img)](itemUrl)
       const re1 = /\[!\[([^\]]*)\]\(([^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
       let m;
       while ((m = re1.exec(text)) !== null && items.length < 15) {
-        const rawTitle = m[1];
+        const altText = m[1];
+        const rawTitle = (textNameMapF.get(m[3].split('?')[0].replace(/\/$/, '') + '/') || '').length > altText.length
+          ? textNameMapF.get(m[3].split('?')[0].replace(/\/$/, '') + '/') : altText;
         const imgUrl = (m[2] || '').split('?')[0];
         const rawUrl = m[3].split('?')[0].replace(/\/$/, '') + '/';
         if (seen.has(rawUrl)) continue;
@@ -162,17 +176,31 @@ export default async function handler(req, res) {
     if (!r.ok) throw new Error(`Jina ${r.status}`);
     const text = await r.text();
 
-    // Parse: [![alt](imgUrl)](itemUrl)
-    // 1〜10位を取得してフロント側でランダム選出できるようにする
+    // まずテキストリンク [商品名](item.rakuten.co.jp/...) を収集して完全名を優先
+    const textNameMap = new Map(); // url → longest text name
+    const reTxt = /\[([^\]]{5,120})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+    let mt;
+    while ((mt = reTxt.exec(text)) !== null) {
+      const txt = mt[1].trim();
+      const url = mt[2].split('?')[0].replace(/\/$/, '') + '/';
+      if (/^!/.test(txt)) continue; // skip image markdown
+      const existing = textNameMap.get(url) || '';
+      if (txt.length > existing.length) textNameMap.set(url, txt);
+    }
+
+    // 画像リンク [![alt](img)](itemUrl) でURL・画像を収集
     const re = /\[!\[([^\]]*)\]\((https?:\/\/[^)]*r10s\.jp[^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
     const seen = new Set();
-    const seenShops = new Set(); // 同一ショップ（ブランド）の重複を防ぐ
+    const seenShops = new Set();
     const items = [];
     let m;
     while ((m = re.exec(text)) !== null && items.length < 15) {
-      const rawTitle = m[1];
+      const altText = m[1];
       const imgUrl = m[2].split('?')[0];
       const rawUrl = m[3].split('?')[0].replace(/\/$/, '') + '/';
+      // テキストリンクの名前が長ければそちらを優先（altは途中で切れることがある）
+      const rawTitle = (textNameMap.get(rawUrl) || '').length > altText.length
+        ? textNameMap.get(rawUrl) : altText;
 
       if (seen.has(rawUrl)) continue;
       seen.add(rawUrl);
