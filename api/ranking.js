@@ -69,7 +69,10 @@ export default async function handler(req, res) {
   // 商品ページから完全な商品名を取得（「…」で切れている場合のみ）
   async function fetchFullName(itemUrl) {
     try {
-      const r = await fetch(`https://r.jina.ai/${itemUrl}`, {
+      // URL の妥当性チェック（不正なURLでfetchが例外を投げないよう）
+      new URL(itemUrl);
+      const safeUrl = `https://r.jina.ai/${encodeURI(itemUrl)}`;
+      const r = await fetch(safeUrl, {
         headers: { 'Accept': 'text/plain', 'X-No-Cache': 'true' },
         signal: AbortSignal.timeout(5000),
       });
@@ -187,12 +190,14 @@ export default async function handler(req, res) {
       if (!r.ok) throw new Error(`Jina ${r.status}`);
       const text = await r.text();
       const items = parseRankingText(text, '566870');
-      for (const item of items) {
-        if (/[……]$|\.{3}$/.test(item.name)) {
-          const full = await fetchFullName(item.itemUrl);
-          if (full) item.name = full;
+      try {
+        for (const item of items) {
+          if (/[…]$|\.{3}$/.test(item.name)) {
+            const full = await fetchFullName(item.itemUrl);
+            if (full) item.name = full;
+          }
         }
-      }
+      } catch (_) { /* ループエラーは無視して取得済みアイテムを返す */ }
       if (items.length >= 1) return res.status(200).json({ items, _src: 'furusato' });
     } catch (e) {
       // fall through
@@ -209,12 +214,14 @@ export default async function handler(req, res) {
     if (!r.ok) throw new Error(`Jina ${r.status}`);
     const text = await r.text();
     const items = parseRankingText(text, genre);
-    for (const item of items) {
-      if (/[……]$|\.{3}$/.test(item.name)) {
-        const full = await fetchFullName(item.itemUrl);
-        if (full) item.name = full;
+    try {
+      for (const item of items) {
+        if (/[…]$|\.{3}$/.test(item.name)) {
+          const full = await fetchFullName(item.itemUrl);
+          if (full) item.name = full;
+        }
       }
-    }
+    } catch (_) { /* ループエラーは無視して取得済みアイテムを返す */ }
     if (items.length >= 1) return res.status(200).json({ items, _src: 'jina' });
   } catch (e) {
     // fall through to static pool
