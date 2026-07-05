@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       },
       signal: AbortSignal.timeout(7000),
     });
-    if (!r.ok) return res.status(200).json({ name: null });
+    if (!r.ok) return res.status(200).json({ name: null, _debug: `status:${r.status}` });
 
     const html = await r.text();
 
@@ -31,8 +31,8 @@ export default async function handler(req, res) {
         return res.status(200).json({ name });
       }
     }
-    return res.status(200).json({ name: null });
-  } catch (_) {
-    return res.status(200).json({ name: null });
+    return res.status(200).json({ name: null, _debug: 'no_title' });
+  } catch (e) {
+    return res.status(200).json({ name: null, _debug: `err:${e.message}` });
   }
 }
