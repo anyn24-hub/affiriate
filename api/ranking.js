@@ -22,6 +22,26 @@ export default async function handler(req, res) {
     return `https://hb.afl.rakuten.co.jp/ichiba/${affId}/?pc=${encodeURIComponent(itemUrl)}&link_type=text`;
   }
 
+  // 商品ページから完全タイトルを取得（Jina.ai経由）
+  async function fetchFullTitle(itemUrl) {
+    try {
+      const r = await fetch(`https://r.jina.ai/${itemUrl}`, {
+        headers: { 'Accept': 'text/plain', 'X-No-Cache': 'true' },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!r.ok) return '';
+      const t = await r.text();
+      // Jina.aiは先頭に "Title: 商品名 | ショップ - 楽天市場" を出力する
+      const m = t.match(/^Title:\s*(.+)$/m) || t.match(/^#\s+(.+)$/m);
+      if (!m) return '';
+      // "|" や "楽天市場" 以降のショップ名部分を除去
+      let title = m[1].replace(/\s*[\|｜]\s*.*/g, '').trim();
+      return cleanTitle(title);
+    } catch {
+      return '';
+    }
+  }
+
   // スイーツ枠で除外するキーワード（ナッツ・健康食品・おつまみ系）
   const SWEETS_EXCLUDE = /ミックスナッツ|アーモンド|カシューナッツ|くるみ|ピスタチオ|マカダミア|ナッツ[^ケ]|おつまみ|珍味|ジャーキー|グラノーラ|プロテイン|サプリ|青汁|コラーゲン|ドライフルーツのみ/;
 
@@ -103,58 +123,57 @@ export default async function handler(req, res) {
       const seenShops = new Set();
       const items = [];
 
-      // テキストリンクから完全商品名を収集
-      const textNameMapF = new Map();
-      const reTxtF = /\[([^\]]{5,120})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
-      let mtf;
-      while ((mtf = reTxtF.exec(text)) !== null) {
-        const txt = mtf[1].trim();
-        const url = mtf[2].split('?')[0].replace(/\/$/, '') + '/';
-        if (/^!/.test(txt)) continue;
-        const existing = textNameMapF.get(url) || '';
-        if (txt.length > existing.length) textNameMapF.set(url, txt);
+      // item.rakuten.co.jp URLを収集（画像付き・テキスト両方）
+      const furuCandidates = [];
+      const furuSeen = new Set();
+      const furuShops = new Set();
+      const re1 = /\[!\[[^\]]*\]\([^)]*\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+      const re2 = /\[([^\]]{4,80})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+      const reImg = /\[!\[[^\]]*\]\((https?:\/\/[^)]*r10s\.jp[^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+      // 画像URLを収集
+      const imgMap = new Map();
+      let mi;
+      while ((mi = reImg.exec(text)) !== null) {
+        const url = mi[2].split('?')[0].replace(/\/$/, '') + '/';
+        imgMap.set(url, mi[1].split('?')[0]);
       }
-
-      // パターン1: [![alt](img)](itemUrl)
-      const re1 = /\[!\[([^\]]*)\]\(([^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
-      let m;
-      while ((m = re1.exec(text)) !== null && items.length < 15) {
-        const altText = m[1];
-        const rawTitle = (textNameMapF.get(m[3].split('?')[0].replace(/\/$/, '') + '/') || '').length > altText.length
-          ? textNameMapF.get(m[3].split('?')[0].replace(/\/$/, '') + '/') : altText;
-        const imgUrl = (m[2] || '').split('?')[0];
-        const rawUrl = m[3].split('?')[0].replace(/\/$/, '') + '/';
-        if (seen.has(rawUrl)) continue;
-        seen.add(rawUrl);
-        const shopMatch = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
-        const shop = shopMatch ? shopMatch[1].toLowerCase() : '';
-        if (shop && seenShops.has(shop)) continue;
-        const name = cleanTitle(rawTitle);
-        if (!name || name.length < 3 || !isValidProductName(name)) continue;
-        if (shop) seenShops.add(shop);
-        items.push({ name, url: makeAff(rawUrl), itemUrl: rawUrl, imageUrl: imgUrl || null });
+      let mf;
+      while ((mf = re1.exec(text)) !== null && furuCandidates.length < 10) {
+        const rawUrl = mf[1].split('?')[0].replace(/\/$/, '') + '/';
+        if (furuSeen.has(rawUrl)) continue;
+        furuSeen.add(rawUrl);
+        const sm = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
+        const shop = sm ? sm[1].toLowerCase() : '';
+        if (shop && furuShops.has(shop)) continue;
+        if (shop) furuShops.add(shop);
+        furuCandidates.push({ itemUrl: rawUrl, imageUrl: imgMap.get(rawUrl) || null });
       }
-
-      // パターン2: [商品名](itemUrl) — 画像なしリンク
-      if (items.length < 3) {
-        const re2 = /\[([^\]]{4,60})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
-        while ((m = re2.exec(text)) !== null && items.length < 15) {
-          const rawTitle = m[1];
-          const rawUrl = m[2].split('?')[0].replace(/\/$/, '') + '/';
-          if (seen.has(rawUrl)) continue;
-          seen.add(rawUrl);
-          const shopMatch = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
-          const shop = shopMatch ? shopMatch[1].toLowerCase() : '';
-          if (shop && seenShops.has(shop)) continue;
-          const name = cleanTitle(rawTitle);
-          if (!name || name.length < 3 || !isValidProductName(name)) continue;
-          if (shop) seenShops.add(shop);
-          items.push({ name, url: makeAff(rawUrl), itemUrl: rawUrl, imageUrl: null });
+      if (furuCandidates.length === 0) {
+        while ((mf = re2.exec(text)) !== null && furuCandidates.length < 10) {
+          if (/^!/.test(mf[1])) continue;
+          const rawUrl = mf[2].split('?')[0].replace(/\/$/, '') + '/';
+          if (furuSeen.has(rawUrl)) continue;
+          furuSeen.add(rawUrl);
+          const sm = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
+          const shop = sm ? sm[1].toLowerCase() : '';
+          if (shop && furuShops.has(shop)) continue;
+          if (shop) furuShops.add(shop);
+          furuCandidates.push({ itemUrl: rawUrl, imageUrl: null });
         }
       }
 
+      // 商品ページを並行フェッチしてフル商品名を取得
+      const furuTitles = await Promise.allSettled(
+        furuCandidates.map(c => fetchFullTitle(c.itemUrl))
+      );
+      for (let i = 0; i < furuCandidates.length && items.length < 10; i++) {
+        const name = furuTitles[i].status === 'fulfilled' ? furuTitles[i].value : '';
+        if (!name || name.length < 3 || !isValidProductName(name)) continue;
+        items.push({ name, url: makeAff(furuCandidates[i].itemUrl), itemUrl: furuCandidates[i].itemUrl, imageUrl: furuCandidates[i].imageUrl });
+      }
+
       if (items.length >= 1) {
-        return res.status(200).json({ items: items.slice(0, 15), _src: 'furusato' });
+        return res.status(200).json({ items: items.slice(0, 15), _src: 'furusato_full' });
       }
     } catch (e) {
       // fall through to standard scraper
@@ -162,81 +181,65 @@ export default async function handler(req, res) {
     return res.status(200).json({ items: [], _error: 'ふるさと納税ランキングを取得できませんでした。時間をおいて再試行してください。' });
   }
 
-  // ── Jina.ai reader → Rakuten ranking page (no API key needed) ───────────
+  // ── Jina.ai reader → Rakuten ranking page → 商品ページでフル商品名取得 ──
   try {
     const jinaUrl = `https://r.jina.ai/https://ranking.rakuten.co.jp/daily/${rankingId}/`;
-
     const r = await fetch(jinaUrl, {
-      headers: {
-        'Accept': 'text/plain',
-        'X-No-Cache': 'true',
-      },
+      headers: { 'Accept': 'text/plain', 'X-No-Cache': 'true' },
       signal: AbortSignal.timeout(9000),
     });
     if (!r.ok) throw new Error(`Jina ${r.status}`);
     const text = await r.text();
 
-    // まずテキストリンク [商品名](item.rakuten.co.jp/...) を収集して完全名を優先
-    const textNameMap = new Map(); // url → longest text name
-    const reTxt = /\[([^\]]{5,120})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
-    let mt;
-    while ((mt = reTxt.exec(text)) !== null) {
-      const txt = mt[1].trim();
-      const url = mt[2].split('?')[0].replace(/\/$/, '') + '/';
-      if (/^!/.test(txt)) continue; // skip image markdown
-      const existing = textNameMap.get(url) || '';
-      if (txt.length > existing.length) textNameMap.set(url, txt);
-    }
-
-    // 画像リンク [![alt](img)](itemUrl) でURL・画像を収集
+    // 画像リンク [![alt](img)](itemUrl) でURL・画像URLを収集（商品名は仮）
     const re = /\[!\[([^\]]*)\]\((https?:\/\/[^)]*r10s\.jp[^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
     const seen = new Set();
     const seenShops = new Set();
-    const items = [];
+    const candidates = [];
     let m;
-    while ((m = re.exec(text)) !== null && items.length < 15) {
-      const altText = m[1];
+    while ((m = re.exec(text)) !== null && candidates.length < 10) {
       const imgUrl = m[2].split('?')[0];
       const rawUrl = m[3].split('?')[0].replace(/\/$/, '') + '/';
-      // テキストリンクの名前が長ければそちらを優先（altは途中で切れることがある）
-      const rawTitle = (textNameMap.get(rawUrl) || '').length > altText.length
-        ? textNameMap.get(rawUrl) : altText;
-
       if (seen.has(rawUrl)) continue;
       seen.add(rawUrl);
-
-      // ショップ名を抽出してブランド重複チェック
       const shopMatch = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
       const shop = shopMatch ? shopMatch[1].toLowerCase() : '';
       if (shop && seenShops.has(shop)) continue;
-
-      // スイーツ枠でナッツ・健康食品系を除外
+      // 仮商品名チェック（除外判定のみ）
+      const rawTitle = m[1];
       if (genre === '410899' && SWEETS_EXCLUDE.test(rawTitle)) continue;
-      // ゆる健康枠でダイエット食品系への偏りを除外
       if (genre === '100533' && HEALTH_OVERINDEX_EXCLUDE.test(rawTitle)) continue;
+      const excl = GENRE_EXCLUDE[genre];
+      if (excl && excl.test(rawTitle)) continue;
+      if (shop) seenShops.add(shop);
+      candidates.push({ itemUrl: rawUrl, imageUrl: imgUrl, shop });
+    }
 
-      const name = cleanTitle(rawTitle);
+    if (candidates.length === 0) throw new Error('候補なし');
+
+    // 商品ページを並行フェッチしてフル商品名を取得
+    const fullTitles = await Promise.allSettled(
+      candidates.map(c => fetchFullTitle(c.itemUrl))
+    );
+
+    const items = [];
+    const usedShops = new Set();
+    const usedSubcats = new Set();
+    for (let i = 0; i < candidates.length && items.length < 10; i++) {
+      const c = candidates[i];
+      const fullName = fullTitles[i].status === 'fulfilled' ? fullTitles[i].value : '';
+      const name = fullName || '';
       if (!name || name.length < 3) continue;
-
-      // 商品名バリデーション
       if (!isValidProductName(name)) continue;
       const req = GENRE_REQUIRED[genre];
       if (req && !req.test(name)) continue;
-      const excl = GENRE_EXCLUDE[genre];
-      if (excl && excl.test(name)) continue;
-
-      if (shop) seenShops.add(shop);
-
-      items.push({
-        name,
-        url: makeAff(rawUrl),
-        itemUrl: rawUrl,
-        imageUrl: imgUrl || null,
-      });
+      if (c.shop && usedShops.has(c.shop)) continue;
+      if (c.shop) usedShops.add(c.shop);
+      items.push({ name, url: makeAff(c.itemUrl), itemUrl: c.itemUrl, imageUrl: c.imageUrl || null });
     }
 
     if (items.length >= 1) {
-      return res.status(200).json({ items, _src: 'jina' });
+      return res.status(200).json({ items, _src: 'jina_full' });
     }
   } catch (e) {
     // fall through to static pool
