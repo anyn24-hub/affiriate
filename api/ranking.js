@@ -88,6 +88,66 @@ export default async function handler(req, res) {
     return t;
   }
 
+  // ── ふるさと納税専用: event.rakuten.co.jp/furusato/ranking/ ─────────────
+  if (genre === '566870') {
+    try {
+      const jinaUrl = 'https://r.jina.ai/https://event.rakuten.co.jp/furusato/ranking/';
+      const r = await fetch(jinaUrl, {
+        headers: { 'Accept': 'text/plain', 'X-No-Cache': 'true' },
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!r.ok) throw new Error(`Jina ${r.status}`);
+      const text = await r.text();
+
+      const seen = new Set();
+      const seenShops = new Set();
+      const items = [];
+
+      // パターン1: [![alt](img)](itemUrl)
+      const re1 = /\[!\[([^\]]*)\]\(([^)]*)\)\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+      let m;
+      while ((m = re1.exec(text)) !== null && items.length < 15) {
+        const rawTitle = m[1];
+        const imgUrl = (m[2] || '').split('?')[0];
+        const rawUrl = m[3].split('?')[0].replace(/\/$/, '') + '/';
+        if (seen.has(rawUrl)) continue;
+        seen.add(rawUrl);
+        const shopMatch = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
+        const shop = shopMatch ? shopMatch[1].toLowerCase() : '';
+        if (shop && seenShops.has(shop)) continue;
+        const name = cleanTitle(rawTitle);
+        if (!name || name.length < 3 || !isValidProductName(name)) continue;
+        if (shop) seenShops.add(shop);
+        items.push({ name, url: makeAff(rawUrl), itemUrl: rawUrl, imageUrl: imgUrl || null });
+      }
+
+      // パターン2: [商品名](itemUrl) — 画像なしリンク
+      if (items.length < 3) {
+        const re2 = /\[([^\]]{4,60})\]\((https:\/\/item\.rakuten\.co\.jp\/[^)]+)\)/g;
+        while ((m = re2.exec(text)) !== null && items.length < 15) {
+          const rawTitle = m[1];
+          const rawUrl = m[2].split('?')[0].replace(/\/$/, '') + '/';
+          if (seen.has(rawUrl)) continue;
+          seen.add(rawUrl);
+          const shopMatch = rawUrl.match(/item\.rakuten\.co\.jp\/([^\/]+)\//);
+          const shop = shopMatch ? shopMatch[1].toLowerCase() : '';
+          if (shop && seenShops.has(shop)) continue;
+          const name = cleanTitle(rawTitle);
+          if (!name || name.length < 3 || !isValidProductName(name)) continue;
+          if (shop) seenShops.add(shop);
+          items.push({ name, url: makeAff(rawUrl), itemUrl: rawUrl, imageUrl: null });
+        }
+      }
+
+      if (items.length >= 1) {
+        return res.status(200).json({ items: items.slice(0, 15), _src: 'furusato' });
+      }
+    } catch (e) {
+      // fall through to standard scraper
+    }
+    return res.status(200).json({ items: [], _error: 'ふるさと納税ランキングを取得できませんでした。時間をおいて再試行してください。' });
+  }
+
   // ── Jina.ai reader → Rakuten ranking page (no API key needed) ───────────
   try {
     const jinaUrl = `https://r.jina.ai/https://ranking.rakuten.co.jp/daily/${rankingId}/`;

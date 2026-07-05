@@ -427,9 +427,9 @@ function populateProducts(items, cat){
         投稿用商品名
         <span id="namewarn${i+1}" style="color:var(--red);margin-left:6px;display:${weak?'inline':'none'}">⚠ ブランド名を追加してください</span>
       </div>
-      <input class="finput" style="font-size:13px;padding:9px 11px;${borderStyle}" value="${escH(it.name||'')}"
-        placeholder="ブランド名 + 商品カテゴリ（例: TOM FORD リップ）"
-        oninput="setF('name${i+1}',this.value);updateNameWarn(this,${i+1})">
+      <textarea class="ftarea" style="font-size:13px;padding:9px 11px;min-height:56px;resize:vertical;${borderStyle}"
+        placeholder="販売名をそのまま、または短く修正"
+        oninput="setF('name${i+1}',this.value);updateNameWarn(this,${i+1})">${escH(it.name||'')}</textarea>
     </div>`;
   }).join('');
 }
