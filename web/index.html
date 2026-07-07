@@ -318,15 +318,7 @@ function validateProductForPost(name, cat) {
   // カテゴリ別ハード除外
   if (cat==='ガジェット' && /スマートフォン本体|タブレット本体|SIMフリー[^\s]{0,10}本体/.test(name)) return false;
   if (cat==='美容' && /美顔器|美容機器|リフトアップ|ナノアクション/.test(name)) return false;
-  // カテゴリ別必須キーワード
-  const CAT_KEYWORDS = {
-    'ガジェット':   /ケース|フィルム|充電器|ケーブル|バッテリー|スタンド|カバー|保護|ハブ|イヤホン|ヘッドホン|ルーター|マウス|キーボード|USB|モバイルバッテリー/,
-    'スイーツ':     /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
-    '美容':         /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア|アイブロウ/,
-    // ふるさと納税: キーワード必須チェックなし（多様な返礼品を許容）
-  };
-  const kw = CAT_KEYWORDS[cat];
-  if (kw && !kw.test(name)) return false;
+  // カテゴリ別キーワードチェックはAPIサイドで実施済みのためフロントでは行わない
   return true;
 }
 
@@ -531,10 +523,12 @@ async function autoGenerate(){
       btn.disabled=false;btn.innerHTML='⚡ 商品を取得する';
       return;
     }
-    const items=pickDiverseProducts(fresh, Math.min(3, fresh.length), cat);
+    // 3件未満の場合は履歴済み商品で補完
+    const supplementPool = fresh.length < 3 ? [...fresh, ...used] : fresh;
+    const items=pickDiverseProducts(supplementPool, 3, cat);
 
     if(fresh.length<3){
-      status.textContent=`⚠️ 未使用商品が${fresh.length}件のみです。残りは手動で入力してください。`;
+      status.textContent=`⚠️ 未使用商品が${fresh.length}件のみです。一部は既出商品で補完しました。`;
       status.style.color='var(--gold)';
     }else{
       status.textContent='✅ 商品取得完了 → 投稿文を生成中…';status.style.color='var(--green)';
