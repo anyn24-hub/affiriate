@@ -475,13 +475,11 @@ async function autoGenerate(){
       return a;
     }
 
-    // 履歴済みURLセットを構築
-    const usedUrls=new Set(
-      loadHistArr()
-        .filter(e=>e.cat===cat)
-        .flatMap(e=>getHistItemUrls(e))
-        .map(normalizeItemUrl)
-    );
+    // 投稿履歴 + 取得済みキャッシュ の両方を「使用済み」として扱う
+    const usedUrls=new Set([
+      ...loadHistArr().filter(e=>e.cat===cat).flatMap(e=>getHistItemUrls(e)).map(normalizeItemUrl),
+      ...getFetchedUrls(cat),
+    ]);
 
     // 未使用をシャッフル優先、不足分は使用済みシャッフルで補完して必ず3件確保
     const fresh=shuffle(allItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
@@ -537,6 +535,8 @@ async function autoGenerate(){
     for(let i=items.length+1;i<=3;i++){
       setF(`name${i}`,'');setF(`url${i}`,'');setF(`imageUrl${i}`,'');
     }
+    // 取得した商品URLをキャッシュに保存（次回取得時の重複除外に使用）
+    addFetchedUrls(cat, items.map(it=>it.itemUrl||it.url||'').filter(Boolean));
 
     // サブカテゴリ重複チェック → 警告
     const selectedSubcats = items.map(it => detectSubcat(cat, it.name||''));
@@ -1262,9 +1262,21 @@ function downloadImage(){
 // ═══ HISTORY ════════════════════════════════════════════════
 const HIST_KEY='ohenai_hist_v2';
 const HIST_MAX=15;
+const FETCHED_KEY='ohenai_fetched_v1'; // 取得済み商品URLの別キャッシュ
 
 function loadHistArr(){try{return JSON.parse(localStorage.getItem(HIST_KEY)||'[]');}catch{return[];}}
 function saveHistArr(arr){try{localStorage.setItem(HIST_KEY,JSON.stringify(arr));}catch{}}
+
+// 取得済みURLキャッシュ（カテゴリ別・履歴表示とは独立）
+function loadFetchedMap(){try{return JSON.parse(localStorage.getItem(FETCHED_KEY)||'{}');}catch{return{};}}
+function addFetchedUrls(cat,urls){
+  const map=loadFetchedMap();
+  if(!map[cat])map[cat]=[];
+  for(const u of urls){const n=normalizeItemUrl(u);if(!map[cat].includes(n))map[cat].push(n);}
+  map[cat]=map[cat].slice(-300); // カテゴリ毎に最大300件
+  try{localStorage.setItem(FETCHED_KEY,JSON.stringify(map));}catch{}
+}
+function getFetchedUrls(cat){const map=loadFetchedMap();return new Set(map[cat]||[]);}
 
 function saveHistory(entry){
   const arr=loadHistArr();
@@ -1283,6 +1295,7 @@ function updateHistoryImage(id,dataUrl){
 function clearHistory(){
   if(!confirm('履歴をすべて削除しますか？'))return;
   localStorage.removeItem(HIST_KEY);
+  localStorage.removeItem(FETCHED_KEY);
   currentHistId=null;
   renderHistory();
   toast('履歴を削除しました');
