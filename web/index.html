@@ -403,7 +403,34 @@ async function fetchRankingItems(genre, src='rank'){
   return items;
 }
 
+// 取得済みプール（1件だけ入れ替えに使う）
+let _rankPool = [];
+let _currentItems = [];
+
+function renderProductCard(it, i, cat){
+  const weak=isWeakPostName(it.name||'', cat||'');
+  const borderStyle=weak?'border-color:rgba(248,113,113,.55)':'';
+  return `
+  <div id="productCard${i+1}" style="background:var(--card2);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:10px 12px;margin-top:8px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="background:var(--purple);color:#fff;border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">${i+1}</span>
+      <a href="${escH(it.url||it.itemUrl||'#')}" target="_blank" rel="noopener"
+        style="font-size:11px;color:var(--muted);text-decoration:underline;flex:1;word-break:break-all">楽天で開く ↗</a>
+      <button onclick="rerollProduct(${i+1})" style="font-size:10px;padding:3px 8px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;flex-shrink:0" title="この商品だけ別の商品に入れ替える">🔄 入替</button>
+      ${it.imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(it.imageUrl)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:``}
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">
+      投稿用商品名
+      <span id="namewarn${i+1}" style="color:var(--red);margin-left:6px;display:${weak?'inline':'none'}">⚠ ブランド名を追加してください</span>
+    </div>
+    <textarea class="ftarea" id="nameArea${i+1}" style="font-size:13px;padding:9px 11px;min-height:44px;resize:none;overflow:hidden;${borderStyle}"
+      placeholder="販売名をそのまま、または短く修正"
+      oninput="setF('name${i+1}',this.value);updateNameWarn(this,${i+1});autoResizeTA(this)">${escH(it.name||'')}</textarea>
+  </div>`;
+}
+
 function populateProducts(items, cat){
+  _currentItems = [...items];
   for(let i=0;i<items.length;i++){
     const n=i+1,it=items[i];
     setF(`name${n}`,it.name);
@@ -412,33 +439,38 @@ function populateProducts(items, cat){
   }
   const ra=document.getElementById('autoResultArea');
   ra.style.display='block';
-  ra.innerHTML=items.map((it,i)=>{
-    const weak=isWeakPostName(it.name||'', cat||'');
-    const borderStyle=weak?'border-color:rgba(248,113,113,.55)':'';
-    return `
-    <div style="background:var(--card2);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:10px 12px;margin-top:8px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <span style="background:var(--purple);color:#fff;border-radius:50%;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0">${i+1}</span>
-        <a href="${escH(it.url||it.itemUrl||'#')}" target="_blank" rel="noopener"
-          style="font-size:11px;color:var(--muted);text-decoration:underline;flex:1;word-break:break-all">楽天で開く ↗</a>
-        ${it.imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(it.imageUrl)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:``}
-      </div>
-      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">
-        投稿用商品名
-        <span id="namewarn${i+1}" style="color:var(--red);margin-left:6px;display:${weak?'inline':'none'}">⚠ ブランド名を追加してください</span>
-      </div>
-      <textarea class="ftarea" id="nameArea${i+1}" style="font-size:13px;padding:9px 11px;min-height:44px;resize:none;overflow:hidden;${borderStyle}"
-        placeholder="販売名をそのまま、または短く修正"
-        oninput="setF('name${i+1}',this.value);updateNameWarn(this,${i+1});autoResizeTA(this)">${escH(it.name||'')}</textarea>
-    </div>`;
-  }).join('');
-  // テキストエリアを内容に合わせて高さ自動調整
+  ra.innerHTML=items.map((it,i)=>renderProductCard(it,i,cat)).join('');
   requestAnimationFrame(()=>{
     for(let i=1;i<=items.length;i++){
       const ta=document.getElementById(`nameArea${i}`);
       if(ta)autoResizeTA(ta);
     }
   });
+}
+
+async function rerollProduct(n){
+  const cat=document.getElementById('catSel').value;
+  const currentUrls=new Set(_currentItems.map(it=>normalizeItemUrl(it.itemUrl||it.url||'')));
+  // プールから現在表示中でないものを候補にする
+  const candidates=_rankPool.filter(it=>!currentUrls.has(normalizeItemUrl(it.itemUrl||it.url||'')));
+  if(candidates.length===0){
+    alert('入れ替え候補がありません。ランキングの商品がすべて表示中です。');
+    return;
+  }
+  const replacement=candidates[Math.floor(Math.random()*candidates.length)];
+  _currentItems[n-1]=replacement;
+  setF(`name${n}`,replacement.name);
+  setF(`url${n}`,replacement.url||replacement.itemUrl);
+  setF(`imageUrl${n}`,replacement.imageUrl||'');
+  // カードだけ再描画
+  const card=document.getElementById(`productCard${n}`);
+  if(card){
+    const tmp=document.createElement('div');
+    tmp.innerHTML=renderProductCard(replacement,n-1,cat);
+    card.replaceWith(tmp.firstElementChild);
+    const ta=document.getElementById(`nameArea${n}`);
+    if(ta)autoResizeTA(ta);
+  }
 }
 
 async function autoGenerate(){
@@ -531,6 +563,7 @@ async function autoGenerate(){
       btn.disabled=false;btn.innerHTML='⚡ 商品を取得する';
       return;
     }
+    _rankPool = supplementPool; // 入替ボタン用に保持
     const items=pickDiverseProducts(supplementPool, 3, cat);
 
     if(fresh.length===0){
