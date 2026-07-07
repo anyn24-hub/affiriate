@@ -394,8 +394,8 @@ function getHistItemUrls(entry){
   return((entry.postText||'').match(/https?:\/\/\S+/g)||[]);
 }
 
-async function fetchRankingItems(genre){
-  const r=await fetch(`/api/ranking?genre=${genre}`);
+async function fetchRankingItems(genre, src='rank'){
+  const r=await fetch(`/api/ranking?genre=${genre}&src=${src}`);
   const data=await r.json();
   if(data._error)throw new Error(data._error);
   const items=data.items||[];
@@ -451,28 +451,23 @@ async function autoGenerate(){
   try{
     // Step 1: 商品取得
     btn.innerHTML='<span class="spinner"></span> 商品を取得中…';
-    status.textContent='① 商品を取得中…';status.style.color='var(--muted)';
-    const rawItems=await fetchRankingItems(genre);
+    status.textContent='① 商品を取得中（ランキング順）…';status.style.color='var(--muted)';
 
-    // 商品名が同じなら異なるショップでも1件に絞る（名前正規化して重複排除）＋バリデーション
-    const seenNames=new Set();
-    const allItems=rawItems.filter(it=>{
-      const key=(it.name||'').replace(/[\s　]/g,'').toLowerCase();
-      if(!key||seenNames.has(key))return false;
-      seenNames.add(key);
-      // cleanProductName → validateProductForPost の2段階チェック
-      const cleaned=cleanProductName(it.name);
-      return validateProductForPost(cleaned, cat);
-    });
-    if(!allItems.length){
-      throw new Error('有効な商品が見つかりませんでした（NG商品名のため除外）');
-    }
-
-    // Fisher-Yatesシャッフル（毎回異なる順序で選出）
+    // Fisher-Yatesシャッフル
     function shuffle(arr){
       const a=[...arr];
       for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
       return a;
+    }
+
+    function filterValid(rawItems){
+      const seenNames=new Set();
+      return rawItems.filter(it=>{
+        const key=(it.name||'').replace(/[\s　]/g,'').toLowerCase();
+        if(!key||seenNames.has(key))return false;
+        seenNames.add(key);
+        return validateProductForPost(cleanProductName(it.name), cat);
+      });
     }
 
     // 投稿履歴 + 取得済みキャッシュ の両方を「使用済み」として扱う
@@ -481,8 +476,23 @@ async function autoGenerate(){
       ...getFetchedUrls(cat),
     ]);
 
-    // 未使用をシャッフル優先、不足分は使用済みシャッフルで補完して必ず3件確保
-    const fresh=shuffle(allItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
+    // ランキング順で取得
+    let allItems=filterValid(await fetchRankingItems(genre,'rank'));
+    let fresh=shuffle(allItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
+
+    // ランキングが全部既出 → レビュー件数順を試す（ふるさと納税は除く）
+    if(fresh.length===0 && cat!=='ふるさと納税'){
+      status.textContent='ランキングが全件既出。レビュー件数順を確認中…';status.style.color='var(--muted)';
+      try{
+        const reviewItems=filterValid(await fetchRankingItems(genre,'review'));
+        const reviewFresh=shuffle(reviewItems.filter(it=>!usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
+        if(reviewFresh.length>0){
+          allItems=reviewItems;
+          fresh=reviewFresh;
+        }
+      }catch(_){}
+    }
+
     const used=shuffle(allItems.filter(it=>usedUrls.has(normalizeItemUrl(it.itemUrl||it.url||''))));
 
     // ショップ重複 + サブカテゴリ重複を避けながら3件選ぶ（2パス：多様性優先→補完）

@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { genre = '' } = req.query;
+  const { genre = '', src = 'rank' } = req.query;
 
   const GENRE_RANKING_ID = {
     '410899': '551167', // スイーツ・お菓子
@@ -161,8 +161,11 @@ export default async function handler(req, res) {
   }
 
   // ── 通常ジャンル: ranking.rakuten.co.jp ────────────────────────────────
+  const rankPath = src === 'review'
+    ? `https://ranking.rakuten.co.jp/review/${rankingId}/`
+    : `https://ranking.rakuten.co.jp/daily/${rankingId}/`;
   try {
-    const r = await fetch(`https://r.jina.ai/https://ranking.rakuten.co.jp/daily/${rankingId}/`, {
+    const r = await fetch(`https://r.jina.ai/${rankPath}`, {
       headers: { 'Accept': 'text/plain', 'X-No-Cache': 'true' },
       signal: AbortSignal.timeout(9000),
     });
