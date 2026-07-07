@@ -462,11 +462,10 @@ async function autoGenerate(){
       });
     }
 
-    // 投稿履歴 + 取得済みキャッシュ の両方を「使用済み」として扱う
-    const usedUrls=new Set([
-      ...loadHistArr().filter(e=>e.cat===cat).flatMap(e=>getHistItemUrls(e)).map(normalizeItemUrl),
-      ...getFetchedUrls(cat),
-    ]);
+    // 投稿履歴のみを「使用済み」として扱う（取得キャッシュは除外しない）
+    const usedUrls=new Set(
+      loadHistArr().filter(e=>e.cat===cat).flatMap(e=>getHistItemUrls(e)).map(normalizeItemUrl)
+    );
 
     // ランキング順で取得
     let allItems=filterValid(await fetchRankingItems(genre,'rank'));
