@@ -318,12 +318,12 @@ function validateProductForPost(name, cat) {
   // カテゴリ別ハード除外
   if (cat==='ガジェット' && /スマートフォン本体|タブレット本体|SIMフリー[^\s]{0,10}本体/.test(name)) return false;
   if (cat==='美容' && /美顔器|美容機器|リフトアップ|ナノアクション/.test(name)) return false;
-  // カテゴリ別必須キーワード
+  // カテゴリ別必須キーワード（APIフィルタをすり抜けた異カテゴリ商品を排除）
   const CAT_KEYWORDS = {
-    'ガジェット':   /ケース|フィルム|充電器|ケーブル|バッテリー|スタンド|カバー|保護|ハブ|イヤホン|ヘッドホン|ルーター|マウス|キーボード|USB|モバイルバッテリー/,
-    'スイーツ':     /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子/,
-    '美容':         /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア|アイブロウ/,
-    // ふるさと納税: キーワード必須チェックなし（多様な返礼品を許容）
+    'ガジェット':   /ケース|フィルム|充電器|ケーブル|バッテリー|スタンド|カバー|保護|ハブ|イヤホン|ヘッドホン|ルーター|マウス|キーボード|USB|モバイルバッテリー|アダプタ|ドック/,
+    'スイーツ':     /チョコ|アイス|プリン|チーズケーキ|ワッフル|クッキー|焼き菓子|和菓子|ゼリー|フルーツ|スイーツ|詰め合わせ|ケーキ|饅頭|大福|羊羹|カヌレ|マドレーヌ|バウム|タルト|マカロン|シュークリーム|菓子|あめ|キャンディ|グミ/,
+    '美容':         /洗顔|化粧水|美容液|日焼け止め|ヘアオイル|シャンプー|トリートメント|リップ|クリーム|乳液|コンディショナー|ヘアマスク|ファンデ|スキンケア|ヘアケア|アイブロウ|美白|保湿|毛穴/,
+    // ふるさと納税・ダイエット健康: チェックなし（多様な返礼品/商品を許容）
   };
   const kw = CAT_KEYWORDS[cat];
   if (kw && !kw.test(name)) return false;
@@ -470,11 +470,10 @@ async function autoGenerate(){
       });
     }
 
-    // 投稿履歴 + 取得済みキャッシュ の両方を「使用済み」として扱う
-    const usedUrls=new Set([
-      ...loadHistArr().filter(e=>e.cat===cat).flatMap(e=>getHistItemUrls(e)).map(normalizeItemUrl),
-      ...getFetchedUrls(cat),
-    ]);
+    // 投稿履歴のみを「使用済み」として扱う（取得キャッシュは除外しない）
+    const usedUrls=new Set(
+      loadHistArr().filter(e=>e.cat===cat).flatMap(e=>getHistItemUrls(e)).map(normalizeItemUrl)
+    );
 
     // ランキング順で取得
     let allItems=filterValid(await fetchRankingItems(genre,'rank'));
@@ -522,20 +521,22 @@ async function autoGenerate(){
       }
       return result;
     }
-    // 未使用のみを使う（履歴にある商品は表示しない）
-    if(fresh.length===0){
-      status.textContent=`⚠️ 上位${allItems.length}件がすべて履歴にあります。日を変えて再取得するか、別カテゴリをお試しください。`;
+    // 未使用が足りない場合は履歴済み商品で補完（必ず3件表示）
+    const supplementPool = [...fresh, ...used];
+    if(supplementPool.length===0){
+      status.textContent='⚠️ 商品を取得できませんでした。時間をおいて再試行してください。';
       status.style.color='var(--gold)';
       document.getElementById('autoPostSection').style.display='none';
       document.getElementById('autoConfirmArea').style.display='none';
       btn.disabled=false;btn.innerHTML='⚡ 商品を取得する';
       return;
     }
-    const items=pickDiverseProducts(fresh, Math.min(3, fresh.length), cat);
+    const items=pickDiverseProducts(supplementPool, 3, cat);
 
-    if(fresh.length<3){
-      status.textContent=`⚠️ 未使用商品が${fresh.length}件のみです。残りは手動で入力してください。`;
-      status.style.color='var(--gold)';
+    if(fresh.length===0){
+      status.textContent='✅ 商品取得完了（全件既出のため履歴から再利用）';status.style.color='var(--green)';
+    }else if(fresh.length<3){
+      status.textContent='✅ 商品取得完了（一部既出商品を補完）';status.style.color='var(--green)';
     }else{
       status.textContent='✅ 商品取得完了 → 投稿文を生成中…';status.style.color='var(--green)';
     }

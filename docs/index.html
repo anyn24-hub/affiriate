@@ -223,6 +223,9 @@ a{color:var(--cyan);text-decoration:none}
     </div>
     <div class="fg"><label>アフィリエイトURL</label><input class="finput" id="affUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." oninput="saveAff()"></div>
     <div class="info cyan mt12" style="font-size:12px">入力後すぐに自動保存されます。</div>
+    <a class="big-btn" href="https://affiliate.rakuten.co.jp/search?sitem=%E6%B1%BA%E7%AE%97%E6%9B%B8&l-id=af_header_cta_search" target="_blank" rel="noopener" style="margin-top:12px;border-color:rgba(245,197,24,.3)">
+      <span class="bico">🔍</span><div class="btxt"><div class="blabel">楽天アフィリエイト 決算書 検索</div><div class="bsub">商品を探してURLをコピー → 上の入力欄に貼り付け</div></div><span class="barr">↗</span>
+    </a>
   </div>
 </div>
 
@@ -323,49 +326,76 @@ function getAffUrl(){
 // ─────────────────────────────────────────
 // STEP 1: AI PROMPT + EXCLUSION LIST
 // ─────────────────────────────────────────
+const NOISE = /^(inc|ltd|co|corp|holdings|group|plc|llc|sa|ag|nv|se)\.?$/i;
+function extractCode(s){
+  s = String(s).trim();
+  if(!s || s.length > 20) return null;
+  if(s.startsWith('http')) return null;
+  if(NOISE.test(s)) return null;
+  // "企業名(CODE)" → extract CODE from parens
+  const m = s.match(/[（(]([A-Za-z0-9]{1,6})[）)]/);
+  if(m) return m[1].toUpperCase();
+  // pure ticker/code (no Japanese/Chinese chars)
+  if(/^[A-Za-z0-9]{1,6}$/.test(s) && !/[^\x00-\x7F]/.test(s) && !NOISE.test(s)) return s.toUpperCase();
+  return null;
+}
 function getExcluded(){
   try{
     const raw = localStorage.getItem(KEYS.excluded)||'[]';
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : raw.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
+    const arr = Array.isArray(parsed) ? parsed : raw.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
+    return arr.map(e=>extractCode(e)).filter(Boolean);
   }catch{ return []; }
 }
-function addToExcluded(names){
-  const current = new Set(getExcluded());
-  names.forEach(n=>{ if(n) current.add(n); });
-  try{ localStorage.setItem(KEYS.excluded, JSON.stringify([...current])); }catch{}
+function addToExcluded(entries){
+  // Load raw array (without extractCode, to preserve order)
+  let current;
+  try{
+    const raw = JSON.parse(localStorage.getItem(KEYS.excluded)||'[]');
+    current = Array.isArray(raw) ? raw.map(e=>extractCode(e)).filter(Boolean) : [];
+  }catch{ current = []; }
+  const seen = new Set(current);
+  entries.forEach(e=>{
+    const code = extractCode(e);
+    if(code && !seen.has(code)){ current.push(code); seen.add(code); }
+  });
+  // Keep up to 1000 entries (codes are tiny; this covers years of history)
+  const trimmed = current.slice(-1000);
+  try{ localStorage.setItem(KEYS.excluded, JSON.stringify(trimmed)); }catch{}
 }
 function copyAiPrompt(){
-  const excludedList = getExcluded();
-  const excludeSection = excludedList.length
-    ? `\n【⚠️ 除外企業リスト（直近投稿済み）】\n以下の企業は絶対に含めないこと。さかのぼって補足する場合も同様：\n${excludedList.map((c,i)=>`${i+1}. ${c}`).join('\n')}\n`
+  const d = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
+  const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const excludedCodes = getExcluded();
+  const excludeSection = excludedCodes.length
+    ? `【除外対象】\n以下のコード/ティッカーは出力しない：\n${excludedCodes.join(', ')}\n\n`
     : '';
-  const prompt = `以下のSBI証券 決算発表スケジュールページを確認し、本日の決算発表企業を抽出してください。
+  const prompt = `以下のSBI証券 決算発表スケジュールページを確認し、すでに発表済みの決算企業候補を抽出してください。
+
+本日の日付：${today}
 
 URL：
 ${SBI_URL}
-${excludeSection}
-出力形式（この形式のみで回答してください）：
+
+${excludeSection}条件：
+・日本・米国・中国・香港すべて対象
+・発表日が ${today} より後の企業は絶対に含めない
+・${today} の発表済み企業を優先
+・足りない場合は過去方向にのみさかのぼる
+・候補企業は最大10社まで出す
+・地域バランス：日本株は最大6社まで。残り4社は米国・中国・香港から必ず探すこと。見つからない場合のみ日本株で補ってよい
+・日本株の企業名は日本語
+・米国・中国・香港株の企業名は英語表記
+・説明文は不要
+
+出力形式：
 | 国 | 証券コード | 企業名 | 発表日 |
 |---|---|---|---|
-| 日本 | 7203 | トヨタ自動車 | 2026-06-20 |
-| 米国 | AAPL | Apple | 2026-06-20 |
-...
 
-条件：
-・日本・米国・中国・香港すべて対象
-・日本株の企業名は日本語（漢字・カナ）で出力すること
-・米国・中国・香港株の企業名はローマ字（英語表記）で出力すること
-・本日の発表が10社未満の場合は前日・前々日にさかのぼって補足し、最大10社を目標とする
-・ただし除外リストの企業は補足対象に含めない（10社に届かなくてもよい）
-・さかのぼった場合は発表日を正確に記載
-・表以外の説明文は不要
-
-【最後に必ずこの形式で出力してください】
-━━━ コピペ用（全企業） ━━━
+最後に必ずこの形式で出力：
+━━━ コピペ用（全企業・国籍ランダム順） ━━━
 企業名(コード/ティッカー), 企業名(コード/ティッカー), ...
-━━━━━━━━━━━━━━━━━━━━━━━━━
-※全地域含む。日本株は日本語名、海外株はローマ字でカンマ区切り1行にまとめる。`;
+━━━━━━━━━━━━━━━━━━━━━━━━━`;
   copyText(prompt);
 }
 
@@ -394,7 +424,7 @@ function copyAllPdfPrompt(){
   const companies = entries.length
     ? entries.map((e,i)=>`${i+1}. ${e}`).join('\n')
     : '（企業名またはティッカー・証券コードを入力してから押してください）';
-  const prompt = `以下の企業の最新の決算発表資料のURLを調べてください。
+  const prompt = `以下の企業の最新の決算発表資料（PDF）のURLを調べてください。
 
 対象企業：
 ${companies}
@@ -404,14 +434,19 @@ ${companies}
 
 条件（重要）：
 ・「最新の決算発表資料」とは、すでに公開済みの最も新しい決算短信・業績発表PDFのこと
-・URLは必ずWeb検索・Browse機能で実在を確認してから回答すること
-・URLを推測・作成して回答することは禁止（存在しないURLは必ず404エラーになります）
-・まだ決算期が到来していない／直近の決算短信が公開されていない場合は「未発表」と回答
-・日本株（決算短信）：
-　① Browse等でTDnetの実際のPDF URLが確認できた場合 → そのPDF URLを回答
-　② 確認できない場合 → 証券コードで特定できるTDnet企業別開示ページURLを回答
-　　 例：メディア工房（3815）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=3815
-・米国・中国・香港株：企業IRページのAnnual Results（決算発表プレスリリース）PDF URLを検索して回答
+・URLは必ずWeb検索・Browseで実在を確認してから回答すること
+・URLを推測・作成することは禁止（存在しないURLは必ず404になります）
+・まだ決算期が到来していない／未公開の場合は「未発表」と回答
+
+・日本株の検索方法（以下を同時並行で調べ、最初に見つかったPDF URLを回答）：
+　A. Google検索「会社名 証券コード 決算短信 filetype:pdf」
+　B. 企業の公式IRページ（example.co.jp/ir など）を Browse して決算短信PDFを探す
+　C. TDnet（https://www.release.tdnet.info）で会社名または証券コードを検索
+　→ A・B・C いずれかで実際のPDF URLが確認できた場合 → そのURLを回答
+　→ どこにもPDF URLが見つからない場合 → TDnet企業別ページURLを回答
+　　 例：アスクル（2678）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
+
+・米国・中国・香港株：「会社名 annual results press release filetype:pdf」でGoogle検索 かつ 企業IRページも Browse し、プレスリリースPDFを回答（Annual Reportは不要）
 ・Annual Report（年次報告書）は不要
 ・URLが確認できない場合は「不明」と記載
 ・説明文・補足は不要`;
@@ -432,6 +467,8 @@ PR文（以下4パターンから決算内容に応じて1つだけ選び、そ�
 ・財務・自己資本比率・キャッシュフロー・配当が中心 → 📚 財務3表を学びたい人へ ${affUrl}
 ※NG表現（投稿文・PR文に絶対使用禁止）：絶対おすすめ・買うべき・稼げる・儲かる・爆益・必須・間違いない・勝てる` : '';
   const prompt = `Drive資料フォルダ(ID:18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0)の決算短信PDFを全件読み込み、投稿素材を生成してください。先にファイル名と件数を一覧表示し、漏れなく全件処理すること。
+
+【重要】出力順序：日本株・米国株・中国株・香港株を国籍で固めず、ランダムな順番で出力すること（投稿が特定の国に偏らないようにするため）。
 
 ①X投稿文（全角=2pt・英数=1pt・絵文字=2pt・改行=1pt、合計200pt以内）
 形式：
