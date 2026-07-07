@@ -359,8 +359,8 @@ function addToExcluded(entries){
     const code = extractCode(e);
     if(code && !seen.has(code)){ current.push(code); seen.add(code); }
   });
-  // Keep only the most recent 30
-  const trimmed = current.slice(-30);
+  // Keep up to 1000 entries (codes are tiny; this covers years of history)
+  const trimmed = current.slice(-1000);
   try{ localStorage.setItem(KEYS.excluded, JSON.stringify(trimmed)); }catch{}
 }
 function copyAiPrompt(){
