@@ -326,59 +326,76 @@ function getAffUrl(){
 // ─────────────────────────────────────────
 // STEP 1: AI PROMPT + EXCLUSION LIST
 // ─────────────────────────────────────────
+const NOISE = /^(inc|ltd|co|corp|holdings|group|plc|llc|sa|ag|nv|se)\.?$/i;
+function extractCode(s){
+  s = String(s).trim();
+  if(!s || s.length > 20) return null;
+  if(s.startsWith('http')) return null;
+  if(NOISE.test(s)) return null;
+  // "企業名(CODE)" → extract CODE from parens
+  const m = s.match(/[（(]([A-Za-z0-9]{1,6})[）)]/);
+  if(m) return m[1].toUpperCase();
+  // pure ticker/code (no Japanese/Chinese chars)
+  if(/^[A-Za-z0-9]{1,6}$/.test(s) && !/[^\x00-\x7F]/.test(s) && !NOISE.test(s)) return s.toUpperCase();
+  return null;
+}
 function getExcluded(){
   try{
     const raw = localStorage.getItem(KEYS.excluded)||'[]';
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : raw.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
+    const arr = Array.isArray(parsed) ? parsed : raw.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
+    return arr.map(e=>extractCode(e)).filter(Boolean);
   }catch{ return []; }
 }
-function addToExcluded(names){
-  const current = new Set(getExcluded());
-  names.forEach(n=>{ if(n) current.add(n); });
-  try{ localStorage.setItem(KEYS.excluded, JSON.stringify([...current])); }catch{}
+function addToExcluded(entries){
+  // Load raw array (without extractCode, to preserve order)
+  let current;
+  try{
+    const raw = JSON.parse(localStorage.getItem(KEYS.excluded)||'[]');
+    current = Array.isArray(raw) ? raw.map(e=>extractCode(e)).filter(Boolean) : [];
+  }catch{ current = []; }
+  const seen = new Set(current);
+  entries.forEach(e=>{
+    const code = extractCode(e);
+    if(code && !seen.has(code)){ current.push(code); seen.add(code); }
+  });
+  // Keep only the most recent 30
+  const trimmed = current.slice(-30);
+  try{ localStorage.setItem(KEYS.excluded, JSON.stringify(trimmed)); }catch{}
 }
 function copyAiPrompt(){
   const d = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
   const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const excludedList = getExcluded();
-  const excludeSection = excludedList.length
-    ? `\n【⚠️ 除外企業リスト（直近投稿済み）】\n以下の企業は絶対に含めないこと。さかのぼって補足する場合も同様：\n${excludedList.map((c,i)=>`${i+1}. ${c}`).join('\n')}\n`
+  const excludedCodes = getExcluded();
+  const excludeSection = excludedCodes.length
+    ? `【除外対象】\n以下のコード/ティッカーは出力しない：\n${excludedCodes.join(', ')}\n\n`
     : '';
-  const prompt = `以下のSBI証券 決算発表スケジュールページを確認し、すでに発表済みの決算企業を抽出してください。
+  const prompt = `以下のSBI証券 決算発表スケジュールページを確認し、すでに発表済みの決算企業候補を抽出してください。
 
-━━━ 本日の日付（絶対基準）：${today} ━━━
+本日の日付：${today}
+
 URL：
 ${SBI_URL}
-${excludeSection}
-【⛔ 最重要ルール：未来の企業は絶対に含めない】
-・発表日が ${today} より後の企業は1社も含めてはいけない
-・例：本日が ${today} なら、${today.slice(0,8)}${String(Number(today.slice(8))+1).padStart(2,'0')} 以降の企業はすべて除外
-・「明日以降の予定」「今後の発表予定」の企業は除外
-・ページに未来の日付で掲載されていても絶対に含めない
-・発表日を必ず1社ずつ確認してから出力すること
 
-出力形式（この形式のみで回答してください）：
+${excludeSection}条件：
+・日本・米国・中国・香港すべて対象
+・発表日が ${today} より後の企業は絶対に含めない
+・${today} の発表済み企業を優先
+・足りない場合は過去方向にのみさかのぼる
+・日本株だけに偏らないよう、米国・中国・香港も可能な範囲で含める
+・候補企業を最大30社まで出す
+・日本株の企業名は日本語
+・米国・中国・香港株の企業名は英語表記
+・説明文は不要
+
+出力形式：
 | 国 | 証券コード | 企業名 | 発表日 |
 |---|---|---|---|
-| 日本 | 7203 | トヨタ自動車 | 2026-06-20 |
-| 米国 | AAPL | Apple | 2026-06-20 |
-...
 
-条件：
-・日本・米国・中国・香港すべて対象
-・日本株の企業名は日本語（漢字・カナ）で出力すること
-・米国・中国・香港株の企業名はローマ字（英語表記）で出力すること
-・${today} の発表が10社未満の場合は前日・前々日（過去方向のみ）にさかのぼって補足し、最大10社を目標とする
-・ただし除外リストの企業は補足対象に含めない（10社に届かなくてもよい）
-・さかのぼった場合は発表日を正確に記載
-・表以外の説明文は不要
-
-【最後に必ずこの形式で出力してください】
+最後に必ずこの形式で出力：
 ━━━ コピペ用（全企業・国籍ランダム順） ━━━
 企業名(コード/ティッカー), 企業名(コード/ティッカー), ...
-━━━━━━━━━━━━━━━━━━━━━━━━━
-※日本・米国・中国・香港の企業を国籍で固めず、ランダムな順番で1行にカンマ区切りで並べること。日本株は日本語名、海外株はローマ字。`;
+━━━━━━━━━━━━━━━━━━━━━━━━━`;
   copyText(prompt);
 }
 
