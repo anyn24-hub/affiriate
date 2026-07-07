@@ -514,19 +514,29 @@ async function autoGenerate(){
       }
       return result;
     }
-    const items=pickDiverseProducts([...fresh,...used], 3, cat);
-
+    // 未使用のみを使う（履歴にある商品は表示しない）
     if(fresh.length===0){
-      status.textContent=`⚠️ 未使用商品なし（上位${allItems.length}件がすべて既出）。ランダムで生成します`;
+      status.textContent=`⚠️ 上位${allItems.length}件がすべて履歴にあります。日を変えて再取得するか、別カテゴリをお試しください。`;
       status.style.color='var(--gold)';
-    }else if(fresh.length<3){
-      status.textContent=`✅ 未使用${fresh.length}件 + 既出${3-fresh.length}件で補完して生成`;
-      status.style.color='var(--cyan)';
+      document.getElementById('autoPostSection').style.display='none';
+      document.getElementById('autoConfirmArea').style.display='none';
+      btn.disabled=false;btn.innerHTML='⚡ 商品を取得する';
+      return;
+    }
+    const items=pickDiverseProducts(fresh, Math.min(3, fresh.length), cat);
+
+    if(fresh.length<3){
+      status.textContent=`⚠️ 未使用商品が${fresh.length}件のみです。残りは手動で入力してください。`;
+      status.style.color='var(--gold)';
     }else{
       status.textContent='✅ 商品取得完了 → 投稿文を生成中…';status.style.color='var(--green)';
     }
 
+    // 未使用分のみ表示（3件に満たない場合は残りのフィールドをリセット）
     populateProducts(items, cat);
+    for(let i=items.length+1;i<=3;i++){
+      setF(`name${i}`,'');setF(`url${i}`,'');setF(`imageUrl${i}`,'');
+    }
 
     // サブカテゴリ重複チェック → 警告
     const selectedSubcats = items.map(it => detectSubcat(cat, it.name||''));
