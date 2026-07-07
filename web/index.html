@@ -1039,54 +1039,67 @@ function buildPostText(cat, extra){
 
   const sep=isHighRate?'｜':' ▷ ';
   const tag=isFurusato?'\n\n#PR #楽天市場 #ふるさと納税':'\n\n#PR #楽天市場';
-  const lines=prods.map((p,i)=>{
-    const comment=isHighRate?comments[i]||'':'';
-    const rawName=isHighRate?trimHighRateName(p.name||''):p.name||'';
-    const name=rawName||'（商品名未入力）';
-    const nameLine=`${['①','②','③'][i]} ${name}${comment?sep+comment:''}`;
-    return `${nameLine}\n${p.url||'（URL未入力）'}`;
-  }).filter(Boolean).join('\n');
-  if(!lines)return null;
-  let post=`${intro}\n\n${lines}`;
-  if(extra)post+=`\n\n${extra}`;
-  post+=tag;
-  let result=autoNG(post);
-  // Step3: 最終投稿テキスト全体のNGパターンチェック
-  if(!validateFinalPost(result)){
-    return null; // NGが残っていれば投稿を出さない
-  }
-  // 280字超の場合はコメントを省略して再構築
-  if(xchars(result)>280){
-    let si2=0;
-    const linesShort=prods.map((p)=>{
-      const cleaned=cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');
-      if(!isHighRate&&!validateProductForPost(cleaned,cat))return null;
-      if(isHighRate&&!cleaned)return null;
-      return `${nums[si2++]} ${cleaned}\n${p.url||'（URL未入力）'}`;
+  const nums=['①','②','③'];
+
+  // 半角スペースを除去してコンパクトにする
+  function compactName(n){ return (n||'').replace(/ +/g,''); }
+  function getBaseName(p){ return compactName(cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'')); }
+
+  // 投稿文を組み立てるヘルパー（nameFn: (baseName, index) => 最終名前文字列）
+  function assemble(nameFn, withComment){
+    let si=0;
+    const ls=prods.map((p,i)=>{
+      const base=getBaseName(p);
+      if(!base)return null;
+      const name=nameFn(base,i);
+      if(!name)return null;
+      const comment=withComment&&!isHighRate?'':isHighRate?comments[i]||'':'';
+      const commentPart=comment?sep+comment:'';
+      return `${nums[si++]} ${name}${commentPart}\n${p.url||'（URL未入力）'}`;
     }).filter(Boolean).join('\n');
-    if(!linesShort)return null;
-    let postShort=`${intro}\n\n${linesShort}`;
-    if(extra)postShort+=`\n\n${extra}`;
-    postShort+=tag;
-    result=autoNG(postShort);
-    if(!validateFinalPost(result))return null;
+    if(!ls)return null;
+    let t=`${intro}\n\n${ls}`;
+    if(extra)t+=`\n\n${extra}`;
+    t+=tag;
+    return autoNG(t);
   }
-  // それでも280字超なら商品名を26文字に切る
+
+  // Step1: コメントあり（通常）
+  let result=assemble((n)=>n, true);
+  if(!result||!validateFinalPost(result))return null;
+
+  // Step2: 280超 → コメントなしで再構築
   if(xchars(result)>280){
-    function trimName(n){ return n.length>26?n.slice(0,26).trimEnd()+'…':n; }
-    let si3=0;
-    const linesTrim=prods.map((p)=>{
-      const cleaned=trimName(cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||''));
-      if(!cleaned)return null;
-      return `${nums[si3++]} ${cleaned}\n${p.url||'（URL未入力）'}`;
-    }).filter(Boolean).join('\n');
-    if(!linesTrim)return null;
-    let postTrim=`${intro}\n\n${linesTrim}`;
-    if(extra)postTrim+=`\n\n${extra}`;
-    postTrim+=tag;
-    result=autoNG(postTrim);
-    if(!validateFinalPost(result))return null;
+    const r2=assemble((n)=>n, false);
+    if(r2&&validateFinalPost(r2))result=r2;
   }
+
+  // Step3: まだ280超 → 名前を残り文字数から動的に切り詰める
+  if(xchars(result)>280){
+    // 名前部分を除いたオーバーヘッドを計算
+    const nameSum=prods.reduce((s,p)=>s+getBaseName(p).length,0);
+    const overhead=xchars(result)-nameSum;
+    const available=Math.max(0,280-overhead-3); // 3文字バッファ
+    const maxPerName=Math.max(8,Math.floor(available/prods.length));
+    function dynTrim(n){ return n.length>maxPerName?n.slice(0,maxPerName).trimEnd()+'…':n; }
+    const r3=assemble(dynTrim, false);
+    if(r3&&validateFinalPost(r3))result=r3;
+  }
+
+  // 最終セーフティ: 万が一まだ超えていたら1文字ずつ削る
+  if(xchars(result)>280){
+    const lines=result.split('\n');
+    while(xchars(result)>280&&lines.length>0){
+      // 最後の非URL・非タグ行を短縮
+      for(let i=lines.length-1;i>=0;i--){
+        if(lines[i]&&!lines[i].startsWith('http')&&!lines[i].startsWith('#')){
+          if(lines[i].length>2){lines[i]=lines[i].slice(0,-2)+'…';break;}
+        }
+      }
+      result=lines.join('\n');
+    }
+  }
+
   return result;
 }
 
