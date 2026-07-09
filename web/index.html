@@ -1073,14 +1073,15 @@ function buildPostText(cat, extra){
   }
 
   const sep=isHighRate?'｜':' ▷ ';
-  const tag='\n\n#PR #楽天市場';
+  const tagFull='\n\n#PR #楽天市場';
+  const tagShort='\n\n#PR';
   const nums=['①','②','③'];
 
   // 手動入力をそのまま使う（半角スペースは除去しない）
   function getBaseName(p){ return cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||''); }
 
-  // 投稿文を組み立てるヘルパー（nameFn: (baseName, index) => 最終名前文字列）
-  function assemble(nameFn, withComment){
+  // 投稿文を組み立てるヘルパー
+  function assemble(nameFn, withComment, tag){
     let si=0;
     const ls=prods.map((p,i)=>{
       const base=getBaseName(p);
@@ -1100,16 +1101,22 @@ function buildPostText(cat, extra){
   }
 
   // Step1: コメントあり（通常）
-  let result=assemble((n)=>n, true);
+  let result=assemble((n)=>n, true, tagFull);
   if(!result||!validateFinalPost(result))return null;
 
-  // Step2: 280超 → コメントなしで再構築
+  // Step2: 260超 → #楽天市場を削除
+  if(xchars(result)>260){
+    const r1b=assemble((n)=>n, true, tagShort);
+    if(r1b&&validateFinalPost(r1b))result=r1b;
+  }
+
+  // Step3: 280超 → コメントなしで再構築
   if(xchars(result)>280){
-    const r2=assemble((n)=>n, false);
+    const r2=assemble((n)=>n, false, tagShort);
     if(r2&&validateFinalPost(r2))result=r2;
   }
 
-  // Step3: まだ280超 → 名前を残り文字数から動的に切り詰める
+  // Step4: まだ280超 → 名前を残り文字数から動的に切り詰める
   if(xchars(result)>280){
     // 名前部分を除いたオーバーヘッドを計算
     const nameSum=prods.reduce((s,p)=>s+getBaseName(p).length,0);
@@ -1117,7 +1124,7 @@ function buildPostText(cat, extra){
     const available=Math.max(0,280-overhead-3); // 3文字バッファ
     const maxPerName=Math.max(8,Math.floor(available/prods.length));
     function dynTrim(n){ return n.length>maxPerName?n.slice(0,maxPerName).trimEnd()+'…':n; }
-    const r3=assemble(dynTrim, false);
+    const r3=assemble(dynTrim, false, tagShort);
     if(r3&&validateFinalPost(r3))result=r3;
   }
 
