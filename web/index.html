@@ -1279,7 +1279,7 @@ async function drawCanvas(canvasId,dlBtnId,cat){
       gf.addColorStop(0,'#4c1d95');gf.addColorStop(1,'#831843');
       ctx.fillStyle=gf;ctx.fillRect(imgX,imgY,IMGW,IMGW);
       ctx.font=`900 ${Math.round(IMGW*.4)}px sans-serif`;ctx.fillStyle='rgba(255,255,255,.3)';
-      ctx.textAlign='center';ctx.fillText(nums[i],imgX+IMGW/2,imgY+IMGW/2+Math.round(IMGW*.14));
+      ctx.textAlign='center';ctx.fillText(isHighRate?'?':nums[i],imgX+IMGW/2,imgY+IMGW/2+Math.round(IMGW*.14));
     }
     ctx.restore();
 
@@ -1288,14 +1288,17 @@ async function drawCanvas(canvasId,dlBtnId,cat){
     const textAreaW=W-PAD-textX-10;
     const cy=ry+rowH/2;
     const circR=28;
-    // Number circle
-    const cg=ctx.createLinearGradient(textX,cy-circR,textX+circR*2,cy+circR);
-    cg.addColorStop(0,'#a855f7');cg.addColorStop(1,'#ec4899');
-    ctx.beginPath();ctx.arc(textX+circR,cy,circR,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
-    ctx.font='900 32px sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';
-    ctx.fillText(nums[i],textX+circR,cy+11);
+    // Number circle（高料率は1商品なので①不要）
+    let nameX=textX;
+    if(!isHighRate){
+      const cg=ctx.createLinearGradient(textX,cy-circR,textX+circR*2,cy+circR);
+      cg.addColorStop(0,'#a855f7');cg.addColorStop(1,'#ec4899');
+      ctx.beginPath();ctx.arc(textX+circR,cy,circR,0,Math.PI*2);ctx.fillStyle=cg;ctx.fill();
+      ctx.font='900 32px sans-serif';ctx.fillStyle='#fff';ctx.textAlign='center';
+      ctx.fillText(nums[i],textX+circR,cy+11);
+      nameX=textX+circR*2+14;
+    }
     // Product name
-    const nameX=textX+circR*2+14;
     const nameW=W-PAD-nameX-10;
     const fs=ROWS===1?46:34;
     const lh=fs+12;
