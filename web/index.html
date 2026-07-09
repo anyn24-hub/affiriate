@@ -146,12 +146,8 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
     <!-- 高料率 -->
     <div id="highRateArea" style="display:none;margin-top:4px">
-      <div class="fg" style="margin-top:0">
-        <label>このカテゴリの表示名（任意）</label>
-        <input class="finput" id="hrNameInput" placeholder="例：食品、コスメ…" oninput="onHrNameInput()">
-      </div>
       <a href="https://affiliate.rakuten.co.jp/link/high_ranking?l-id=af_header_search_02" target="_blank" rel="noopener"
-        style="margin-top:10px;display:flex;align-items:center;gap:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:13px;text-decoration:none;color:var(--text)">
+        style="display:flex;align-items:center;gap:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:13px;text-decoration:none;color:var(--text)">
         <span style="font-size:20px">💰</span>
         <div style="flex:1"><div style="font-size:14px;font-weight:800">楽天アフィリエイト管理画面を開く</div><div style="font-size:11px;color:var(--muted);margin-top:2px">高料率ランキングからアフィリエイトHTMLを取得</div></div>
         <span style="color:var(--muted);font-size:14px">↗</span>
@@ -161,8 +157,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <textarea class="ftarea" id="affHtml" placeholder="管理画面で生成した &lt;table&gt;〜&lt;/table&gt; を貼り付け"></textarea>
       </div>
       <div class="btn-row">
-        <button class="btn btn-gold" onclick="parseAffHtml()" style="flex:1">✨ HTMLを解析して投稿を生成</button>
-        <button class="btn btn-ghost btn-sm" onclick="clearAffHtml()">クリア</button>
+        <button class="btn btn-gold btn-full" onclick="parseAffHtml()">✨ HTMLを解析して投稿を生成</button>
       </div>
       <div id="parseResult" style="margin-top:10px"></div>
       <div id="postArea" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
@@ -368,37 +363,6 @@ function setF(id,v){const el=document.getElementById(id);if(el)el.value=v||'';}
 function getF(id){return(document.getElementById(id)?.value||'').trim();}
 function fmtTs(iso){const d=new Date(iso);const pad=n=>String(n).padStart(2,'0');return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;}
 
-// ═══ HIGH-RATE NAME MANAGEMENT ═══════════════════════════════
-const HR_NAMES_KEY='ohenai_hr_names';
-function loadHrNames(){try{return JSON.parse(localStorage.getItem(HR_NAMES_KEY)||'{}');}catch{return{};}}
-function saveHrNameStore(cat,name){
-  const names=loadHrNames();
-  if(name)names[cat]=name;else delete names[cat];
-  try{localStorage.setItem(HR_NAMES_KEY,JSON.stringify(names));}catch{}
-}
-function updateSelOption(cat,customName){
-  const sel=document.getElementById('catSel');
-  const opt=[...sel.options].find(o=>o.value===cat);
-  if(!opt)return;
-  const ico=cat==='高料率①'?'💰':'💎';
-  opt.text=customName?`${ico} ${customName}`:`${ico} ${cat}`;
-}
-function applyHrNames(){
-  const names=loadHrNames();
-  ['高料率①','高料率②'].forEach(cat=>updateSelOption(cat,names[cat]||''));
-}
-function onHrNameInput(){
-  const cat=document.getElementById('catSel').value;
-  const name=document.getElementById('hrNameInput').value.trim();
-  saveHrNameStore(cat,name);
-  updateSelOption(cat,name);
-}
-function clearAffHtml(){
-  document.getElementById('affHtml').value='';
-  document.getElementById('parseResult').innerHTML='';
-  document.getElementById('postArea').style.display='none';
-}
-
 // ═══ CATEGORY ════════════════════════════════════════════════
 function onCatChange(){
   const cat=document.getElementById('catSel').value;
@@ -414,10 +378,6 @@ function onCatChange(){
   document.getElementById('affHtml').value='';
   document.getElementById('catTimeHint').textContent=CAT_TIME[cat]||'';
   for(let i=1;i<=3;i++){['name','url','imageUrl'].forEach(k=>setF(k+i,''));}
-  if(cat==='高料率①'||cat==='高料率②'){
-    const names=loadHrNames();
-    document.getElementById('hrNameInput').value=names[cat]||'';
-  }
 }
 
 // ═══ AUTO-FETCH RANKING ══════════════════════════════════════
@@ -1078,7 +1038,7 @@ function buildPostText(cat, extra){
   }
 
   const sep=isHighRate?'｜':' ▷ ';
-  const tag='\n\n#PR #楽天市場';
+  const tag=isFurusato?'\n\n#PR #楽天市場 #ふるさと納税':'\n\n#PR #楽天市場';
   const nums=['①','②','③'];
 
   // 半角スペースを除去してコンパクトにする
@@ -1095,8 +1055,7 @@ function buildPostText(cat, extra){
       if(!name)return null;
       const comment=withComment&&!isHighRate?'':isHighRate?comments[i]||'':'';
       const commentPart=comment?sep+comment:'';
-      const num=isHighRate?'':nums[si++];
-      return `${num}${name}${commentPart}\n${p.url||'（URL未入力）'}`;
+      return `${nums[si++]} ${name}${commentPart}\n${p.url||'（URL未入力）'}`;
     }).filter(Boolean).join('\n');
     if(!ls)return null;
     let t=`${intro}\n\n${ls}`;
@@ -1459,7 +1418,7 @@ function delHist(idx){
 
 // ═══ INIT ════════════════════════════════════════════════════
 function initHeader(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));const wd=['日','月','火','水','木','金','土'][d.getDay()];document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;}
-(function(){initHeader();applyHrNames();onCatChange();renderHistory();})();
+(function(){initHeader();onCatChange();renderHistory();})();
 </script>
 </body>
 </html>
