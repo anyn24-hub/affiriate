@@ -1076,9 +1076,8 @@ function buildPostText(cat, extra){
   const tag='\n\n#PR #楽天市場';
   const nums=['①','②','③'];
 
-  // 半角スペースを除去してコンパクトにする
-  function compactName(n){ return (n||'').replace(/ +/g,''); }
-  function getBaseName(p){ return compactName(cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'')); }
+  // 手動入力をそのまま使う（半角スペースは除去しない）
+  function getBaseName(p){ return cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||''); }
 
   // 投稿文を組み立てるヘルパー（nameFn: (baseName, index) => 最終名前文字列）
   function assemble(nameFn, withComment){
