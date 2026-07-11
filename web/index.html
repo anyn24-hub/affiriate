@@ -103,7 +103,6 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <option value="ポイントアップ投稿" id="catOptPointup">⭐ ポイントアップ投稿（5・0のつく日）</option>
       </select>
       <div id="catTimeHint" style="font-size:11px;color:var(--cyan);font-weight:700;margin-top:5px"></div>
-      <div id="pointupDayHint" style="font-size:11px;color:var(--muted);margin-top:3px"></div>
     </div>
   </div>
 </div>
@@ -1606,7 +1605,13 @@ function delHist(idx){
 }
 
 // ═══ INIT ════════════════════════════════════════════════════
-function initHeader(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));const wd=['日','月','火','水','木','金','土'][d.getDay()];document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;}
+function initHeader(){
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
+  const wd=['日','月','火','水','木','金','土'][d.getDay()];
+  const isPointUpDay=[5,10,15,20,25,30].includes(d.getDate());
+  const el=document.getElementById('hdrDate');
+  el.innerHTML=`${d.getMonth()+1}/${d.getDate()}（${wd}）`+(isPointUpDay?' <span style="font-size:10px;background:#f59e0b;color:#000;border-radius:4px;padding:1px 5px;font-weight:800;vertical-align:middle">PU日</span>':'');
+}
 (function(){
   initHeader();onCatChange();applyHrNames();renderHistory();
   // ポイントアップデー自動判定: ポイントアップ日は高料率②と入れ替え表示
@@ -1619,15 +1624,8 @@ function initHeader(){const d=new Date(new Date().toLocaleString('en-US',{timeZo
   if(isPointUpDay){
     if(optHr2)optHr2.remove();
     document.getElementById('pointupBanner').style.display='block';
-    document.getElementById('pointupDayHint').textContent='⭐ 今日はポイントアップ日です';
-    document.getElementById('pointupDayHint').style.color='#f59e0b';
   }else{
     if(optPointup)optPointup.remove();
-    // 次のポイントアップ日を計算
-    const puDays=[5,10,15,20,25,30];
-    const nextDay=puDays.find(d=>d>day)||(puDays[0]);
-    const nextMonth=puDays.find(d=>d>day)?today.getMonth()+1:today.getMonth()+2;
-    document.getElementById('pointupDayHint').textContent=`次のポイントアップ日: ${nextMonth}/${nextDay}`;
   }
 })();
 </script>
