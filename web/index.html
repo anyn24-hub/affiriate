@@ -100,7 +100,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <option value="ふるさと納税">🎁 ふるさと納税</option>
         <option value="高料率①">💰 高料率①</option>
         <option value="高料率②">💎 高料率②</option>
-        <option value="ポイントアップ投稿">⭐ ポイントアップ投稿（5・0のつく日）</option>
+        <option value="ポイントアップ投稿" id="catOptPointup">⭐ ポイントアップ投稿（5・0のつく日）</option>
       </select>
       <div id="catTimeHint" style="font-size:11px;color:var(--cyan);font-weight:700;margin-top:5px"></div>
     </div>
@@ -119,12 +119,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
     <!-- ポイントアップ投稿 -->
     <div id="pointupArea" style="display:none;margin-top:4px">
       <div id="pointupDayBadge" style="text-align:center;font-size:13px;font-weight:700;padding:10px;border-radius:10px;margin-bottom:12px"></div>
-      <div class="fg" style="margin-bottom:10px">
-        <label style="font-size:12px">🔗 アフィリエイトURL（任意・最大3件）</label>
-        <input type="url" class="finp" id="pointupUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." style="margin-bottom:6px">
-        <input type="url" class="finp" id="pointupUrl2" placeholder="https://hb.afl.rakuten.co.jp/... （2件目）" style="margin-bottom:6px">
-        <input type="url" class="finp" id="pointupUrl3" placeholder="https://hb.afl.rakuten.co.jp/... （3件目）">
-      </div>
+      <a href="https://affiliate.rakuten.co.jp/link/pc/shop?cmd=shop&me_adv_category_id=85&me_id=1" target="_blank" rel="noopener" class="btn btn-full" style="display:block;text-align:center;background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.35);font-size:13px;padding:11px;margin-bottom:10px;text-decoration:none">🔗 楽天ポイントアップ アフィリエイトリンクを開く</a>
       <button class="btn btn-full" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:16px;padding:15px" onclick="generatePointupPost()">⭐ ポイントアップ投稿文を生成</button>
       <div id="pointupPostSection" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
         <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">📝 投稿文</div>
@@ -488,11 +483,8 @@ function onHrNameInput(){const cat=document.getElementById('catSel').value;const
 // ═══ POINT-UP POST ═══════════════════════════════════════════
 function buildPointupPost(){
   const body=POINTUP_TEMPLATES[Math.floor(Math.random()*POINTUP_TEMPLATES.length)];
-  const urls=[1,2,3].map(n=>(document.getElementById('pointupUrl'+n)?.value||'').trim()).filter(Boolean);
-  const urlPart=urls.length?'\n'+urls.join('\n'):'';
-  // タグ付きで280字以内に収める
-  const withMarket=body+urlPart+'\n\n#PR #楽天市場';
-  const withoutMarket=body+urlPart+'\n\n#PR';
+  const withMarket=body+'\n\n#PR #楽天市場';
+  const withoutMarket=body+'\n\n#PR';
   if(xchars(withMarket)<=280)return withMarket;
   if(xchars(withoutMarket)<=280)return withoutMarket;
   return withoutMarket;
@@ -1608,10 +1600,12 @@ function delHist(idx){
 function initHeader(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));const wd=['日','月','火','水','木','金','土'][d.getDay()];document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;}
 (function(){
   initHeader();onCatChange();applyHrNames();renderHistory();
-  // ポイントアップデー自動判定バナー
+  // ポイントアップデー自動判定
   const day=new Date().getDate();
   if([5,10,15,20,25,30].includes(day)){
     document.getElementById('pointupBanner').style.display='block';
+    const opt=document.getElementById('catOptPointup');
+    if(opt)opt.textContent='⭐ ポイントアップ投稿（5・0のつく日）★今日！';
   }
 })();
 </script>
