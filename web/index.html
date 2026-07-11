@@ -93,6 +93,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <option value="ふるさと納税">🎁 ふるさと納税</option>
         <option value="高料率①">💰 高料率①</option>
         <option value="高料率②">💎 高料率②</option>
+        <option value="ポイントアップ投稿">⭐ ポイントアップ投稿（5・0のつく日）</option>
       </select>
       <div id="catTimeHint" style="font-size:11px;color:var(--cyan);font-weight:700;margin-top:5px"></div>
     </div>
@@ -107,6 +108,24 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
     <span class="chevron">▼</span>
   </div>
   <div class="sec-body">
+
+    <!-- ポイントアップ投稿 -->
+    <div id="pointupArea" style="display:none;margin-top:4px">
+      <div id="pointupDayBadge" style="text-align:center;font-size:13px;font-weight:700;padding:10px;border-radius:10px;margin-bottom:12px"></div>
+      <button class="btn btn-full" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:16px;padding:15px" onclick="generatePointupPost()">⭐ ポイントアップ投稿文を生成</button>
+      <div id="pointupPostSection" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">📝 投稿文</div>
+        <div class="out-box" id="pointupPostBox" contenteditable="true" oninput="onPointupPostInput()"></div>
+        <div class="char-row">
+          <span style="font-size:12px;color:var(--muted)">投稿先: X のみ</span>
+          <span class="char-cnt char-ok" id="pointupCharCount">0 / 280文字</span>
+        </div>
+        <div class="btn-row mt8">
+          <button class="btn btn-green" onclick="copyPointupPost()" style="flex:1">📋 X用にコピー</button>
+          <button class="btn btn-ghost btn-sm" onclick="generatePointupPost()">🔄 投稿文を再生成</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 自動取得カテゴリ（スイーツ/ガジェット/美容/ゆる健康） -->
     <div id="autoFetchArea" style="margin-top:4px">
@@ -229,7 +248,16 @@ const CAT_TIME = {
   '美容':         '⏰ 18:00',
   'ふるさと納税': '⏰ 20:00',
   '高料率②':     '⏰ 22:00',
+  'ポイントアップ投稿': '⏰ 15:00',
 };
+
+const POINTUP_TEMPLATES = [
+  '今日は5と0のつく日。\n\n楽天市場のポイントアップ日は、エントリーを忘れずに。\n買い回りや欲しいものリストを見直すのにちょうどいいタイミング。\n\n日用品・スイーツ・ふるさと納税など、\n普段より少しお得に揃えられる日です。\n\n#PR #楽天市場',
+  '5と0のつく日は、楽天市場のポイントアップ日。\n\nエントリーさえすれば、いつもよりポイントが多くもらえます。\n買い回りのついでに、気になっていたものをチェックしてみて。\n\n#PR #楽天市場',
+  '楽天市場「5と0のつく日」。\n\nエントリーして買い回りをすると、ポイントが最大で10倍以上になることも。\n日用品のまとめ買いや、ふるさと納税の見直しにも向いている日。\n\n#PR #楽天市場',
+  '今日は楽天のポイントアップ日（5・0のつく日）。\n\nエントリーを忘れずに。\n普段から気になっていたものを、このタイミングでチェックしてみるのもあり。\n\n#PR #楽天市場',
+  '5か0のつく日は、楽天市場でポイントが上がる日。\n\nエントリーして買い物するだけで、いつもよりお得になります。\n買い回りの計画を立てるのにも向いているタイミング。\n\n#PR #楽天市場',
+];
 const INTRO = {
   'スイーツ': [
     '甘いものを少し楽しみたい人向け。\n\n自分用にもギフトにも良さそうなスイーツを3つ選びました。',
@@ -399,8 +427,10 @@ function fmtTs(iso){const d=new Date(iso);const pad=n=>String(n).padStart(2,'0')
 function onCatChange(){
   const cat=document.getElementById('catSel').value;
   const isAuto=RANK_AUTO_CATS.includes(cat);
-  document.getElementById('autoFetchArea').style.display=isAuto?'block':'none';
-  document.getElementById('highRateArea').style.display=isAuto?'none':'block';
+  const isPointup=cat==='ポイントアップ投稿';
+  document.getElementById('autoFetchArea').style.display=(isAuto&&!isPointup)?'block':'none';
+  document.getElementById('highRateArea').style.display=(!isAuto&&!isPointup)?'block':'none';
+  document.getElementById('pointupArea').style.display=isPointup?'block':'none';
   document.getElementById('autoResultArea').style.display='none';
   document.getElementById('autoConfirmArea').style.display='none';
   document.getElementById('autoPostSection').style.display='none';
@@ -415,6 +445,23 @@ function onCatChange(){
     const names=loadHrNames();
     document.getElementById('hrNameInput').value=names[cat]||'';
   }
+  if(isPointup){
+    const day=new Date().getDate();
+    const isPointUpDay=[5,10,15,20,25,30].includes(day);
+    const badge=document.getElementById('pointupDayBadge');
+    if(isPointUpDay){
+      badge.textContent='⭐ 今日はポイントアップ日です！投稿してみましょう。';
+      badge.style.background='rgba(245,158,11,.15)';
+      badge.style.color='#f59e0b';
+      badge.style.border='1px solid rgba(245,158,11,.3)';
+    }else{
+      badge.textContent=`今日（${day}日）はポイントアップ日ではありません。次回の5または0のつく日に投稿できます。`;
+      badge.style.background='rgba(255,255,255,.05)';
+      badge.style.color='var(--muted)';
+      badge.style.border='1px solid var(--border)';
+    }
+    document.getElementById('pointupPostSection').style.display='none';
+  }
 }
 
 // ═══ HIGH-RATE NAME MANAGEMENT ═══════════════════════════════
@@ -424,6 +471,29 @@ function saveHrNameStore(cat,name){const names=loadHrNames();if(name)names[cat]=
 function updateSelOption(cat,customName){const sel=document.getElementById('catSel');const opt=[...sel.options].find(o=>o.value===cat);if(!opt)return;const base=cat==='高料率①'?'💰 高料率①':'💎 高料率②';opt.text=customName?`${base.slice(0,2)} ${customName}`:base;}
 function applyHrNames(){['高料率①','高料率②'].forEach(cat=>{const names=loadHrNames();updateSelOption(cat,names[cat]||'');});}
 function onHrNameInput(){const cat=document.getElementById('catSel').value;const name=document.getElementById('hrNameInput').value.trim();saveHrNameStore(cat,name);updateSelOption(cat,name);}
+// ═══ POINT-UP POST ═══════════════════════════════════════════
+function generatePointupPost(){
+  const post=POINTUP_TEMPLATES[Math.floor(Math.random()*POINTUP_TEMPLATES.length)];
+  const box=document.getElementById('pointupPostBox');
+  box.textContent=post;
+  document.getElementById('pointupPostSection').style.display='block';
+  updatePointupCounter(post);
+}
+function updatePointupCounter(text){
+  const t=text||document.getElementById('pointupPostBox').textContent||'';
+  const c=xchars(t);
+  const el=document.getElementById('pointupCharCount');
+  el.textContent=`${c} / 280文字`;
+  el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');
+}
+function onPointupPostInput(){
+  updatePointupCounter();
+}
+function copyPointupPost(){
+  const text=document.getElementById('pointupPostBox').textContent||'';
+  cp(text);
+}
+
 function clearAffHtml(){
   document.getElementById('affHtml').value='';
   document.getElementById('parseResult').innerHTML='';
