@@ -76,6 +76,13 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 </div>
 <div class="page">
 
+<!-- ポイントアップデー通知バナー -->
+<div id="pointupBanner" style="display:none;margin-bottom:12px;padding:13px 16px;border-radius:12px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(239,68,68,.12));border:1px solid rgba(245,158,11,.4);text-align:center">
+  <div style="font-size:15px;font-weight:800;color:#f59e0b;margin-bottom:3px">⭐ 今日はポイントアップ日（5・0のつく日）です！</div>
+  <div style="font-size:12px;color:var(--muted)">楽天市場でポイントが多くもらえる日。投稿してみましょう。</div>
+  <button class="btn btn-sm" style="margin-top:8px;background:rgba(245,158,11,.2);color:#f59e0b;border:1px solid rgba(245,158,11,.4);font-size:12px;padding:5px 14px" onclick="jumpToPointup()">投稿文を生成する →</button>
+</div>
+
 <!-- STEP 1 -->
 <div class="sec open" id="sec1">
   <div class="sec-hd" onclick="tog('sec1')">
@@ -112,6 +119,12 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
     <!-- ポイントアップ投稿 -->
     <div id="pointupArea" style="display:none;margin-top:4px">
       <div id="pointupDayBadge" style="text-align:center;font-size:13px;font-weight:700;padding:10px;border-radius:10px;margin-bottom:12px"></div>
+      <div class="fg" style="margin-bottom:10px">
+        <label style="font-size:12px">🔗 アフィリエイトURL（任意・最大3件）</label>
+        <input type="url" class="finp" id="pointupUrl1" placeholder="https://hb.afl.rakuten.co.jp/..." style="margin-bottom:6px">
+        <input type="url" class="finp" id="pointupUrl2" placeholder="https://hb.afl.rakuten.co.jp/... （2件目）" style="margin-bottom:6px">
+        <input type="url" class="finp" id="pointupUrl3" placeholder="https://hb.afl.rakuten.co.jp/... （3件目）">
+      </div>
       <button class="btn btn-full" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:16px;padding:15px" onclick="generatePointupPost()">⭐ ポイントアップ投稿文を生成</button>
       <div id="pointupPostSection" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
         <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">📝 投稿文</div>
@@ -251,12 +264,13 @@ const CAT_TIME = {
   'ポイントアップ投稿': '⏰ 15:00',
 };
 
+// テンプレート本文（タグなし）。URL・タグは generatePointupPost() で動的に付与
 const POINTUP_TEMPLATES = [
-  '今日は5と0のつく日。\n\n楽天市場のポイントアップ日は、エントリーを忘れずに。\n買い回りや欲しいものリストを見直すのにちょうどいいタイミング。\n\n日用品・スイーツ・ふるさと納税など、\n普段より少しお得に揃えられる日です。\n\n#PR #楽天市場',
-  '5と0のつく日は、楽天市場のポイントアップ日。\n\nエントリーさえすれば、いつもよりポイントが多くもらえます。\n買い回りのついでに、気になっていたものをチェックしてみて。\n\n#PR #楽天市場',
-  '楽天市場「5と0のつく日」。\n\nエントリーして買い回りをすると、ポイントが最大で10倍以上になることも。\n日用品のまとめ買いや、ふるさと納税の見直しにも向いている日。\n\n#PR #楽天市場',
-  '今日は楽天のポイントアップ日（5・0のつく日）。\n\nエントリーを忘れずに。\n普段から気になっていたものを、このタイミングでチェックしてみるのもあり。\n\n#PR #楽天市場',
-  '5か0のつく日は、楽天市場でポイントが上がる日。\n\nエントリーして買い物するだけで、いつもよりお得になります。\n買い回りの計画を立てるのにも向いているタイミング。\n\n#PR #楽天市場',
+  '今日は5と0のつく日。\n\n楽天市場のポイントアップ日は、エントリーを忘れずに。\n買い回りや欲しいものリストを見直すのにちょうどいいタイミング。\n\n日用品・スイーツ・ふるさと納税など、\n普段より少しお得に揃えられる日です。',
+  '5と0のつく日は、楽天市場のポイントアップ日。\n\nエントリーさえすれば、いつもよりポイントが多くもらえます。\n買い回りのついでに、気になっていたものをチェックしてみて。',
+  '楽天市場「5と0のつく日」。\n\nエントリーして買い回りをすると、ポイントが最大で10倍以上になることも。\n日用品のまとめ買いや、ふるさと納税の見直しにも向いている日。',
+  '今日は楽天のポイントアップ日（5・0のつく日）。\n\nエントリーを忘れずに。\n普段から気になっていたものを、このタイミングでチェックしてみるのもあり。',
+  '5か0のつく日は、楽天市場でポイントが上がる日。\n\nエントリーして買い物するだけで、いつもよりお得になります。\n買い回りの計画を立てるのにも向いているタイミング。',
 ];
 const INTRO = {
   'スイーツ': [
@@ -472,8 +486,19 @@ function updateSelOption(cat,customName){const sel=document.getElementById('catS
 function applyHrNames(){['高料率①','高料率②'].forEach(cat=>{const names=loadHrNames();updateSelOption(cat,names[cat]||'');});}
 function onHrNameInput(){const cat=document.getElementById('catSel').value;const name=document.getElementById('hrNameInput').value.trim();saveHrNameStore(cat,name);updateSelOption(cat,name);}
 // ═══ POINT-UP POST ═══════════════════════════════════════════
+function buildPointupPost(){
+  const body=POINTUP_TEMPLATES[Math.floor(Math.random()*POINTUP_TEMPLATES.length)];
+  const urls=[1,2,3].map(n=>(document.getElementById('pointupUrl'+n)?.value||'').trim()).filter(Boolean);
+  const urlPart=urls.length?'\n'+urls.join('\n'):'';
+  // タグ付きで280字以内に収める
+  const withMarket=body+urlPart+'\n\n#PR #楽天市場';
+  const withoutMarket=body+urlPart+'\n\n#PR';
+  if(xchars(withMarket)<=280)return withMarket;
+  if(xchars(withoutMarket)<=280)return withoutMarket;
+  return withoutMarket;
+}
 function generatePointupPost(){
-  const post=POINTUP_TEMPLATES[Math.floor(Math.random()*POINTUP_TEMPLATES.length)];
+  const post=buildPointupPost();
   const box=document.getElementById('pointupPostBox');
   box.textContent=post;
   document.getElementById('pointupPostSection').style.display='block';
@@ -492,6 +517,13 @@ function onPointupPostInput(){
 function copyPointupPost(){
   const text=document.getElementById('pointupPostBox').textContent||'';
   cp(text);
+}
+function jumpToPointup(){
+  const sel=document.getElementById('catSel');
+  sel.value='ポイントアップ投稿';
+  onCatChange();
+  document.getElementById('sec2').classList.add('open');
+  document.getElementById('sec2').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function clearAffHtml(){
@@ -1574,7 +1606,14 @@ function delHist(idx){
 
 // ═══ INIT ════════════════════════════════════════════════════
 function initHeader(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));const wd=['日','月','火','水','木','金','土'][d.getDay()];document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;}
-(function(){initHeader();onCatChange();applyHrNames();renderHistory();})();
+(function(){
+  initHeader();onCatChange();applyHrNames();renderHistory();
+  // ポイントアップデー自動判定バナー
+  const day=new Date().getDate();
+  if([5,10,15,20,25,30].includes(day)){
+    document.getElementById('pointupBanner').style.display='block';
+  }
+})();
 </script>
 </body>
 </html>
