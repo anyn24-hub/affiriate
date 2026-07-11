@@ -131,7 +131,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
           <div class="ng-box" id="autoNgBox"></div>
           <div class="btn-row mt8">
             <button class="btn btn-green" onclick="copyAutoPost()" style="flex:1">📋 X用にコピー</button>
-            <button class="btn btn-ghost btn-sm" onclick="autoGenerate()">🔄 再生成</button>
+            <button class="btn btn-ghost btn-sm" onclick="regenPostOnly()">🔄 投稿文を再生成</button>
           </div>
         </div>
         <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
@@ -146,12 +146,8 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
     <!-- 高料率 -->
     <div id="highRateArea" style="display:none;margin-top:4px">
-      <div class="fg" style="margin-top:0">
-        <label>このカテゴリの表示名（任意）</label>
-        <input class="finput" id="hrNameInput" placeholder="例：食品、コスメ…" oninput="onHrNameInput()">
-      </div>
       <a href="https://affiliate.rakuten.co.jp/link/high_ranking?l-id=af_header_search_02" target="_blank" rel="noopener"
-        style="margin-top:10px;display:flex;align-items:center;gap:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:13px;text-decoration:none;color:var(--text)">
+        style="display:flex;align-items:center;gap:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:13px;text-decoration:none;color:var(--text)">
         <span style="font-size:20px">💰</span>
         <div style="flex:1"><div style="font-size:14px;font-weight:800">楽天アフィリエイト管理画面を開く</div><div style="font-size:11px;color:var(--muted);margin-top:2px">高料率ランキングからアフィリエイトHTMLを取得</div></div>
         <span style="color:var(--muted);font-size:14px">↗</span>
@@ -183,7 +179,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <div class="ng-box" id="ngBox"></div>
         <div class="btn-row mt8">
           <button class="btn btn-green" onclick="copyPost()" style="flex:1">📋 X用にコピー</button>
-          <button class="btn btn-ghost btn-sm" onclick="regenHighRate()">🔄 再生成</button>
+          <button class="btn btn-ghost btn-sm" onclick="regenPostOnly()">🔄 投稿文を再生成</button>
         </div>
         <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
           <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像</div>
@@ -1200,6 +1196,25 @@ async function regenHighRate(){
   generatePost();
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   generateImage();
+}
+
+// 全ジャンル共通: 投稿文だけ再生成（商品・画像はそのまま）
+function regenPostOnly(){
+  const cat=document.getElementById('catSel').value;
+  const isAuto=RANK_AUTO_CATS.includes(cat);
+  if(isAuto){
+    // 自動カテゴリ: confirmAndGenerateと同じ投稿文生成処理
+    const post=buildPostText(cat,'');
+    if(!post){toast('投稿文を生成できませんでした。商品名を確認してください。',true);return;}
+    const box=document.getElementById('autoPostBox');
+    box.textContent=post;
+    updateAutoCounter(post);
+    runAutoNGCheck(post);
+    document.getElementById('autoPostSection').style.display='block';
+  }else{
+    // 高料率: 投稿文のみ
+    generatePost();
+  }
 }
 
 // generateImage: called from STEP3 button (高料率のみ)
