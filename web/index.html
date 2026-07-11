@@ -99,7 +99,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <option value="美容">💄 美容</option>
         <option value="ふるさと納税">🎁 ふるさと納税</option>
         <option value="高料率①">💰 高料率①</option>
-        <option value="高料率②">💎 高料率②</option>
+        <option value="高料率②" id="catOptHr2">💎 高料率②</option>
         <option value="ポイントアップ投稿" id="catOptPointup">⭐ ポイントアップ投稿（5・0のつく日）</option>
       </select>
       <div id="catTimeHint" style="font-size:11px;color:var(--cyan);font-weight:700;margin-top:5px"></div>
@@ -119,7 +119,13 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
     <!-- ポイントアップ投稿 -->
     <div id="pointupArea" style="display:none;margin-top:4px">
       <div id="pointupDayBadge" style="text-align:center;font-size:13px;font-weight:700;padding:10px;border-radius:10px;margin-bottom:12px"></div>
-      <a href="https://affiliate.rakuten.co.jp/link/pc/shop?cmd=shop&me_adv_category_id=85&me_id=1" target="_blank" rel="noopener" class="btn btn-full" style="display:block;text-align:center;background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.35);font-size:13px;padding:11px;margin-bottom:10px;text-decoration:none">🔗 楽天ポイントアップ アフィリエイトリンクを開く</a>
+      <div class="fg" style="margin-bottom:10px">
+        <label style="font-size:12px">🔗 アフィリエイトURL</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="url" class="finp" id="pointupUrl1" placeholder="リンクを開いてコピーしたURLを貼り付け" style="flex:1;margin-bottom:0">
+          <a href="https://affiliate.rakuten.co.jp/link/pc/shop?cmd=shop&me_adv_category_id=85&me_id=1" target="_blank" rel="noopener" class="btn btn-sm" style="white-space:nowrap;background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.35);font-size:12px;padding:8px 10px;text-decoration:none">🔗 開く</a>
+        </div>
+      </div>
       <button class="btn btn-full" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:16px;padding:15px" onclick="generatePointupPost()">⭐ ポイントアップ投稿文を生成</button>
       <div id="pointupPostSection" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
         <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">📝 投稿文</div>
@@ -256,7 +262,7 @@ const CAT_TIME = {
   '美容':         '⏰ 18:00',
   'ふるさと納税': '⏰ 20:00',
   '高料率②':     '⏰ 22:00',
-  'ポイントアップ投稿': '⏰ 15:00',
+  'ポイントアップ投稿': '⏰ 22:00',
 };
 
 // テンプレート本文（タグなし）。URL・タグは generatePointupPost() で動的に付与
@@ -483,8 +489,10 @@ function onHrNameInput(){const cat=document.getElementById('catSel').value;const
 // ═══ POINT-UP POST ═══════════════════════════════════════════
 function buildPointupPost(){
   const body=POINTUP_TEMPLATES[Math.floor(Math.random()*POINTUP_TEMPLATES.length)];
-  const withMarket=body+'\n\n#PR #楽天市場';
-  const withoutMarket=body+'\n\n#PR';
+  const url=(document.getElementById('pointupUrl1')?.value||'').trim();
+  const urlPart=url?'\n'+url:'';
+  const withMarket=body+urlPart+'\n\n#PR #楽天市場';
+  const withoutMarket=body+urlPart+'\n\n#PR';
   if(xchars(withMarket)<=280)return withMarket;
   if(xchars(withoutMarket)<=280)return withoutMarket;
   return withoutMarket;
@@ -1600,12 +1608,20 @@ function delHist(idx){
 function initHeader(){const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));const wd=['日','月','火','水','木','金','土'][d.getDay()];document.getElementById('hdrDate').textContent=`${d.getMonth()+1}/${d.getDate()}（${wd}）`;}
 (function(){
   initHeader();onCatChange();applyHrNames();renderHistory();
-  // ポイントアップデー自動判定
+  // ポイントアップデー自動判定: ポイントアップ日は高料率②と入れ替え表示
   const day=new Date().getDate();
-  if([5,10,15,20,25,30].includes(day)){
+  const isPointUpDay=[5,10,15,20,25,30].includes(day);
+  const optHr2=document.getElementById('catOptHr2');
+  const optPointup=document.getElementById('catOptPointup');
+  if(isPointUpDay){
+    // ポイントアップ日: 高料率②を非表示、ポイントアップを表示
+    if(optHr2)optHr2.style.display='none';
+    if(optPointup)optPointup.style.display='';
     document.getElementById('pointupBanner').style.display='block';
-    const opt=document.getElementById('catOptPointup');
-    if(opt)opt.textContent='⭐ ポイントアップ投稿（5・0のつく日）★今日！';
+  }else{
+    // 通常日: ポイントアップを非表示、高料率②を表示
+    if(optHr2)optHr2.style.display='';
+    if(optPointup)optPointup.style.display='none';
   }
 })();
 </script>
