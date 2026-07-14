@@ -100,7 +100,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <option value="ふるさと納税">🎁 ふるさと納税</option>
         <option value="高料率①">💰 高料率①</option>
         <option value="高料率②" id="catOptHr2">💎 高料率②</option>
-        <option value="ポイントアップ投稿" id="catOptPointup">⭐ ポイントアップ投稿（5・0のつく日）</option>
+        <option value="ポイントアップ投稿" id="catOptPointup">⭐ ポイントアップ投稿（5・0のつく日 / 予約投稿用）</option>
       </select>
       <div id="catTimeHint" style="font-size:11px;color:var(--cyan);font-weight:700;margin-top:5px"></div>
     </div>
@@ -171,6 +171,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
           <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">📸 投稿用画像</div>
           <canvas id="autoCanvas" style="width:100%;border-radius:12px;display:block;background:#0d0d18"></canvas>
           <div class="btn-row mt8">
+            <button class="btn btn-ghost btn-sm" onclick="regenAutoImage()">🖼️ 画像を再生成</button>
             <button class="btn btn-ghost btn-sm" id="autoDlBtn" onclick="downloadAutoImage()" style="display:none">💾 保存</button>
           </div>
         </div>
@@ -218,6 +219,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
           <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像</div>
           <canvas id="ogCanvas" style="width:100%;border-radius:12px;display:block;background:#0d0d18"></canvas>
           <div class="btn-row mt8">
+            <button class="btn btn-ghost btn-sm" onclick="regenManualImage()">🖼️ 画像を再生成</button>
             <button class="btn btn-ghost btn-sm" id="dlBtn" onclick="downloadImage()" style="display:none">💾 保存</button>
           </div>
         </div>
@@ -852,6 +854,16 @@ function updateAutoCounter(t){const c=xchars(t);const el=document.getElementById
 function runAutoNGCheck(text){const found=NG_WORDS.filter(w=>text.includes(w));const box=document.getElementById('autoNgBox');if(found.length){box.className='ng-box show ng-warn';box.innerHTML=`🚫 NGワード: ${found.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`;}else{box.className='ng-box show ng-ok';box.textContent='✅ NGワードなし';}}
 function copyAutoPost(){const t=document.getElementById('autoPostBox').textContent||'';const c=xchars(t);if(c>280){toast(`${c}文字です。280文字以内に収めてください`,true);return;}cp(t);}
 function downloadAutoImage(){const c=document.getElementById('autoCanvas');const a=document.createElement('a');a.download='henai_post.png';a.href=c.toDataURL('image/png');a.click();}
+async function regenAutoImage(){
+  const cat=document.getElementById('catSel').value;
+  await drawCanvas('autoCanvas','autoDlBtn',cat);
+  toast('画像を再生成しました ✓');
+}
+async function regenManualImage(){
+  const cat=document.getElementById('catSel').value;
+  await drawCanvas('ogCanvas','dlBtn',cat);
+  toast('画像を再生成しました ✓');
+}
 
 // ═══ 高率 HTML PARSER ════════════════════════════════════════
 function cleanTitle(raw){
@@ -1629,9 +1641,8 @@ function initHeader(){
   if(isPointUpDay){
     if(optHr2)optHr2.remove();
     document.getElementById('pointupBanner').style.display='block';
-  }else{
-    if(optPointup)optPointup.remove();
   }
+  // 非PU日はポイントアップ選択肢を残す（予約投稿用）
 })();
 </script>
 </body>
