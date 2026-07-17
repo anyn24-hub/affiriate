@@ -853,7 +853,19 @@ function onAutoPostInput(){const t=document.getElementById('autoPostBox').textCo
 function updateAutoCounter(t){const c=xchars(t);const el=document.getElementById('autoCharCount');el.textContent=`${c} / 280文字`;el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');}
 function runAutoNGCheck(text){const found=NG_WORDS.filter(w=>text.includes(w));const box=document.getElementById('autoNgBox');if(found.length){box.className='ng-box show ng-warn';box.innerHTML=`🚫 NGワード: ${found.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`;}else{box.className='ng-box show ng-ok';box.textContent='✅ NGワードなし';}}
 function copyAutoPost(){const t=document.getElementById('autoPostBox').textContent||'';const c=xchars(t);if(c>280){toast(`${c}文字です。280文字以内に収めてください`,true);return;}cp(t);}
-function downloadAutoImage(){const c=document.getElementById('autoCanvas');const a=document.createElement('a');a.download='henai_post.png';a.href=c.toDataURL('image/png');a.click();}
+function downloadAutoImage(){
+  const c=document.getElementById('autoCanvas');
+  try{
+    c.toBlob(blob=>{
+      if(!blob){toast('画像の保存に失敗しました',true);return;}
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.download='henai_post.png';a.href=url;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    },'image/png');
+  }catch(e){toast('画像の保存に失敗しました: '+e.message,true);}
+}
 async function regenAutoImage(){
   const cat=document.getElementById('catSel').value;
   await drawCanvas('autoCanvas','autoDlBtn',cat);
@@ -1510,10 +1522,18 @@ function rrect(ctx,x,y,w,h,r){
   ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
 }
 function downloadImage(){
-  const a=document.createElement('a');
-  a.download=`ohenai_${Date.now()}.png`;
-  a.href=document.getElementById('ogCanvas').toDataURL('image/png');
-  a.click();toast('画像を保存しました ✓');
+  const c=document.getElementById('ogCanvas');
+  try{
+    c.toBlob(blob=>{
+      if(!blob){toast('画像の保存に失敗しました',true);return;}
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.download=`ohenai_${Date.now()}.png`;a.href=url;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      toast('画像を保存しました ✓');
+    },'image/png');
+  }catch(e){toast('画像の保存に失敗しました: '+e.message,true);}
 }
 
 // ═══ HISTORY ════════════════════════════════════════════════
