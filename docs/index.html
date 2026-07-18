@@ -450,8 +450,9 @@ ${companies}
 ・日本株の検索方法（優先順に試し、最初に見つかったPDF URLを回答）：
 　A. Google検索でPDF URLを直接取得（最優先）：
 　　 ①「会社名 証券コード 決算短信 filetype:pdf」で検索
-　　 ②見つからない場合「site:会社ドメイン filetype:pdf 決算短信」で検索
-　　 　（例：ベルクなら「site:belc.jp filetype:pdf 決算短信」）
+　　 ②見つからない場合「site:xj-storage.jp 会社名 決算短信 filetype:pdf」で検索
+　　 　（xj-storage.jpはTDnetのPDF配信CDN）
+　　 ③見つからない場合「site:会社ドメイン filetype:pdf 決算短信」で検索
 　　 ※日本企業IRページはJavaScriptで動的生成のためBrowseでは中身が見えない場合が多い
 　B. Yahoo Finance（TDnetミラー）：
 　　 https://finance.yahoo.co.jp/quote/証券コード.T/news を Browse → 最新の決算短信リンクのPDF URLを取得
@@ -460,11 +461,22 @@ ${companies}
 　→ どこにもPDF URLが見つからない場合 → TDnet企業別ページURLを回答
 　　 例：アスクル（2678）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
 
-・米国・中国・香港株の検索方法：
-　A. 企業の公式IRページを Browse して最新の quarterly earnings release PDFを探す
-　B. Google検索「ティッカー Q2 2026 earnings release filetype:pdf」（直近四半期を試す）
-　→ 未発表の場合は1つ前の四半期の最新PDFを回答（「未発表」ではなく最新公開済みのもの）
-・Annual Report（年次報告書）は不要
+・米国株（NYSE/NASDAQ上場）の検索方法：
+　A. Google検索「ティッカー Q2 2026 earnings release filetype:pdf」（直近四半期を試す）
+　B. 企業の公式IRページを Browse して最新の quarterly earnings release PDFを探す
+　→ 未発表の場合は1つ前の四半期の最新PDFを回答
+
+・香港・中国株（HKEx上場）の検索方法：
+　A. HKExニュース（https://www.hkexnews.hk/）でティッカーまたは会社名を検索 → 最新の業績発表PDFを取得
+　B. Google検索「会社名 ティッカー interim results annual results filetype:pdf」
+　C. 企業の公式IRページを Browse してPDFを探す
+　→ 未発表の場合は最新公開済みのPDFを回答
+
+・中国本土株（A株・上海・深セン上場）の検索方法：
+　A. Google検索「会社名 証券コード 业绩快报 OR 财报 filetype:pdf」
+　B. 企業の公式IRページを Browse してPDFを探す
+
+・Annual Report（年次報告書）は不要・四半期/中間/通期の業績発表PDFを優先
 ・URLが確認できない場合は「不明」と記載
 ・説明文・補足は不要`;
   copyText(prompt);
