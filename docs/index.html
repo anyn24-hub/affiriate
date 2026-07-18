@@ -449,9 +449,10 @@ ${companies}
 ・まだ決算期が到来していない／未公開の場合は「未発表」と回答
 
 ・【日本株】以下を順に試し、必ず .pdf URLを取得すること：
-　①Google検索「"会社名" 決算短信 filetype:pdf」→ ヒットしたPDF URLを取得
-　②https://finance.yahoo.co.jp/quote/証券コード.T/news をBrowse
-　　→ ページ内の最新「決算短信」リンクのURL（finance-frontend-*.jp または xj-storage.jp のPDF）を取得
+　①https://finance.yahoo.co.jp/quote/証券コード.T/news をBrowse（最優先・常に最新が載っている）
+　　→ ページ内の最新「決算短信」リンクのURL（finance-frontend-*.jp または xj-storage.jp で終わるPDF）を取得
+　②Google検索「"会社名" 決算短信 filetype:pdf」→ ヒットしたPDF URLを取得
+　　※Googleは古いPDFを返す場合があるため①を優先すること
 　③どうしても .pdf URLが見つからない場合のみ TDnet企業ページURLで回答
 　　例：https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
 　※TDnet（release.tdnet.info）は直接アクセスで403になるためPDF不可
