@@ -448,15 +448,15 @@ ${companies}
 ・まだ決算期が到来していない／未公開の場合は「未発表」と回答
 
 ・日本株の検索方法（優先順に試し、最初に見つかったPDF URLを回答）：
-　A. Google検索「会社名 証券コード 決算短信 filetype:pdf」でPDF URLを直接取得（最優先・最速）
-　B. 企業公式IRページから取得：
-　　 Google検索「会社名 IR」でIRページを特定 → そのページをBrowse
-　　 → ページ内の「.pdf」を含むリンクをすべて確認し、最新の決算短信PDFのURLを抽出
-　　 → IRページにPDFリンクがない場合、ページ内のリンク先（一覧ページ等）もたどってPDFを探す
-　C. Yahoo Finance（TDnetミラー）：
-　　 https://finance.yahoo.co.jp/quote/証券コード.T/news を Browse → 最新の決算短信をクリックしPDF URLを取得
+　A. Google検索でPDF URLを直接取得（最優先）：
+　　 ①「会社名 証券コード 決算短信 filetype:pdf」で検索
+　　 ②見つからない場合「site:会社ドメイン filetype:pdf 決算短信」で検索
+　　 　（例：ベルクなら「site:belc.jp filetype:pdf 決算短信」）
+　　 ※日本企業IRページはJavaScriptで動的生成のためBrowseでは中身が見えない場合が多い
+　B. Yahoo Finance（TDnetミラー）：
+　　 https://finance.yahoo.co.jp/quote/証券コード.T/news を Browse → 最新の決算短信リンクのPDF URLを取得
 　※TDnet（release.tdnet.info）は直接アクセスで403エラーになるためPDF取得不可
-　→ A・B・C で実際の .pdf URLが確認できた場合 → そのURLを回答（IRページURLではなくPDF自体のURLが必要）
+　→ A・B で実際の .pdf URLが確認できた場合 → そのURLを回答（IRページURLではなくPDF自体のURLが必要）
 　→ どこにもPDF URLが見つからない場合 → TDnet企業別ページURLを回答
 　　 例：アスクル（2678）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
 
