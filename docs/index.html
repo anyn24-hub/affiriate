@@ -450,20 +450,24 @@ ${companies}
 ・日本株の検索方法（優先順に試し、最初に見つかったPDF URLを回答）：
 　A. Google検索でPDF URLを直接取得（最優先）：
 　　 ①「会社名 証券コード 決算短信 filetype:pdf」で検索
-　　 　→ 検索結果に含まれる xj-storage.jp・finance-frontend-pc-dist.west.edge.storage-yahoo.jp 等のPDF URLを取得
-　　 　　（xj-storage.jp / finance-frontend-* はTDnetのPDF配信CDN。URLを確認してそのまま回答）
-　　 ②見つからない場合「会社名 証券コード filetype:pdf」でより広く検索
+　　 　→ 検索結果の xj-storage.jp・finance-frontend-pc-dist.west.edge.storage-yahoo.jp 等のPDF URLをそのまま取得
+　　 ②見つからない場合「"会社名" 決算短信 filetype:pdf」（会社名を引用符で囲んで再検索）
+　　 ③見つからない場合「"会社名" filetype:pdf 2026」で年度指定で再検索
 　　 ※日本企業IRページはJavaScriptで動的生成のためBrowseでは中身が見えない場合が多い
 　B. Yahoo Finance（TDnetミラー）：
-　　 https://finance.yahoo.co.jp/quote/証券コード.T/news を Browse → 最新の決算短信リンクのPDF URLを取得
+　　 https://finance.yahoo.co.jp/quote/証券コード.T/news をBrowse
+　　 → 「決算短信」のリンクURLを取得 → そのURLをさらにFetchしてリダイレクト先のPDF URLを確認して回答
 　※TDnet（release.tdnet.info）は直接アクセスで403エラーになるためPDF取得不可
 　→ A・B で実際の .pdf URLが確認できた場合 → そのURLを回答（IRページURLではなくPDF自体のURLが必要）
 　→ どこにもPDF URLが見つからない場合 → TDnet企業別ページURLを回答
 　　 例：アスクル（2678）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
 
 ・米国株（NYSE/NASDAQ上場）の検索方法：
-　A. Google検索「ティッカー Q2 2026 earnings release filetype:pdf」（直近四半期を試す）
-　B. 企業の公式IRページを Browse して最新の quarterly earnings release PDFを探す
+　A. Google検索で以下を順に試す：
+　　 ①「ティッカー Q2 2026 earnings release filetype:pdf」
+　　 ②「ティッカー Q2 2026 press release filetype:pdf」（TSMCなどpressreleaseを使う企業向け）
+　　 ③「ティッカー Q2 2026 earnings filetype:pdf site:q4cdn.com」（AXP/SCHWなどq4cdn使用企業向け）
+　B. 企業の公式IRページを Browse して最新の quarterly earnings/press release PDFを探す
 　→ 未発表の場合は1つ前の四半期の最新PDFを回答
 
 ・香港・中国株（HKEx上場）の検索方法：
