@@ -443,32 +443,25 @@ ${companies}
 
 条件（重要）：
 ・「最新の決算発表資料」とは、すでに公開済みの最も新しい決算短信・業績発表PDFのこと
+・回答は必ず .pdf で終わるURLのみ（IRページURL・TDnetページURLは不可）
 ・URLは必ずWeb検索・Browseで実在を確認してから回答すること
 ・URLを推測・作成することは禁止（存在しないURLは必ず404になります）
 ・まだ決算期が到来していない／未公開の場合は「未発表」と回答
 
-・日本株の検索方法（優先順に試し、最初に見つかったPDF URLを回答）：
-　A. Google検索でPDF URLを直接取得（最優先）：
-　　 ①「会社名 証券コード 決算短信 filetype:pdf」で検索
-　　 　→ 検索結果の xj-storage.jp・finance-frontend-pc-dist.west.edge.storage-yahoo.jp 等のPDF URLをそのまま取得
-　　 ②見つからない場合「"会社名" 決算短信 filetype:pdf」（会社名を引用符で囲んで再検索）
-　　 ③見つからない場合「"会社名" filetype:pdf 2026」で年度指定で再検索
-　　 ※日本企業IRページはJavaScriptで動的生成のためBrowseでは中身が見えない場合が多い
-　B. Yahoo Finance（TDnetミラー）：
-　　 https://finance.yahoo.co.jp/quote/証券コード.T/news をBrowse
-　　 → 最新の「決算短信」リンクに含まれる finance-frontend-pc-dist.west.edge.storage-yahoo.jp のPDF URLをそのまま回答
-　※TDnet（release.tdnet.info）は直接アクセスで403エラーになるためPDF取得不可
-　→ A・B で実際の .pdf URLが確認できた場合 → そのURLを回答（IRページURLではなくPDF自体のURLが必要）
-　→ どこにもPDF URLが見つからない場合 → TDnet企業別ページURLを回答
-　　 例：アスクル（2678）→ https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
+・【日本株】以下を順に試し、必ず .pdf URLを取得すること：
+　①Google検索「"会社名" 決算短信 filetype:pdf」→ ヒットしたPDF URLを取得
+　②https://finance.yahoo.co.jp/quote/証券コード.T/news をBrowse
+　　→ ページ内の最新「決算短信」リンクのURL（finance-frontend-*.jp または xj-storage.jp のPDF）を取得
+　③どうしても .pdf URLが見つからない場合のみ TDnet企業ページURLで回答
+　　例：https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
+　※TDnet（release.tdnet.info）は直接アクセスで403になるためPDF不可
 
-・米国株（NYSE/NASDAQ上場）の検索方法：
-　A. Google検索で以下を順に試す：
-　　 ①「ティッカー Q2 2026 earnings release filetype:pdf」
-　　 ②「ティッカー Q2 2026 press release filetype:pdf」（TSMCなどpressreleaseを使う企業向け）
-　　 ③「ティッカー Q2 2026 earnings filetype:pdf site:q4cdn.com」（AXP/SCHWなどq4cdn使用企業向け）
-　B. 企業の公式IRページを Browse して最新の quarterly earnings/press release PDFを探す
-　→ 未発表の場合は1つ前の四半期の最新PDFを回答
+・【米国株】以下を順に試し、必ず .pdf URLを取得すること：
+　①企業のIRページをBrowseして最新のearnings release / press release PDFのURLを取得
+　　（IRページで "Q2 2026" または "Second Quarter 2026" のPDFリンクを探す）
+　②Google検索「ティッカー "Q2 2026" earnings release filetype:pdf」
+　③Google検索「ティッカー "Q2 2026" press release filetype:pdf」
+　→ Q2未発表なら同じ手順でQ1を検索し最新公開済みPDFを回答
 
 ・香港・中国株（HKEx上場）の検索方法：
 　A. HKExニュース（https://www.hkexnews.hk/）でティッカーまたは会社名を検索 → 最新の業績発表PDFを取得
