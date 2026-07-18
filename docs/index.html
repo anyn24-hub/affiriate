@@ -450,9 +450,9 @@ ${companies}
 ・日本株の検索方法（優先順に試し、最初に見つかったPDF URLを回答）：
 　A. Google検索でPDF URLを直接取得（最優先）：
 　　 ①「会社名 証券コード 決算短信 filetype:pdf」で検索
-　　 ②見つからない場合「site:xj-storage.jp 会社名 決算短信 filetype:pdf」で検索
-　　 　（xj-storage.jpはTDnetのPDF配信CDN）
-　　 ③見つからない場合「site:会社ドメイン filetype:pdf 決算短信」で検索
+　　 　→ 検索結果に含まれる xj-storage.jp・finance-frontend-pc-dist.west.edge.storage-yahoo.jp 等のPDF URLを取得
+　　 　　（xj-storage.jp / finance-frontend-* はTDnetのPDF配信CDN。URLを確認してそのまま回答）
+　　 ②見つからない場合「会社名 証券コード filetype:pdf」でより広く検索
 　　 ※日本企業IRページはJavaScriptで動的生成のためBrowseでは中身が見えない場合が多い
 　B. Yahoo Finance（TDnetミラー）：
 　　 https://finance.yahoo.co.jp/quote/証券コード.T/news を Browse → 最新の決算短信リンクのPDF URLを取得
