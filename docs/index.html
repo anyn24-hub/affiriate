@@ -404,7 +404,16 @@ ${excludeSection}条件：
 // ─────────────────────────────────────────
 function parseAllEntries(){
   const val = document.getElementById('allTicker').value;
-  return val.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
+  const parts = val.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
+  const merged = [];
+  for(const p of parts){
+    if(/^(Inc|Ltd|Co|Corp|LLC|LLP|N\.V|S\.A|plc)\b/i.test(p) && merged.length){
+      merged[merged.length-1] += ', ' + p;
+    } else {
+      merged.push(p);
+    }
+  }
+  return merged;
 }
 function renderAllChips(){
   const entries = parseAllEntries();
