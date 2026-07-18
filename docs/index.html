@@ -456,7 +456,7 @@ ${companies}
 　　 ※日本企業IRページはJavaScriptで動的生成のためBrowseでは中身が見えない場合が多い
 　B. Yahoo Finance（TDnetミラー）：
 　　 https://finance.yahoo.co.jp/quote/証券コード.T/news をBrowse
-　　 → 「決算短信」のリンクURLを取得 → そのURLをさらにFetchしてリダイレクト先のPDF URLを確認して回答
+　　 → 最新の「決算短信」リンクに含まれる finance-frontend-pc-dist.west.edge.storage-yahoo.jp のPDF URLをそのまま回答
 　※TDnet（release.tdnet.info）は直接アクセスで403エラーになるためPDF取得不可
 　→ A・B で実際の .pdf URLが確認できた場合 → そのURLを回答（IRページURLではなくPDF自体のURLが必要）
 　→ どこにもPDF URLが見つからない場合 → TDnet企業別ページURLを回答
