@@ -450,12 +450,11 @@ ${companies}
 
 ・【日本株】以下を順に試し、必ず直接アクセス可能な .pdf URLを取得すること：
 　①Google検索「"会社名" 決算短信 filetype:pdf」
-　　→ xj-storage.jp または contents.xj-storage.jp のPDF URLを優先して取得
-　　　（finance-frontend-pc-dist.west.edge.storage-yahoo.jp は403になるため使用禁止）
-　②https://finance.yahoo.co.jp/quote/証券コード.T/news をBrowse
-　　→ 最新「決算短信」のリンクをたどり、xj-storage.jp のPDF URLを取得
+　　→ xj-storage.jp または contents.xj-storage.jp のPDF URLを取得
+　②見つからない場合「"会社名" 証券コード site:xj-storage.jp filetype:pdf」で再検索
 　③どうしても .pdf URLが見つからない場合のみ TDnet企業ページURLで回答
 　　例：https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
+　※finance-frontend-pc-dist.west.edge.storage-yahoo.jp は403エラーのため使用禁止
 　※TDnet（release.tdnet.info）は直接アクセスで403になるためPDF不可
 
 ・【米国株】以下を順に試し、必ず .pdf で終わる完全なURLを取得すること：
