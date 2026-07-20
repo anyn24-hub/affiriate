@@ -370,12 +370,14 @@ function copyAiPrompt(){
   const excludeSection = excludedCodes.length
     ? `【除外対象】\n以下のコード/ティッカーは出力しない：\n${excludedCodes.join(', ')}\n\n`
     : '';
-  const prompt = `以下のSBI証券 決算発表スケジュールページを確認し、すでに発表済みの決算企業候補を抽出してください。
+  const prompt = `以下のSBI証券 決算発表スケジュールの内容から、すでに発表済みの決算企業候補を抽出してください。
 
 本日の日付：${today}
 
-URL：
-${SBI_URL}
+━━━ SBIスケジュール内容（ここに貼り付け） ━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${excludeSection}条件：
 ・日本・米国・中国・香港すべて対象
