@@ -230,6 +230,22 @@ a{color:var(--cyan);text-decoration:none}
 </div><!-- /page -->
 <div id="toast"></div>
 
+<!-- ─── コピーモーダル ─── -->
+<div id="copyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;padding:16px;box-sizing:border-box;overflow:auto">
+  <div style="max-width:640px;margin:0 auto;background:#1a1a2e;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,.15)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-weight:700;font-size:14px;color:#fff">プロンプトをコピー</span>
+      <button onclick="document.getElementById('copyModal').style.display='none'" style="background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;line-height:1">×</button>
+    </div>
+    <textarea id="copyModalText" readonly style="width:100%;height:50vh;background:#0d0d1a;color:#e0e0e0;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:10px;font-size:12px;line-height:1.5;resize:none;box-sizing:border-box;-webkit-user-select:text;user-select:text"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="selectAllModal()" style="flex:1;padding:12px;background:#2a2a4a;color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:8px;font-size:13px;cursor:pointer">全選択</button>
+      <button onclick="copyFromModal()" style="flex:2;padding:12px;background:#4a6cf7;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">コピーする</button>
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:8px;text-align:center">コピーできない場合は「全選択」→ 長押しでコピー</div>
+  </div>
+</div>
+
 <script>
 // ─────────────────────────────────────────
 // CONSTANTS
@@ -265,9 +281,24 @@ function toast(msg, bad){
 }
 
 function copyText(text){
-  navigator.clipboard.writeText(text).then(()=>toast('コピーしました ✓')).catch(()=>{
-    const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('コピーしました ✓');
-  });
+  // モーダルに表示（iOS等でクリップボードが画像になる問題を回避）
+  document.getElementById('copyModalText').value = text;
+  document.getElementById('copyModal').style.display = 'block';
+  // 同時にクリップボードにも試みる
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).catch(()=>{});
+  }
+}
+function selectAllModal(){
+  const ta = document.getElementById('copyModalText');
+  ta.focus(); ta.select();
+}
+function copyFromModal(){
+  const ta = document.getElementById('copyModalText');
+  ta.focus(); ta.select();
+  navigator.clipboard.writeText(ta.value)
+    .then(()=>{ toast('コピーしました ✓'); document.getElementById('copyModal').style.display='none'; })
+    .catch(()=>{ document.execCommand('copy'); toast('コピーしました ✓'); document.getElementById('copyModal').style.display='none'; });
 }
 
 // ─────────────────────────────────────────
