@@ -172,7 +172,7 @@ a{color:var(--cyan);text-decoration:none}
   </div>
   <div class="section-body">
     <button class="big-btn gold" id="allFetchBtn" onclick="fetchAllCompanies()" style="margin-top:4px">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">🇯🇵🇺🇸 決算企業を自動取得</div><div class="bsub">SBI証券から直近5日間の決算発表企業を自動取得（日本 6社 + 米国 4社）</div></div><span class="barr">▶</span>
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">🇯🇵🇺🇸🇨🇳 決算企業を自動取得</div><div class="bsub">SBI証券から直近5日間の決算発表企業を取得（日本 6社 + 米国 4社・中国は件数のみ）</div></div><span class="barr">▶</span>
     </button>
     <div id="allFetchResult" style="display:none;margin-top:10px"></div>
   </div>
@@ -447,12 +447,33 @@ async function fetchUsList(from, today){
   return companies;
 }
 
+async function fetchCnCount(from, today){
+  const ym0 = today.substring(0,6), ym1 = from.substring(0,6);
+  let count = 0;
+  function sumCal(cal){
+    for(const mo of cal.body||[])
+      for(const wk of mo.detail||[])
+        for(const day of wk.week||[])
+          if(day.date && day.count && parseInt(day.count)>0 && day.date>=from && day.date<=today)
+            count += parseInt(day.count);
+  }
+  try{
+    const cal0 = await sbiJsonp(`${SBI_US_BASE}?nation=CN&ym=${ym0}`);
+    sumCal(cal0);
+    if(ym1 !== ym0){
+      const cal1 = await sbiJsonp(`${SBI_US_BASE}?nation=CN&ym=${ym1}`);
+      sumCal(cal1);
+    }
+  }catch(e){ /* CN calendar failure is non-fatal */ }
+  return count;
+}
+
 async function fetchAllCompanies(){
   const btn = document.getElementById('allFetchBtn');
   const res = document.getElementById('allFetchResult');
   btn.disabled = true;
   res.style.display = 'block';
-  res.innerHTML = '<div class="info cyan">⏳ SBI証券から取得中（日本株・米国株）...</div>';
+  res.innerHTML = '<div class="info cyan">⏳ SBI証券から取得中（日本株・米国株・中国株）...</div>';
   try{
     const d = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
     const pad = n=>String(n).padStart(2,'0');
@@ -460,14 +481,16 @@ async function fetchAllCompanies(){
     const today = fmt(d);
     const d5 = new Date(d); d5.setDate(d5.getDate()-5);
     const from = fmt(d5);
-    const [jpAll, usAll] = await Promise.all([fetchJpList(from, today), fetchUsList(from, today)]);
+    const [jpAll, usAll, cnCount] = await Promise.all([
+      fetchJpList(from, today), fetchUsList(from, today), fetchCnCount(from, today)
+    ]);
     if(!jpAll.length && !usAll.length){
       res.innerHTML = '<div class="info cyan">直近5日間に発表済み企業が見つかりませんでした。</div>';
       return;
     }
     applyRandSel(jpAll, 6);
     applyRandSel(usAll, 4);
-    window._sbiAll = {jp:jpAll, us:usAll};
+    window._sbiAll = {jp:jpAll, us:usAll, cnCount};
     renderAllResult();
   } catch(e){
     res.innerHTML = `<div class="info" style="border-color:rgba(226,74,74,.4);background:rgba(226,74,74,.07);color:rgba(255,160,160,1)">❌ 取得失敗：${e.message||e}<br><small style="opacity:.7">SBIのAPIが変更された可能性があります。</small></div>`;
@@ -476,8 +499,10 @@ async function fetchAllCompanies(){
   }
 }
 
+const SBI_CN_URL = 'https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-foreign%7Ctl4-CN&file=index.html&getFlg=on&OutSide=on';
+
 function renderAllResult(){
-  const {jp, us} = window._sbiAll||{jp:[],us:[]};
+  const {jp, us, cnCount} = window._sbiAll||{jp:[],us:[],cnCount:0};
   const selJp = jp.filter(c=>c.sel).length;
   const selUs = us.filter(c=>c.sel).length;
   const totalSel = selJp + selUs;
@@ -485,6 +510,9 @@ function renderAllResult(){
   function chips(arr, region){
     return arr.map((c,i)=>`<span onclick="toggleCompany('${region}',${i})" style="cursor:pointer;border-radius:100px;font-size:12px;font-weight:700;padding:4px 12px;white-space:nowrap;border:1px solid;${c.sel?'background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.5);color:var(--gold)':'background:rgba(255,255,255,.04);border-color:var(--border);color:rgba(255,255,255,.35)'}">${c.name}（${c.code}）</span>`).join('');
   }
+  const cnSection = cnCount ? `
+    <div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇨🇳 中国株（直近5日間 ${cnCount}社）<span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.35)"> ※社名はSBIページで確認（CORS制限のため自動取得不可）</span></div>
+    <a href="${SBI_CN_URL}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:rgba(226,74,74,.08);border:1px solid rgba(226,74,74,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--red);text-decoration:none;margin-bottom:10px">🔗 SBI中国株スケジュールを開く ↗</a>` : '';
   res.innerHTML = `
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
       <span>選択中：<strong style="color:var(--gold)">${totalSel}社</strong>　<span style="font-size:11px">（タップで選択／解除）</span></span>
@@ -492,6 +520,7 @@ function renderAllResult(){
     </div>
     ${jp.length?`<div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇯🇵 日本株（全${jp.length}社中 ${selJp}社選択）</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${chips(jp,'jp')}</div>`:''}
     ${us.length?`<div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇺🇸 米国株（全${us.length}社中 ${selUs}社選択）</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${chips(us,'us')}</div>`:''}
+    ${cnSection}
     ${totalSel?`<button class="big-btn gold" onclick="addAllToStep2()" style="margin-top:4px">
       <span class="bico">✅</span><div class="btxt"><div class="blabel">選択した${totalSel}社をSTEP2に追加</div><div class="bsub">STEP2の入力欄に自動入力します</div></div><span class="barr">▶</span>
     </button>`:''}
