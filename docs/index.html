@@ -525,35 +525,38 @@ const SBI_CN_PAGE = 'https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Cont
 
 function renderAllResult(){
   const {jp, us, cn, cnCount} = window._sbiAll||{jp:[],us:[],cn:null,cnCount:0};
-  const selJp = jp.filter(c=>c.sel).length;
-  const selUs = us.filter(c=>c.sel).length;
-  const selCn = cn ? cn.filter(c=>c.sel).length : 0;
-  const totalSel = selJp + selUs + selCn;
+  const selJpArr = jp.filter(c=>c.sel);
+  const selUsArr = us.filter(c=>c.sel);
+  const selCnArr = cn ? cn.filter(c=>c.sel) : [];
+  const totalSel = selJpArr.length + selUsArr.length + selCnArr.length;
   const res = document.getElementById('allFetchResult');
-  function chips(arr, region){
-    return arr.map((c,i)=>`<span onclick="toggleCompany('${region}',${i})" style="cursor:pointer;border-radius:100px;font-size:12px;font-weight:700;padding:4px 12px;white-space:nowrap;border:1px solid;${c.sel?'background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.5);color:var(--gold)':'background:rgba(255,255,255,.04);border-color:var(--border);color:rgba(255,255,255,.35)'}">${c.name}（${c.code}）</span>`).join('');
+  function chip(c, region, i){
+    return `<span onclick="toggleCompany('${region}',${i})" title="タップで除外" style="cursor:pointer;border-radius:100px;font-size:12px;font-weight:700;padding:4px 12px;white-space:nowrap;border:1px solid;background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.5);color:var(--gold)">${c.name}（${c.code}）</span>`;
   }
-  // CN section: Workerあり→チップ表示、なし→件数+リンク
+  function selChips(arr, region){
+    return arr.map((c,i)=> c.sel ? chip(c,region,i) : '').join('');
+  }
+  const jpChips  = selChips(jp, 'jp');
+  const usChips  = selChips(us, 'us');
+  const cnChips  = cn ? selChips(cn, 'cn') : '';
   let cnSection = '';
-  if(cn && cn.length){
-    cnSection = `<div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇨🇳 中国株（全${cn.length}社中 ${selCn}社選択）</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${chips(cn,'cn')}</div>`;
-  } else if(cn && cn.length === 0){
-    cnSection = `<div style="font-size:11px;color:var(--muted);margin:6px 0 10px">🇨🇳 中国株：直近5日間に発表なし</div>`;
+  if(cn !== null){
+    if(selCnArr.length) cnSection = `<span style="font-size:11px;color:var(--muted);font-weight:700;margin-right:6px">🇨🇳</span>${cnChips}`;
   } else if(cnCount){
-    cnSection = `
-      <div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇨🇳 中国株（直近5日間 ${cnCount}社）<span style="font-size:10px;font-weight:400"> ※Workerを設定すると自動取得可</span></div>
-      <a href="${SBI_CN_PAGE}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:rgba(226,74,74,.08);border:1px solid rgba(226,74,74,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--red);text-decoration:none;margin-bottom:10px">🔗 SBI中国株スケジュールを開く ↗</a>`;
+    cnSection = `<a href="${SBI_CN_PAGE}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:rgba(226,74,74,.08);border:1px solid rgba(226,74,74,.25);border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--red);text-decoration:none">🇨🇳 中国株 ${cnCount}社あり ↗</a>`;
   }
   res.innerHTML = `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-      <span>選択中：<strong style="color:var(--gold)">${totalSel}社</strong>　<span style="font-size:11px">（タップで選択／解除）</span></span>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <span>抽出：<strong style="color:var(--gold)">${totalSel}社</strong>　<span style="font-size:11px">（タップで除外）</span></span>
       <button onclick="reshuffleAll()" style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;color:rgba(255,255,255,.6);font-size:11px;font-weight:700;padding:4px 12px;cursor:pointer;font-family:inherit">🔀 再抽選</button>
     </div>
-    ${jp.length?`<div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇯🇵 日本株（全${jp.length}社中 ${selJp}社選択）</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${chips(jp,'jp')}</div>`:''}
-    ${us.length?`<div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇺🇸 米国株（全${us.length}社中 ${selUs}社選択）</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${chips(us,'us')}</div>`:''}
-    ${cnSection}
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+      ${jpChips?`<span style="font-size:11px;color:var(--muted);font-weight:700;align-self:center;margin-right:2px">🇯🇵</span>${jpChips}`:''}
+      ${usChips?`<span style="font-size:11px;color:var(--muted);font-weight:700;align-self:center;margin-right:2px;margin-left:${jpChips?'6px':'0'}">🇺🇸</span>${usChips}`:''}
+      ${cnSection}
+    </div>
     ${totalSel?`<button class="big-btn gold" onclick="addAllToStep2()" style="margin-top:4px">
-      <span class="bico">✅</span><div class="btxt"><div class="blabel">選択した${totalSel}社をSTEP2に追加</div><div class="bsub">STEP2の入力欄に自動入力します</div></div><span class="barr">▶</span>
+      <span class="bico">✅</span><div class="btxt"><div class="blabel">${totalSel}社をSTEP2に追加</div><div class="bsub">STEP2の入力欄に自動入力します</div></div><span class="barr">▶</span>
     </button>`:''}
   `;
 }
@@ -573,8 +576,8 @@ function reshuffleAll(){
 }
 
 function addAllToStep2(){
-  const {jp, us} = window._sbiAll||{jp:[],us:[]};
-  const sel = [...jp.filter(c=>c.sel), ...us.filter(c=>c.sel)];
+  const {jp, us, cn} = window._sbiAll||{jp:[],us:[],cn:null};
+  const sel = [...jp.filter(c=>c.sel), ...us.filter(c=>c.sel), ...(cn||[]).filter(c=>c.sel)];
   if(!sel.length) return;
   const input = document.getElementById('allTicker');
   const existing = input.value.trim();
