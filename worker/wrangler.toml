@@ -1,0 +1,7 @@
+name = "sbi-cn-proxy"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# After `wrangler deploy`, your Worker URL will be:
+#   https://sbi-cn-proxy.<your-subdomain>.workers.dev
+# Copy that URL into SBI_CN_WORKER in docs/index.html

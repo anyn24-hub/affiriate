@@ -361,8 +361,11 @@ function addToExcluded(entries){
   try{ localStorage.setItem(KEYS.excluded, JSON.stringify(trimmed)); }catch{}
 }
 // ─────────────────────────────────────────
-// STEP 1: SBI AUTO-FETCH — JAPAN + US (JSONP)
+// STEP 1: SBI AUTO-FETCH — JAPAN + US (JSONP) + CN (Worker)
 // ─────────────────────────────────────────
+// ↓ デプロイ後にCloudflare WorkerのURLをここに設定
+const SBI_CN_WORKER = null; // 例: 'https://sbi-cn-proxy.YOUR-NAME.workers.dev'
+
 const SBI_HASH    = '50ae7690c24ca53fb1fd390f9eb8fe1419b48631';
 const SBI_JP_CAL  = 'https://vc.iris.sbisec.co.jp/calendar/settlement/stock/announcement_calendar_list.do';
 const SBI_JP_DATE = 'https://vc.iris.sbisec.co.jp/calendar/settlement/stock/announcement_info_date.do';
@@ -447,7 +450,27 @@ async function fetchUsList(from, today){
   return companies;
 }
 
-async function fetchCnCount(from, today){
+// CN fetch: Worker で社名まで取得、未設定なら件数のみ（カレンダーAPI）
+async function fetchCnList(from, today){
+  if(SBI_CN_WORKER){
+    try{
+      const resp = await fetch(SBI_CN_WORKER);
+      if(!resp.ok) throw new Error(`Worker ${resp.status}`);
+      const {companies} = await resp.json();
+      const excluded = new Set(getExcluded()), seen = new Set(), list = [];
+      for(const c of companies||[]){
+        if(!c.ticker || !c.date) continue;
+        if(c.date < from || c.date > today) continue;
+        if(excluded.has(c.ticker) || seen.has(c.ticker)) continue;
+        seen.add(c.ticker);
+        list.push({code:c.ticker, name:c.name||c.ticker, date:c.date, region:'cn', sel:false});
+      }
+      return {companies:list, count:null};
+    }catch(e){
+      console.warn('CN Worker fetch failed:', e.message);
+    }
+  }
+  // Worker未設定 or 失敗 → カレンダーAPIで件数のみ
   const ym0 = today.substring(0,6), ym1 = from.substring(0,6);
   let count = 0;
   function sumCal(cal){
@@ -458,14 +481,10 @@ async function fetchCnCount(from, today){
             count += parseInt(day.count);
   }
   try{
-    const cal0 = await sbiJsonp(`${SBI_US_BASE}?nation=CN&ym=${ym0}`);
-    sumCal(cal0);
-    if(ym1 !== ym0){
-      const cal1 = await sbiJsonp(`${SBI_US_BASE}?nation=CN&ym=${ym1}`);
-      sumCal(cal1);
-    }
-  }catch(e){ /* CN calendar failure is non-fatal */ }
-  return count;
+    sumCal(await sbiJsonp(`${SBI_US_BASE}?nation=CN&ym=${ym0}`));
+    if(ym1 !== ym0) sumCal(await sbiJsonp(`${SBI_US_BASE}?nation=CN&ym=${ym1}`));
+  }catch(_){}
+  return {companies:null, count};
 }
 
 async function fetchAllCompanies(){
@@ -481,16 +500,19 @@ async function fetchAllCompanies(){
     const today = fmt(d);
     const d5 = new Date(d); d5.setDate(d5.getDate()-5);
     const from = fmt(d5);
-    const [jpAll, usAll, cnCount] = await Promise.all([
-      fetchJpList(from, today), fetchUsList(from, today), fetchCnCount(from, today)
+    const [jpAll, usAll, cnResult] = await Promise.all([
+      fetchJpList(from, today), fetchUsList(from, today), fetchCnList(from, today)
     ]);
-    if(!jpAll.length && !usAll.length){
+    const cnAll = cnResult.companies;   // null = Worker未使用
+    const cnCount = cnResult.count;     // null = Worker使用済み
+    if(!jpAll.length && !usAll.length && !(cnAll&&cnAll.length)){
       res.innerHTML = '<div class="info cyan">直近5日間に発表済み企業が見つかりませんでした。</div>';
       return;
     }
-    applyRandSel(jpAll, 6);
-    applyRandSel(usAll, 4);
-    window._sbiAll = {jp:jpAll, us:usAll, cnCount};
+    applyRandSel(jpAll, 5);
+    applyRandSel(usAll, 3);
+    if(cnAll) applyRandSel(cnAll, 2);
+    window._sbiAll = {jp:jpAll, us:usAll, cn:cnAll, cnCount};
     renderAllResult();
   } catch(e){
     res.innerHTML = `<div class="info" style="border-color:rgba(226,74,74,.4);background:rgba(226,74,74,.07);color:rgba(255,160,160,1)">❌ 取得失敗：${e.message||e}<br><small style="opacity:.7">SBIのAPIが変更された可能性があります。</small></div>`;
@@ -499,20 +521,29 @@ async function fetchAllCompanies(){
   }
 }
 
-const SBI_CN_URL = 'https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-foreign%7Ctl4-CN&file=index.html&getFlg=on&OutSide=on';
+const SBI_CN_PAGE = 'https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-foreign%7Ctl4-CN&file=index.html&getFlg=on&OutSide=on';
 
 function renderAllResult(){
-  const {jp, us, cnCount} = window._sbiAll||{jp:[],us:[],cnCount:0};
+  const {jp, us, cn, cnCount} = window._sbiAll||{jp:[],us:[],cn:null,cnCount:0};
   const selJp = jp.filter(c=>c.sel).length;
   const selUs = us.filter(c=>c.sel).length;
-  const totalSel = selJp + selUs;
+  const selCn = cn ? cn.filter(c=>c.sel).length : 0;
+  const totalSel = selJp + selUs + selCn;
   const res = document.getElementById('allFetchResult');
   function chips(arr, region){
     return arr.map((c,i)=>`<span onclick="toggleCompany('${region}',${i})" style="cursor:pointer;border-radius:100px;font-size:12px;font-weight:700;padding:4px 12px;white-space:nowrap;border:1px solid;${c.sel?'background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.5);color:var(--gold)':'background:rgba(255,255,255,.04);border-color:var(--border);color:rgba(255,255,255,.35)'}">${c.name}（${c.code}）</span>`).join('');
   }
-  const cnSection = cnCount ? `
-    <div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇨🇳 中国株（直近5日間 ${cnCount}社）<span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.35)"> ※社名はSBIページで確認（CORS制限のため自動取得不可）</span></div>
-    <a href="${SBI_CN_URL}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:rgba(226,74,74,.08);border:1px solid rgba(226,74,74,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--red);text-decoration:none;margin-bottom:10px">🔗 SBI中国株スケジュールを開く ↗</a>` : '';
+  // CN section: Workerあり→チップ表示、なし→件数+リンク
+  let cnSection = '';
+  if(cn && cn.length){
+    cnSection = `<div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇨🇳 中国株（全${cn.length}社中 ${selCn}社選択）</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${chips(cn,'cn')}</div>`;
+  } else if(cn && cn.length === 0){
+    cnSection = `<div style="font-size:11px;color:var(--muted);margin:6px 0 10px">🇨🇳 中国株：直近5日間に発表なし</div>`;
+  } else if(cnCount){
+    cnSection = `
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin:6px 0 4px">🇨🇳 中国株（直近5日間 ${cnCount}社）<span style="font-size:10px;font-weight:400"> ※Workerを設定すると自動取得可</span></div>
+      <a href="${SBI_CN_PAGE}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:rgba(226,74,74,.08);border:1px solid rgba(226,74,74,.25);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:var(--red);text-decoration:none;margin-bottom:10px">🔗 SBI中国株スケジュールを開く ↗</a>`;
+  }
   res.innerHTML = `
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
       <span>選択中：<strong style="color:var(--gold)">${totalSel}社</strong>　<span style="font-size:11px">（タップで選択／解除）</span></span>
@@ -535,8 +566,9 @@ function toggleCompany(region, i){
 
 function reshuffleAll(){
   if(!window._sbiAll) return;
-  applyRandSel(window._sbiAll.jp, 6);
-  applyRandSel(window._sbiAll.us, 4);
+  applyRandSel(window._sbiAll.jp, 5);
+  applyRandSel(window._sbiAll.us, 3);
+  if(window._sbiAll.cn) applyRandSel(window._sbiAll.cn, 2);
   renderAllResult();
 }
 
