@@ -663,24 +663,32 @@ ${companies}
 　※finance-frontend-pc-dist.west.edge.storage-yahoo.jp は403のため回答禁止
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【米国株】検索手順（必ずファイル名まで含む完全なURLを取得すること）
+【米国株】検索手順（①→②の順に試すこと）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-① 企業のIRページをBrowseして最新のEarnings Release / Press Release PDFのURLを取得
-　（IRページで "Q2 2026" または "Second Quarter 2026" のPDFリンクを探す）
-② Google検索「ティッカー "Q2 2026" earnings release filetype:pdf」
-③ Q2未発表なら同じ手順でQ1を検索し最新公開済みPDFを回答
-※ディレクトリURL（/q2/ で終わるなど）は無効。必ずファイル名（.pdf）まで含むこと
+① SEC EDGAR で最新8-K（EX-99.1）のPDFを取得（最優先・必ず直接アクセス可能）
+　手順:
+　a. 以下URLをBrowseして最新の8-Kを開く（ティッカーをそのまま使用可）
+　   https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=ティッカー&type=8-K&dateb=&owner=include&count=5
+　b. 最新の8-Kを開く → 添付書類一覧から「EX-99.1」のPDFリンクを取得
+　c. URLは https://www.sec.gov/Archives/edgar/data/... の形式になる
+　→ このURLは必ず直接アクセス可能なPDFなので、そのまま回答すること
+
+② ①でEX-99.1が見つからない場合のみ：企業公式IRページをBrowseして取得
+　※investor.xxx.com/static-files/UUID.pdf 形式のURLは認証エラーになるため禁止
+　※必ず .pdf で終わり、直接ダウンロード可能なURLのみ回答
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【中国・香港株（HKEx上場）】検索手順
+【香港・中国株（HKEx上場）】検索手順
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-① HKExニュース（https://www.hkexnews.hk/）でティッカーまたは会社名を検索 → 最新の業績発表PDFを取得
-② Google検索「会社名 ティッカー interim results annual results filetype:pdf」
-③ 企業の公式IRページをBrowseしてPDFを探す
+① https://www.hkexnews.hk/ でティッカーまたは会社名を検索
+　→「Results Announcement」または「Interim Results」の最新PDFリンクを取得
+　→ URLは https://www1.hkexnews.hk/listedco/listconews/... の形式
+
+② ①で見つからない場合：Google検索「ティッカー site:hkexnews.hk results filetype:pdf」
 
 【中国本土株（A株・上海・深セン上場）】
-① Google検索「会社名 証券コード 业绩快报 OR 财报 filetype:pdf」
-② 企業の公式IRページをBrowseしてPDFを探す
+① https://www.cninfo.com.cn/ で証券コードを検索 → 最新の业绩快报・财报PDFを取得
+② Google検索「証券コード site:cninfo.com.cn filetype:pdf」
 
 Annual Report（年次報告書）は不要。四半期/中間/通期の業績発表PDFを優先すること。
 説明文・補足は不要。`;
