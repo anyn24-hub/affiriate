@@ -196,7 +196,7 @@ a{color:var(--cyan);text-decoration:none}
       <div class="company-chips" id="allCompanyChips"><span style="font-size:12px;color:rgba(255,255,255,.15)">企業名を入力すると横並びで表示されます</span></div>
     </div>
     <button class="big-btn blue" onclick="copyAllPdfPrompt()" style="margin-top:12px">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算PDF URL抽出を依頼</div><div class="bsub">日本株（TDnet）・海外株（Annual Results）どちらも対応</div></div><span class="barr">📋</span>
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算データ取得・投稿文生成を依頼</div><div class="bsub">IRページを直接閲覧してX投稿文と画像指示書を自動生成</div></div><span class="barr">📋</span>
     </button>
     <a class="big-btn" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener" style="margin-top:8px;border-color:rgba(78,226,122,.3)">
       <span class="bico">📁</span><div class="btxt"><div class="blabel">Google Driveに保存</div><div class="bsub">ダウンロードした決算PDFをここに保存</div></div><span class="barr">↗</span>
@@ -619,7 +619,8 @@ function renderAllChips(){
   chips.innerHTML   = entries.map(n=>`<span class="company-chip">${escHtml(n)}</span>`).join('');
 }
 function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function copyAllPdfPrompt(){
+// ── バックアップ：元のPDF URL取得方式（「STEP2を元のPDF URLバージョンに戻して」で復元）──
+function copyAllPdfPromptLegacy(){
   const entries = parseAllEntries();
   const companies = entries.length
     ? entries.map((e,i)=>`${i+1}. ${e}`).join('\n')
@@ -692,6 +693,92 @@ ${companies}
 
 Annual Report（年次報告書）は不要。四半期/中間/通期の業績発表PDFを優先すること。
 説明文・補足は不要。`;
+  copyText(prompt);
+  if(entries.length) addToExcluded(entries);
+}
+
+// ─────────────────────────────────────────
+// STEP 2 (新): IRページ直接閲覧 → 投稿文・画像指示書生成
+// ─────────────────────────────────────────
+function copyAllPdfPrompt(){
+  const entries = parseAllEntries();
+  const affUrl  = getAffUrl();
+  const companies = entries.length
+    ? entries.map((e,i)=>`${i+1}. ${e}`).join('\n')
+    : '（企業名またはティッカー・証券コードを入力してから押してください）';
+
+  const affPr = affUrl ? `
+PR文（以下4パターンから決算内容に応じて1つだけ選び、投稿文に挿入すること）：
+・通常の決算速報 → 📚 決算書の読み方を学びたい人へ ${affUrl}
+・増収減益・利益率低下・営業利益減少が中心 → 📚 利益構造の読み解きを学びたい人へ ${affUrl}
+・赤字転落・特別損失・減損が中心 → 📚 損益計算書を理解したい人へ ${affUrl}
+・財務・自己資本比率・キャッシュフロー・配当が中心 → 📚 財務3表を学びたい人へ ${affUrl}
+※NG表現（投稿文・PR文に絶対使用禁止）：絶対おすすめ・買うべき・稼げる・儲かる・爆益・必須・間違いない・勝てる` : '';
+
+  const prompt = `以下の企業について、IRページをBrowseして最新決算データを取得し、X投稿文と画像指示書を生成してください。
+
+対象企業：
+${companies}
+
+【重要】出力順序：日本株・米国株・中国株・香港株を国籍で固めず、ランダムな順番で出力すること（投稿が特定の国に偏らないようにするため）。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【データ取得手順】各企業を順番に処理すること
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【日本株】
+① Google検索「会社名 IR 決算短信」でIRページを特定してBrowse
+② 以下のデータを取得する：
+　・売上高・営業利益・純利益（当期・前期・前期比）
+　・来期予想（売上・営利・純利益）・EPS・配当
+　・業績コメント・事業背景・経営戦略
+　・総資産・純資産・自己資本比率・営業CF
+
+【米国株】
+① SEC EDGAR で最新8-K（EX-99.1）の本文をBrowse
+　https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=ティッカー&type=8-K&dateb=&owner=include&count=5
+② EX-99.1の内容から財務データを取得
+
+【香港・中国株（HKEx上場）】
+① https://www.hkexnews.hk/ でティッカーまたは会社名を検索
+② 最新のResults AnnouncementをBrowseして財務データを取得
+
+【中国A株】
+① https://www.cninfo.com.cn/ で証券コードを検索して財務データを取得
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【出力形式】取得データをもとに各企業を以下の形式で出力
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+①X投稿文（全角=2pt・英数=1pt・絵文字=2pt・改行=1pt、合計200pt以内。超過する場合はインサイトを短くして必ず200pt以内に収めること）
+【文字数削減ルール・必ず適用】
+・社名は投資家が使う最短の通称/略称のみ使用（正式名不要）：ホールディングス→HD、株式会社→㈱、グループ→Grp、インターナショナル→Intl、テクノロジー→Tech、コーポレーション→Corp
+・例：三菱UFJフィナンシャル・グループ→三菱UFJ-FG、日本電信電話→NTT
+・不要な半角スペースは全て削除
+・数値単位は最短表記（例：1,234百万円→1,234百万・$12.3M→$12.3M）
+形式：
+【決算速報】略称名 決算期
+売上▶数値(増減%)✅
+営利▶数値(増減%)📈
+純利▶数値(増減%)📈
+インサイト1行${affPr}
+@kessan_class
+※指標3行のみ・IRページ原文の数値そのまま使用・買い煽り/爆益禁止
+
+②ChatGPT用画像指示書テキスト（コードブロックで出力・このAIは画像生成しない）
+16:9横長／濃紺(#0D1B2A)×グレー(#2E2E2E)基調
+ヘッダー：中央=企業名(最大フォント・最も目立つ配置・文字色=#FFFFFF白固定)・右上=決算期・サブ=事業内容（証券コードはサブか左上に小さく）
+6カード3×2：売上高(青📊)・営業利益(緑📈)・純利益(✅)・業績背景(シアン)・財務配当(🛡️)・来期予想(オレンジ🔮)→各カードにIRページから取得した実際の値を記入
+フッター：インサイト3行+@kessan_class(右小)
+
+出力（各社）：
+---【会社名(証券コード/ティッカー)】---
+▼X投稿文(推定Xpt)
+\`\`\`
+投稿文
+\`\`\`
+▼ChatGPT画像指示書
+\`\`\`
+指示書テキスト
+\`\`\``;
   copyText(prompt);
   if(entries.length) addToExcluded(entries);
 }
