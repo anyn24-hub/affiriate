@@ -624,51 +624,64 @@ function copyAllPdfPrompt(){
   const companies = entries.length
     ? entries.map((e,i)=>`${i+1}. ${e}`).join('\n')
     : '（企業名またはティッカー・証券コードを入力してから押してください）';
-  const prompt = `以下の企業の最新の決算発表資料（PDF）のURLを調べてください。
+  const prompt = `以下の企業の最新決算発表資料（PDF）のURLを調べてください。
 
 対象企業：
 ${companies}
 
-出力形式（この形式のみで回答してください）：
-企業名（コード/ティッカー）: https://... または「未発表」または「不明」
+出力形式（この形式のみで回答）：
+企業名（コード/ティッカー）: https://...（.pdfで終わるURL） または「未発表」または「不明」
 
-条件（重要）：
-・「最新の決算発表資料」とは、すでに公開済みの最も新しい決算短信・業績発表PDFのこと
-・回答は必ず .pdf で終わるURLのみ（IRページURL・TDnetページURLは不可）
-・URLは必ずWeb検索・Browseで実在を確認してから回答すること
-・URLを推測・作成することは禁止（存在しないURLは必ず404になります）
-・まだ決算期が到来していない／未公開の場合は「未発表」と回答
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ 絶対に使用禁止のURL（これらは必ず失敗します）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・finance-frontend-pc-dist.west.edge.storage-yahoo.jp → 403エラー・使用禁止
+・https://www.release.tdnet.info/inbs/I_main_00.html?... → PDFではなくページURL・使用禁止
+・URLを推測・作成する行為 → 実在しないURLは必ず404になる・使用禁止
 
-・【日本株】以下を順に試し、必ず直接アクセス可能な .pdf URLを取得すること：
-　①Google検索「"会社名" 決算短信 filetype:pdf」
-　　→ xj-storage.jp または contents.xj-storage.jp のPDF URLを取得
-　②見つからない場合「"会社名" 証券コード site:xj-storage.jp filetype:pdf」で再検索
-　③どうしても .pdf URLが見つからない場合のみ TDnet企業ページURLで回答
-　　例：https://www.release.tdnet.info/inbs/I_main_00.html?COMPANY_CODE=2678
-　※finance-frontend-pc-dist.west.edge.storage-yahoo.jp は403エラーのため使用禁止
-　※TDnet（release.tdnet.info）は直接アクセスで403になるためPDF不可
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+共通ルール
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+・回答は必ず .pdf で終わるURLのみ
+・URLはBrowse/Web検索で実在を確認してから回答すること
+・未公開・決算期未到来の場合は「未発表」と回答
 
-・【米国株】以下を順に試し、必ず .pdf で終わる完全なURLを取得すること：
-　※ディレクトリURL（/q2/ で終わるなど）は無効。必ずファイル名まで含むこと
-　①企業のIRページをBrowseして最新のearnings release / press release PDFのURLを取得
-　　（IRページで "Q2 2026" または "Second Quarter 2026" のPDFリンクを探す）
-　②Google検索「ティッカー "Q2 2026" earnings release filetype:pdf」
-　③Google検索「ティッカー "Q2 2026" press release filetype:pdf」
-　→ Q2未発表なら同じ手順でQ1を検索し最新公開済みPDFを回答
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【日本株】検索手順（順番通りに試すこと）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+① Google検索「"会社名" 決算短信 filetype:pdf」
+　→ xj-storage.jp または contents.xj-storage.jp の .pdf URLを取得
 
-・香港・中国株（HKEx上場）の検索方法：
-　A. HKExニュース（https://www.hkexnews.hk/）でティッカーまたは会社名を検索 → 最新の業績発表PDFを取得
-　B. Google検索「会社名 ティッカー interim results annual results filetype:pdf」
-　C. 企業の公式IRページを Browse してPDFを探す
-　→ 未発表の場合は最新公開済みのPDFを回答
+② ①で見つからない場合、TDnetリストページをBrowseする
+　URL形式: https://www.release.tdnet.info/inbs/I_list_00_証券コード.html
+　例（証券コード3077の場合）: https://www.release.tdnet.info/inbs/I_list_00_3077.html
+　→ ページ内のPDFリンクから contents.xj-storage.jp/... のURLを取得して回答
 
-・中国本土株（A株・上海・深セン上場）の検索方法：
-　A. Google検索「会社名 証券コード 业绩快报 OR 财报 filetype:pdf」
-　B. 企業の公式IRページを Browse してPDFを探す
+③ ①②どちらも見つからない場合は「不明」と回答
+　※I_main_00.html や I_list_00.html のページURL自体を回答するのは禁止
 
-・Annual Report（年次報告書）は不要・四半期/中間/通期の業績発表PDFを優先
-・URLが確認できない場合は「不明」と記載
-・説明文・補足は不要`;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【米国株】検索手順（必ずファイル名まで含む完全なURLを取得すること）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+① 企業のIRページをBrowseして最新のEarnings Release / Press Release PDFのURLを取得
+　（IRページで "Q2 2026" または "Second Quarter 2026" のPDFリンクを探す）
+② Google検索「ティッカー "Q2 2026" earnings release filetype:pdf」
+③ Q2未発表なら同じ手順でQ1を検索し最新公開済みPDFを回答
+※ディレクトリURL（/q2/ で終わるなど）は無効。必ずファイル名（.pdf）まで含むこと
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【中国・香港株（HKEx上場）】検索手順
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+① HKExニュース（https://www.hkexnews.hk/）でティッカーまたは会社名を検索 → 最新の業績発表PDFを取得
+② Google検索「会社名 ティッカー interim results annual results filetype:pdf」
+③ 企業の公式IRページをBrowseしてPDFを探す
+
+【中国本土株（A株・上海・深セン上場）】
+① Google検索「会社名 証券コード 业绩快报 OR 财报 filetype:pdf」
+② 企業の公式IRページをBrowseしてPDFを探す
+
+Annual Report（年次報告書）は不要。四半期/中間/通期の業績発表PDFを優先すること。
+説明文・補足は不要。`;
   copyText(prompt);
   if(entries.length) addToExcluded(entries);
 }
