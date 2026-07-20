@@ -219,10 +219,6 @@ a{color:var(--cyan);text-decoration:none}
     <button class="big-btn blue" onclick="copyAllPdfPrompt()" style="margin-top:12px">
       <span class="bico">🤖</span><div class="btxt"><div class="blabel">Claude用プロンプトをコピー</div><div class="bsub">IRページ閲覧 → X投稿文＋画像指示書を生成（画像はChatGPTで）</div></div><span class="barr">📋</span>
     </button>
-    <button class="big-btn" onclick="copyImageBatchPrompt()" style="margin-top:8px;border-color:rgba(78,226,122,.3)">
-      <span class="bico">🖼️</span><div class="btxt"><div class="blabel">ChatGPT画像一括生成プロンプトをコピー</div><div class="bsub">Claudeの画像指示書をここに貼り付けてChatGPTへ（3〜4社ずつ）</div></div><span class="barr">📋</span>
-    </button>
-    <textarea class="finput" id="imageInstructions" placeholder="Claudeが出力した画像指示書テキストをここに貼り付け（複数社分まとめてOK・3〜4社ずつ推奨）" rows="5" style="margin-top:8px;resize:vertical;font-size:12px"></textarea>
   </div>
 </div>
 
@@ -774,19 +770,6 @@ ${companies}
   if(entries.length) addToExcluded(entries);
 }
 
-function copyImageBatchPrompt(){
-  const instructions = document.getElementById('imageInstructions').value.trim();
-  if(!instructions){
-    toast('⚠️ 画像指示書テキストを貼り付けてください');
-    return;
-  }
-  const prompt = `以下の画像指示書に従い、各社の決算画像を順番に生成してください。
-1社ごとに生成完了後、次の会社に進んでください。仕様を混同しないよう各社の指示を独立して処理すること。
-
-${instructions}`;
-  copyText(prompt);
-  toast('📋 ChatGPT画像生成プロンプトをコピーしました');
-}
 
 // ─────────────────────────────────────────
 // STEP 4: CLAUDE PROMPT
