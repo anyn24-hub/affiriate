@@ -537,7 +537,7 @@ function renderAllResult(){
       ${cnSection}
     </div>
     ${totalSel?`<button class="big-btn gold" onclick="addAllToStep2()" style="margin-top:4px">
-      <span class="bico">✅</span><div class="btxt"><div class="blabel">${totalSel}社をSTEP2に追加</div><div class="bsub">STEP2の入力欄に自動入力します</div></div><span class="barr">▶</span>
+      <span class="bico">✅</span><div class="btxt"><div class="blabel">${totalSel}社をSTEP3に追加</div><div class="bsub">STEP3の入力欄に自動入力します</div></div><span class="barr">▶</span>
     </button>`:''}
   `;
 }
@@ -568,7 +568,7 @@ function addAllToStep2(){
   const sec2 = document.getElementById('sec2');
   if(sec2 && !sec2.classList.contains('open')) tog('sec2');
   sec2.scrollIntoView({behavior:'smooth'});
-  toast('✅ '+sel.length+'社をSTEP2に追加しました');
+  toast('✅ '+sel.length+'社をSTEP3に追加しました');
 }
 
 // ─────────────────────────────────────────
@@ -752,7 +752,7 @@ ${companies}
 
 出力（各社）：
 ---【会社名(証券コード/ティッカー)】---
-📎 参照元: [実際にBrowseしたURL]
+📎 参照元: [決算書PDFのURLがあればそのURL、なければBrowseしたIRページのURL]
 ▼X投稿文(推定Xpt)
 \`\`\`
 投稿文
