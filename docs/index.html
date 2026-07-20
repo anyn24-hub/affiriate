@@ -171,15 +171,18 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info cyan">以下3ページを開いて表示内容をコピーし、プロンプト内の各枠に貼り付けてください。<br>
+    <button class="big-btn gold" id="jpFetchBtn" onclick="fetchJapanCompanies()" style="margin-top:4px">
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">🇯🇵 日本株を自動取得</div><div class="bsub">SBI証券から直近5日間の決算発表企業を自動取得</div></div><span class="barr">▶</span>
+    </button>
+    <div id="jpFetchResult" style="display:none;margin-top:10px"></div>
+    <div class="info cyan" style="margin-top:14px">外国株（米国・中国）は以下を開いてコピーし、プロンプトに貼り付けてください。<br>
       <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
-        <a href="https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">🇯🇵 日本株スケジュール ↗</a>
         <a href="https://site0.sbisec.co.jp/marble/market/calendar/schedule/foreign.do?Param6=US" target="_blank" rel="noopener" style="color:var(--cyan);font-size:12px;font-weight:700">🇺🇸 米国株スケジュール ↗</a>
         <a href="https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-foreign%7Ctl4-CN&file=index.html&getFlg=on&OutSide=on" target="_blank" rel="noopener" style="color:var(--red);font-size:12px;font-weight:700">🇨🇳 中国株スケジュール ↗</a>
       </div>
     </div>
-    <button class="big-btn cyan" onclick="copyAiPrompt()" style="margin-top:12px">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">AI抽出用プロンプトをコピー</div><div class="bsub">日本・米国・中国 / 直近5日間 / ChatGPT・Geminiへ貼り付け</div></div><span class="barr">📋</span>
+    <button class="big-btn cyan" onclick="copyAiPrompt()" style="margin-top:10px">
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">外国株AI抽出プロンプトをコピー</div><div class="bsub">米国・中国 / 直近5日間 / ChatGPT・Geminiへ貼り付け</div></div><span class="barr">📋</span>
     </button>
   </div>
 </div>
@@ -366,6 +369,125 @@ function addToExcluded(entries){
   const trimmed = current.slice(-1000);
   try{ localStorage.setItem(KEYS.excluded, JSON.stringify(trimmed)); }catch{}
 }
+// ─────────────────────────────────────────
+// STEP 1: SBI JAPAN AUTO-FETCH (JSONP)
+// ─────────────────────────────────────────
+const SBI_HASH     = '50ae7690c24ca53fb1fd390f9eb8fe1419b48631';
+const SBI_CAL_API  = 'https://vc.iris.sbisec.co.jp/calendar/settlement/stock/announcement_calendar_list.do';
+const SBI_DATE_API = 'https://vc.iris.sbisec.co.jp/calendar/settlement/stock/announcement_info_date.do';
+let _cbN = 0;
+function sbiJsonp(url){
+  return new Promise((resolve, reject)=>{
+    const fn = '__sbi'+(++_cbN)+'_'+Date.now();
+    const s  = document.createElement('script');
+    s.charset = 'shift-jis';
+    let tm = setTimeout(()=>{ cleanup(); reject(new Error('タイムアウト')); }, 8000);
+    window[fn] = d=>{ cleanup(); resolve(d); };
+    s.onerror = ()=>{ cleanup(); reject(new Error('読み込みエラー')); };
+    function cleanup(){ clearTimeout(tm); delete window[fn]; if(s.parentNode) s.remove(); }
+    s.src = url + '&callback=' + fn;
+    document.head.appendChild(s);
+  });
+}
+async function fetchJapanCompanies(){
+  const btn = document.getElementById('jpFetchBtn');
+  const res = document.getElementById('jpFetchResult');
+  btn.disabled = true;
+  res.style.display = 'block';
+  res.innerHTML = '<div class="info cyan">⏳ SBI証券から取得中...</div>';
+  try{
+    const d = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
+    const pad = n=>String(n).padStart(2,'0');
+    const fmt = dt=>`${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}`;
+    const today = fmt(d);
+    const d5 = new Date(d); d5.setDate(d5.getDate()-5);
+    const from = fmt(d5);
+    // カレンダー取得（月跨ぎ対応）
+    const ym0 = today.substring(0,6);
+    const ym1 = from.substring(0,6);
+    const calData = await sbiJsonp(`${SBI_CAL_API}?hash=${SBI_HASH}&type=delay&baseYM=${ym0}&selectedDate=${today}&span=2`);
+    const dateSet = new Set();
+    const dates = [];
+    function extractDates(cal){
+      for(const mo of cal.body||[]){
+        for(const wk of mo.detail||[]){
+          for(const day of wk.week||[]){
+            if(day.date && day.count && parseInt(day.count)>0 && day.date>=from && day.date<=today && !dateSet.has(day.date)){
+              dates.push(day.date); dateSet.add(day.date);
+            }
+          }
+        }
+      }
+    }
+    extractDates(calData);
+    if(ym1 !== ym0){
+      const cal2 = await sbiJsonp(`${SBI_CAL_API}?hash=${SBI_HASH}&type=delay&baseYM=${ym1}&selectedDate=${from}&span=2`);
+      extractDates(cal2);
+    }
+    dates.sort();
+    if(!dates.length){
+      res.innerHTML = '<div class="info cyan">直近5日間に発表済み企業が見つかりませんでした。</div>';
+      return;
+    }
+    const excluded = new Set(getExcluded());
+    const seen = new Set();
+    const companies = [];
+    for(const date of dates){
+      const data = await sbiJsonp(`${SBI_DATE_API}?hash=${SBI_HASH}&type=delay&selectedDate=${date}`);
+      for(const item of data.body||[]){
+        if(!item.productCode || !item.productName) continue;
+        if(excluded.has(item.productCode) || seen.has(item.productCode)) continue;
+        seen.add(item.productCode);
+        companies.push({code:item.productCode, name:item.productName, date:item.date, sel:true});
+      }
+    }
+    if(!companies.length){
+      res.innerHTML = '<div class="info cyan">取得できた企業が0件でした（全て除外済みの可能性があります）。</div>';
+      return;
+    }
+    window._sbiJp = companies;
+    renderJpResult();
+  } catch(e){
+    res.innerHTML = `<div class="info" style="border-color:rgba(226,74,74,.4);background:rgba(226,74,74,.07);color:rgba(255,160,160,1)">❌ 取得失敗：${e.message||e}<br><small style="opacity:.7">SBIのAPIが変更された可能性があります。手動プロンプトをご利用ください。</small></div>`;
+  } finally{
+    btn.disabled = false;
+  }
+}
+function renderJpResult(){
+  const companies = window._sbiJp||[];
+  const selCount = companies.filter(c=>c.sel).length;
+  const res = document.getElementById('jpFetchResult');
+  res.innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+      取得：<strong style="color:var(--gold)">${companies.length}社</strong>　選択中：<strong style="color:var(--cyan)">${selCount}社</strong><span style="margin-left:8px;font-size:11px">（タップで選択／解除）</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+      ${companies.map((c,i)=>`<span onclick="toggleJp(${i})" style="cursor:pointer;border-radius:100px;font-size:12px;font-weight:700;padding:4px 12px;white-space:nowrap;border:1px solid;${c.sel?'background:rgba(245,197,24,.15);border-color:rgba(245,197,24,.5);color:var(--gold)':'background:rgba(255,255,255,.04);border-color:var(--border);color:rgba(255,255,255,.35)'}">${c.name}（${c.code}）</span>`).join('')}
+    </div>
+    ${selCount?`<button class="big-btn gold" onclick="addJpToStep2()" style="margin-top:0">
+      <span class="bico">✅</span><div class="btxt"><div class="blabel">選択した${selCount}社をSTEP2に追加</div><div class="bsub">STEP2の入力欄に自動入力します</div></div><span class="barr">▶</span>
+    </button>`:''}
+  `;
+}
+function toggleJp(i){
+  if(!window._sbiJp) return;
+  window._sbiJp[i].sel = !window._sbiJp[i].sel;
+  renderJpResult();
+}
+function addJpToStep2(){
+  const sel = (window._sbiJp||[]).filter(c=>c.sel);
+  if(!sel.length) return;
+  const input = document.getElementById('allTicker');
+  const existing = input.value.trim();
+  const newEntries = sel.map(c=>`${c.name}(${c.code})`).join(', ');
+  input.value = existing ? existing+', '+newEntries : newEntries;
+  renderAllChips();
+  const sec2 = document.getElementById('sec2');
+  if(sec2 && !sec2.classList.contains('open')) tog('sec2');
+  sec2.scrollIntoView({behavior:'smooth'});
+  toast('✅ '+sel.length+'社をSTEP2に追加しました');
+}
+
 function copyAiPrompt(){
   const d = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
   const today = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -375,15 +497,10 @@ function copyAiPrompt(){
     : '';
   const d5 = new Date(d); d5.setDate(d5.getDate()-5);
   const from = `${d5.getFullYear()}-${String(d5.getMonth()+1).padStart(2,'0')}-${String(d5.getDate()).padStart(2,'0')}`;
-  const prompt = `以下のSBI証券 決算発表スケジュール（日本株・米国株・中国株）の内容から、発表済みの決算企業候補を抽出してください。
+  const prompt = `以下のSBI証券 決算発表スケジュール（米国株・中国株）の内容から、発表済みの決算企業候補を抽出してください。
 
 本日の日付：${today}
 対象期間：${from} ～ ${today}（直近5日間・件数が1件以上ある日のみ）
-
-━━━ 🇯🇵 日本株スケジュール（ここに貼り付け） ━━━
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ━━━ 🇺🇸 米国株スケジュール（ここに貼り付け） ━━━
 
@@ -398,10 +515,8 @@ function copyAiPrompt(){
 ${excludeSection}条件：
 ・対象期間（${from}〜${today}）の発表済み企業のみ（未来日は絶対に含めない）
 ・件数が「0件」の日付は無視すること
-・候補企業は最大10社まで
-・地域バランス：日本株は最大6社まで。残り4社は米国・中国から必ず探すこと。見つからない場合のみ日本株で補ってよい
-・日本株の企業名は日本語
-・米国・中国株の企業名は英語表記
+・候補企業は最大4社まで（米国・中国のみ）
+・企業名は英語表記
 ・説明文は不要
 
 出力形式：
