@@ -178,42 +178,15 @@ a{color:var(--cyan);text-decoration:none}
   </div>
 </div>
 
-<!-- ─── STEP 2 ─── -->
-<div class="section" id="sec2">
-  <div class="section-header" onclick="tog('sec2')">
-    <span class="step-badge">STEP 2</span>
-    <span class="section-title">決算資料をダウンロード → Driveに保存</span>
-    <span class="chevron">▼</span>
-  </div>
-  <div class="section-body">
-    <div class="info cyan" style="font-size:12px">企業名・ティッカー・証券コードを入力 → ChatGPTに決算PDF URLを調べてもらう → Driveに保存（日本株・海外株どちらもOK）</div>
-    <div class="fg mt12">
-      <label>企業名 / ティッカー / 証券コード（コンマ区切りで複数入力可）</label>
-      <input class="finput" id="allTicker" placeholder="例：トヨタ, 7203, AAPL, テンセント, 0700" oninput="renderAllChips()" autocomplete="off" spellcheck="false">
-    </div>
-    <div id="allChipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="allChipCount"></span></div>
-      <div class="company-chips" id="allCompanyChips"><span style="font-size:12px;color:rgba(255,255,255,.15)">企業名を入力すると横並びで表示されます</span></div>
-    </div>
-    <button class="big-btn blue" onclick="copyAllPdfPrompt()" style="margin-top:12px">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPTに決算データ取得・投稿文生成を依頼</div><div class="bsub">IRページを直接閲覧してX投稿文と画像指示書を自動生成</div></div><span class="barr">📋</span>
-    </button>
-    <a class="big-btn" href="https://drive.google.com/drive/u/1/folders/18wtkPzESM12OZhe4e2YLQ5mT1HhBVGw0" target="_blank" rel="noopener" style="margin-top:8px;border-color:rgba(78,226,122,.3)">
-      <span class="bico">📁</span><div class="btxt"><div class="blabel">Google Driveに保存</div><div class="bsub">ダウンロードした決算PDFをここに保存</div></div><span class="barr">↗</span>
-    </a>
-  </div>
-</div>
-
-
-<!-- ─── STEP 3: 収益化設定 ─── -->
+<!-- ─── STEP 2: アフィリエイト設定 ─── -->
 <div class="section" id="secAff">
   <div class="section-header" onclick="tog('secAff')">
-    <span class="step-badge">STEP 3</span>
+    <span class="step-badge">STEP 2</span>
     <span class="section-title">楽天アフィリエイトURL設定</span>
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info gold">ここで設定したURLはSTEP4のClaudeプロンプトに自動で組み込まれます。</div>
+    <div class="info gold">ここで設定したURLはSTEP3のChatGPTプロンプトに自動で組み込まれます。</div>
     <div class="toggle-row mt12">
       <span class="toggle-label">アフィリエイトリンクを投稿文に含める</span>
       <label class="toggle"><input type="checkbox" id="affEnabled" onchange="saveAff()"><span class="tslider"></span></label>
@@ -226,17 +199,25 @@ a{color:var(--cyan);text-decoration:none}
   </div>
 </div>
 
-<!-- ─── STEP 4: Claude投稿文生成 ─── -->
-<div class="section" id="sec5">
-  <div class="section-header" onclick="tog('sec5')">
-    <span class="step-badge">STEP 4</span>
-    <span class="section-title">投稿コンテンツをClaudeで生成</span>
+<!-- ─── STEP 3: ChatGPT投稿文生成 ─── -->
+<div class="section" id="sec2">
+  <div class="section-header" onclick="tog('sec2')">
+    <span class="step-badge b">STEP 3</span>
+    <span class="section-title">ChatGPTで決算データ取得・投稿文生成</span>
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info cyan">DriveフォルダのPDFをClaudeに読み込ませ、X投稿文と画像指示書を生成します。</div>
-    <button class="big-btn cyan" onclick="copyClaudePrompt()" style="margin-top:12px">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">Claude用プロンプトをコピー</div><div class="bsub">Driveフォルダ全PDFを一括処理</div></div><span class="barr">📋</span>
+    <div class="info cyan" style="font-size:12px">STEP1で選択した企業をそのまま自動入力 → プロンプトをコピーしてChatGPT（Browse機能オン）に貼り付け → IRページを閲覧してX投稿文・画像指示書を一括生成</div>
+    <div class="fg mt12">
+      <label>対象企業（STEP1から自動入力、または手動でコンマ区切り入力も可）</label>
+      <input class="finput" id="allTicker" placeholder="例：トヨタ, 7203, AAPL, テンセント, 0700" oninput="renderAllChips()" autocomplete="off" spellcheck="false">
+    </div>
+    <div id="allChipArea" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px">対象企業 <span id="allChipCount"></span></div>
+      <div class="company-chips" id="allCompanyChips"><span style="font-size:12px;color:rgba(255,255,255,.15)">企業名を入力すると横並びで表示されます</span></div>
+    </div>
+    <button class="big-btn blue" onclick="copyAllPdfPrompt()" style="margin-top:12px">
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPT用プロンプトをコピー</div><div class="bsub">IRページ閲覧 → X投稿文＋画像指示書を一括生成</div></div><span class="barr">📋</span>
     </button>
   </div>
 </div>
