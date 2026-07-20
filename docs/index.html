@@ -647,18 +647,23 @@ ${companies}
 ・未公開・決算期未到来の場合は「未発表」と回答
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-【日本株】検索手順（順番通りに試すこと）
+【日本株】検索手順（①→②→③→④の順に試すこと）
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-① Google検索「"会社名" 決算短信 filetype:pdf」
-　→ xj-storage.jp または contents.xj-storage.jp の .pdf URLを取得
+① Google検索「証券コード site:xj-storage.jp」
+　例（6085の場合）: 6085 site:xj-storage.jp
+　→ contents.xj-storage.jp/... の .pdf URLが出てきたらそれを回答
 
-② ①で見つからない場合、TDnetリストページをBrowseする
-　URL形式: https://www.release.tdnet.info/inbs/I_list_00_証券コード.html
-　例（証券コード3077の場合）: https://www.release.tdnet.info/inbs/I_list_00_3077.html
-　→ ページ内のPDFリンクから contents.xj-storage.jp/... のURLを取得して回答
+② ①で見つからない場合：かぶたんの開示ページをBrowse
+　URL: https://kabutan.jp/stock/news?code=証券コード
+　例（6085の場合）: https://kabutan.jp/stock/news?code=6085
+　→ ページ内の「決算短信」リンクからPDF URLを取得（contents.xj-storage.jp/...）
 
-③ ①②どちらも見つからない場合は「不明」と回答
-　※I_main_00.html や I_list_00.html のページURL自体を回答するのは禁止
+③ ②でも見つからない場合：企業の公式IRページをBrowse
+　Google検索「会社名 IR 決算短信 PDF」でIRページを特定 → 決算短信PDFの直リンクを取得
+
+④ すべて失敗した場合は「不明」と回答
+　※TDnet（release.tdnet.info）のページURLそのものは回答禁止
+　※finance-frontend-pc-dist.west.edge.storage-yahoo.jp は403のため回答禁止
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【米国株】検索手順（必ずファイル名まで含む完全なURLを取得すること）
