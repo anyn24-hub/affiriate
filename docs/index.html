@@ -171,12 +171,15 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info cyan">SBI証券の決算発表スケジュールを開き、<strong>日本株・米国株・中国株・香港株</strong>の発表予定を確認します。表示内容をGeminiまたはChatGPTに貼り付け、投稿候補企業を抽出してください。</div>
-    <a class="big-btn gold" href="https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on&OutSide=on" target="_blank" rel="noopener">
-      <span class="bico">🏦</span><div class="btxt"><div class="blabel">SBI決算発表スケジュールを開く</div><div class="bsub">日本・米国・中国・香港の決算予定を確認</div></div><span class="barr">↗</span>
-    </a>
-    <button class="big-btn cyan" onclick="copyAiPrompt()">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">AI抽出用プロンプトをコピー</div><div class="bsub">最低10社・さかのぼり対応 / Gemini・ChatGPTへ貼り付け</div></div><span class="barr">📋</span>
+    <div class="info cyan">以下3ページを開いて表示内容をコピーし、プロンプト内の各枠に貼り付けてください。<br>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
+        <a href="https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on" target="_blank" rel="noopener" style="color:var(--gold);font-size:12px;font-weight:700">🇯🇵 日本株スケジュール ↗</a>
+        <a href="https://site0.sbisec.co.jp/marble/market/calendar/schedule/foreign.do?Param6=US" target="_blank" rel="noopener" style="color:var(--cyan);font-size:12px;font-weight:700">🇺🇸 米国株スケジュール ↗</a>
+        <a href="https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-foreign%7Ctl4-CN&file=index.html&getFlg=on&OutSide=on" target="_blank" rel="noopener" style="color:var(--red);font-size:12px;font-weight:700">🇨🇳 中国株スケジュール ↗</a>
+      </div>
+    </div>
+    <button class="big-btn cyan" onclick="copyAiPrompt()" style="margin-top:12px">
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">AI抽出用プロンプトをコピー</div><div class="bsub">日本・米国・中国 / 直近5日間 / ChatGPT・Geminiへ貼り付け</div></div><span class="barr">📋</span>
     </button>
   </div>
 </div>
@@ -370,24 +373,35 @@ function copyAiPrompt(){
   const excludeSection = excludedCodes.length
     ? `【除外対象】\n以下のコード/ティッカーは出力しない：\n${excludedCodes.join(', ')}\n\n`
     : '';
-  const prompt = `以下のSBI証券 決算発表スケジュールの内容から、すでに発表済みの決算企業候補を抽出してください。
+  const d5 = new Date(d); d5.setDate(d5.getDate()-5);
+  const from = `${d5.getFullYear()}-${String(d5.getMonth()+1).padStart(2,'0')}-${String(d5.getDate()).padStart(2,'0')}`;
+  const prompt = `以下のSBI証券 決算発表スケジュール（日本株・米国株・中国株）の内容から、発表済みの決算企業候補を抽出してください。
 
 本日の日付：${today}
+対象期間：${from} ～ ${today}（直近5日間・件数が1件以上ある日のみ）
 
-━━━ SBIスケジュール内容（ここに貼り付け） ━━━
+━━━ 🇯🇵 日本株スケジュール（ここに貼り付け） ━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━ 🇺🇸 米国株スケジュール（ここに貼り付け） ━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━ 🇨🇳 中国株スケジュール（ここに貼り付け） ━━━
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ${excludeSection}条件：
-・日本・米国・中国・香港すべて対象
-・発表日が ${today} より後の企業は絶対に含めない
-・${today} の発表済み企業を優先
-・足りない場合は過去方向にのみさかのぼる
-・候補企業は最大10社まで出す
-・地域バランス：日本株は最大6社まで。残り4社は米国・中国・香港から必ず探すこと。見つからない場合のみ日本株で補ってよい
+・対象期間（${from}〜${today}）の発表済み企業のみ（未来日は絶対に含めない）
+・件数が「0件」の日付は無視すること
+・候補企業は最大10社まで
+・地域バランス：日本株は最大6社まで。残り4社は米国・中国から必ず探すこと。見つからない場合のみ日本株で補ってよい
 ・日本株の企業名は日本語
-・米国・中国・香港株の企業名は英語表記
+・米国・中国株の企業名は英語表記
 ・説明文は不要
 
 出力形式：
