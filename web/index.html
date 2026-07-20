@@ -6,16 +6,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#a855f7">
+<meta name="theme-color" content="#0f1117">
 <title>楽天アフィ投稿Bot | おとな偏愛Lab</title>
 <style>
-:root{--bg:#0f0f14;--bg2:#16161e;--card:#1c1c26;--card2:#22222e;--border:rgba(255,255,255,.1);--pink:#ff6b9d;--purple:#a855f7;--cyan:#22d3ee;--green:#4ade80;--red:#f87171;--gold:#fbbf24;--text:#f0f0f5;--muted:rgba(240,240,245,.55);--r:14px}
+:root{--bg:#0f1117;--bg2:#161b22;--card:#1c2130;--card2:#222840;--border:rgba(255,255,255,.09);--pink:#818cf8;--purple:#6366f1;--cyan:#60a5fa;--green:#4ade80;--red:#f87171;--gold:#fbbf24;--text:#e5e7eb;--muted:rgba(229,231,235,.5);--r:14px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:17px;-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;min-height:100vh;padding-bottom:90px;max-width:700px;margin:0 auto}
-.hdr{background:linear-gradient(135deg,#0a0a12,#16101e);border-bottom:1px solid rgba(168,85,247,.35);padding:14px 20px 12px;position:sticky;top:0;z-index:100}
+.hdr{background:#0f1117;border-bottom:1px solid rgba(255,255,255,.08);padding:14px 20px 12px;position:sticky;top:0;z-index:100}
 .hdr-inner{display:flex;justify-content:space-between;align-items:center}
-.hdr-title{font-size:19px;font-weight:900;background:linear-gradient(135deg,var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr-title{font-size:19px;font-weight:900;color:var(--text)}
 .hdr-sub{font-size:11px;color:var(--muted);margin-top:2px}
 .hdr-date{font-size:13px;color:var(--cyan);font-weight:700}
 .page{padding:14px 16px}
@@ -1641,28 +1641,44 @@ function initHeader(){
   const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
   const wd=['日','月','火','水','木','金','土'][d.getDay()];
   const day=d.getDate();
-  const isPointUpDay=[5,10,15,20,25,30].includes(day);
-  const puLine=isPointUpDay
-    ?'<div style="font-size:10px;background:#f59e0b;color:#000;border-radius:4px;padding:1px 6px;font-weight:800;display:inline-block;margin-top:3px">⭐ PU日</div>'
-    :(()=>{const puDays=[5,10,15,20,25,30];const nd=puDays.find(n=>n>day);const nm=nd?d.getMonth()+1:d.getMonth()+2;const ndd=nd||puDays[0];return `<div style="font-size:10px;color:var(--muted);margin-top:3px">次PU: ${nm}/${ndd}</div>`;})();
+  const puDays=[5,10,15,20,25,30];
+  // 前日判定（PU日の前日 = 4,9,14,19,24,29）
+  const preDays=puDays.map(d=>d-1);
+  const isPointUpDay=puDays.includes(day);
+  const isPreDay=preDays.includes(day);
+  let puLine='';
+  if(isPointUpDay){
+    puLine='<div style="font-size:10px;background:rgba(99,102,241,.25);color:#a5b4fc;border-radius:4px;padding:1px 6px;font-weight:700;display:inline-block;margin-top:3px">📌 今日はPU日</div>';
+  }else if(isPreDay){
+    const nextPuDay=day+1;
+    puLine=`<div style="font-size:10px;background:rgba(99,102,241,.15);color:#818cf8;border-radius:4px;padding:1px 6px;font-weight:700;display:inline-block;margin-top:3px">⭐ 明日（${nextPuDay}日）がPU日</div>`;
+  }else{
+    const nd=puDays.find(n=>n>day);const nm=nd?d.getMonth()+1:d.getMonth()+2;const ndd=nd||puDays[0];
+    const preDayDate=ndd-1;
+    puLine=`<div style="font-size:10px;color:var(--muted);margin-top:3px">予約投稿: ${nm}/${preDayDate}</div>`;
+  }
   const el=document.getElementById('hdrDate');
   el.style.textAlign='right';
   el.innerHTML=`<div>${d.getMonth()+1}/${d.getDate()}（${wd}）</div>`+puLine;
 }
 (function(){
   initHeader();onCatChange();applyHrNames();renderHistory();
-  // ポイントアップデー自動判定: ポイントアップ日は高料率②と入れ替え表示
-  // <option>はdisplay:noneが効かないブラウザがあるためDOMから削除する
-  const today=new Date();
-  const day=today.getDate();
-  const isPointUpDay=[5,10,15,20,25,30].includes(day);
-  const optHr2=document.getElementById('catOptHr2');
-  const optPointup=document.getElementById('catOptPointup');
-  if(isPointUpDay){
-    if(optHr2)optHr2.remove();
-    document.getElementById('pointupBanner').style.display='block';
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
+  const day=d.getDate();
+  const puDays=[5,10,15,20,25,30];
+  const preDays=puDays.map(d=>d-1);
+  // 前日またはPU当日はバナー表示
+  if(puDays.includes(day)||preDays.includes(day)){
+    const banner=document.getElementById('pointupBanner');
+    const msg=puDays.includes(day)
+      ?'<div style="font-size:14px;font-weight:700;color:#a5b4fc;margin-bottom:3px">📌 今日はポイントアップ日（5・0のつく日）です</div><div style="font-size:12px;color:var(--muted)">エントリーをお忘れなく。</div>'
+      :`<div style="font-size:14px;font-weight:700;color:#818cf8;margin-bottom:3px">⭐ 明日（${day+1}日）はポイントアップ日です</div><div style="font-size:12px;color:var(--muted)">今日中に予約投稿を準備しましょう。</div>`;
+    banner.querySelector('div').outerHTML;
+    banner.innerHTML=msg+`<button class="btn btn-sm" style="margin-top:8px;background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3);font-size:12px;padding:5px 14px" onclick="jumpToPointup()">投稿文を生成する →</button>`;
+    banner.style.background='rgba(99,102,241,.08)';
+    banner.style.borderColor='rgba(99,102,241,.25)';
+    banner.style.display='block';
   }
-  // 非PU日はポイントアップ選択肢を残す（予約投稿用）
 })();
 </script>
 </body>
