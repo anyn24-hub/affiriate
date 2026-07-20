@@ -199,15 +199,15 @@ a{color:var(--cyan);text-decoration:none}
   </div>
 </div>
 
-<!-- ─── STEP 3: ChatGPT投稿文生成 ─── -->
+<!-- ─── STEP 3: Claude投稿文生成 ─── -->
 <div class="section" id="sec2">
   <div class="section-header" onclick="tog('sec2')">
     <span class="step-badge b">STEP 3</span>
-    <span class="section-title">ChatGPTで決算データ取得・投稿文生成</span>
+    <span class="section-title">Claudeで決算データ取得・投稿文生成</span>
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <div class="info cyan" style="font-size:12px">STEP1で選択した企業をそのまま自動入力 → プロンプトをコピーしてChatGPT（Browse機能オン）に貼り付け → IRページを閲覧してX投稿文・画像指示書を一括生成</div>
+    <div class="info cyan" style="font-size:12px">① プロンプトをコピーして <strong>Claude（claude.ai）</strong> に貼り付け → IRページ閲覧・X投稿文・画像指示書を生成<br>② Claudeの出力から画像指示書を <strong>ChatGPT（DALL-E）</strong> に貼り付けて画像生成（3〜4社ずつ推奨）</div>
     <div class="fg mt12">
       <label>対象企業（STEP1から自動入力、または手動でコンマ区切り入力も可）</label>
       <input class="finput" id="allTicker" placeholder="例：トヨタ, 7203, AAPL, テンセント, 0700" oninput="renderAllChips()" autocomplete="off" spellcheck="false">
@@ -217,8 +217,12 @@ a{color:var(--cyan);text-decoration:none}
       <div class="company-chips" id="allCompanyChips"><span style="font-size:12px;color:rgba(255,255,255,.15)">企業名を入力すると横並びで表示されます</span></div>
     </div>
     <button class="big-btn blue" onclick="copyAllPdfPrompt()" style="margin-top:12px">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">ChatGPT用プロンプトをコピー</div><div class="bsub">IRページ閲覧 → X投稿文＋画像指示書を一括生成</div></div><span class="barr">📋</span>
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">Claude用プロンプトをコピー</div><div class="bsub">IRページ閲覧 → X投稿文＋画像指示書を生成（画像はChatGPTで）</div></div><span class="barr">📋</span>
     </button>
+    <button class="big-btn" onclick="copyImageBatchPrompt()" style="margin-top:8px;border-color:rgba(78,226,122,.3)">
+      <span class="bico">🖼️</span><div class="btxt"><div class="blabel">ChatGPT画像一括生成プロンプトをコピー</div><div class="bsub">Claudeの画像指示書をここに貼り付けてChatGPTへ（3〜4社ずつ）</div></div><span class="barr">📋</span>
+    </button>
+    <textarea class="finput" id="imageInstructions" placeholder="Claudeが出力した画像指示書テキストをここに貼り付け（複数社分まとめてOK・3〜4社ずつ推奨）" rows="5" style="margin-top:8px;resize:vertical;font-size:12px"></textarea>
   </div>
 </div>
 
@@ -744,7 +748,7 @@ ${companies}
 @kessan_class
 ※指標3行のみ・IRページ原文の数値そのまま使用・買い煽り/爆益禁止
 
-②ChatGPT用画像指示書テキスト（コードブロックで出力・このAIは画像生成しない）
+②画像指示書テキスト（コードブロックで出力・画像生成は別途ChatGPTで行う）
 16:9横長／濃紺(#0D1B2A)×グレー(#2E2E2E)基調
 ヘッダー：中央=企業名(最大フォント・最も目立つ配置・文字色=#FFFFFF白固定)・右上=決算期・サブ=事業内容（証券コードはサブか左上に小さく）
 6カード3×2：売上高(青📊)・営業利益(緑📈)・純利益(✅)・業績背景(シアン)・財務配当(🛡️)・来期予想(オレンジ🔮)→各カードにIRページから取得した実際の値を記入
@@ -757,12 +761,26 @@ ${companies}
 \`\`\`
 投稿文
 \`\`\`
-▼ChatGPT画像指示書
+▼画像指示書（ChatGPTに貼り付けて画像生成）
 \`\`\`
 指示書テキスト
 \`\`\``;
   copyText(prompt);
   if(entries.length) addToExcluded(entries);
+}
+
+function copyImageBatchPrompt(){
+  const instructions = document.getElementById('imageInstructions').value.trim();
+  if(!instructions){
+    toast('⚠️ 画像指示書テキストを貼り付けてください');
+    return;
+  }
+  const prompt = `以下の画像指示書に従い、各社の決算画像を順番に生成してください。
+1社ごとに生成完了後、次の会社に進んでください。仕様を混同しないよう各社の指示を独立して処理すること。
+
+${instructions}`;
+  copyText(prompt);
+  toast('📋 ChatGPT画像生成プロンプトをコピーしました');
 }
 
 // ─────────────────────────────────────────
