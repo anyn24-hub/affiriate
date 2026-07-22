@@ -797,13 +797,7 @@ async function confirmAndGenerate(){
       'skincare':'スキンケア','supplement':'サプリ','sparkling':'炭酸水','nuts':'ナッツ','bath':'入浴剤',
       'furusato_rice':'米','furusato_meat':'肉','furusato_seafood':'海鮮','furusato_fruit':'フルーツ',
       'furusato_sweet':'スイーツ','furusato_daily':'日用品','furusato_other':'その他'};
-    if(dups.length>0){
-      const dupNames=dups.map(([s])=>SUBCAT_LABEL[s]||s).join('・');
-      if(!confirm(`「${dupNames}」が重複しています。このまま生成しますか？\n（キャンセルして商品名を修正することもできます）`)){
-        btn.disabled=false;btn.innerHTML='✅ この商品で投稿文・画像を生成';
-        return;
-      }
-    }
+    // サブカテゴリ重複はそのまま続行（確認ダイアログなし）
 
     // Step 2: 投稿文生成
     const post=buildPostText(cat,'');
