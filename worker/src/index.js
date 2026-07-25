@@ -59,6 +59,15 @@ async function getJpHash() {
   return null;
 }
 
+function relaxedJsonParse(text) {
+  // Remove trailing commas before } or ]
+  let s = text.replace(/,(\s*[}\]])/g, '$1');
+  // Quote unquoted object keys that appear after { or ,
+  // Skips already-quoted keys (preceded by ") and values inside strings
+  s = s.replace(/([{,][\r\n\t ]*)([a-zA-Z_$][a-zA-Z0-9_$]*)(\s*:(?!:))/g, '$1"$2"$3');
+  return JSON.parse(s);
+}
+
 // Call SBI JSONP endpoint server-side and parse result
 async function sbiJsonpFetch(url) {
   const fullUrl = `${url}&callback=cb`;
@@ -66,13 +75,15 @@ async function sbiJsonpFetch(url) {
     headers: { 'User-Agent': UA, 'Accept': '*/*', 'Accept-Language': 'ja-JP,ja;q=0.9' },
   });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  const text = await resp.text();
+  // SBI JSONP responses are Shift-JIS encoded
+  const buf = await resp.arrayBuffer();
+  let text;
+  try { text = new TextDecoder('shift-jis').decode(buf); }
+  catch (_) { text = new TextDecoder('utf-8').decode(buf); }
   // Strip JSONP wrapper: cb({...}) or cb([...])
   const m = text.match(/^[^(]+\(([\s\S]*)\)\s*;?\s*$/);
   if (!m) throw new Error('JSONP parse error');
-  // SBI returns relaxed JSON with trailing commas — strip them before parsing
-  const cleaned = m[1].replace(/,(\s*[}\]])/g, '$1');
-  return JSON.parse(cleaned);
+  return relaxedJsonParse(m[1]);
 }
 
 export default {
@@ -102,6 +113,27 @@ export default {
       }
     }
 
+    // /debug-jp-date — return raw JSONP text for debugging
+    if (url.pathname === '/debug-jp-date') {
+      try {
+        const hash = await getJpHash();
+        if (!hash) return new Response('hash not found', { headers: CORS });
+        const params = new URLSearchParams({
+          hash,
+          type: url.searchParams.get('type') || 'delay',
+          selectedDate: url.searchParams.get('selectedDate') || '',
+          callback: 'cb',
+        });
+        const resp = await fetch(`${SBI_JP_DATE}?${params}`, {
+          headers: { 'User-Agent': UA, 'Accept': '*/*', 'Accept-Language': 'ja-JP,ja;q=0.9' },
+        });
+        const text = await resp.text();
+        return new Response(text, { headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8' } });
+      } catch (e) {
+        return new Response(e.message, { headers: CORS });
+      }
+    }
+
     // /jp-date — proxy JP company list for a specific date
     if (url.pathname === '/jp-date') {
       try {
@@ -111,9 +143,27 @@ export default {
           hash,
           type: url.searchParams.get('type') || 'delay',
           selectedDate: url.searchParams.get('selectedDate') || '',
+          callback: 'cb',
         });
-        const data = await sbiJsonpFetch(`${SBI_JP_DATE}?${params}`);
-        return json(data);
+        const fullUrl = `${SBI_JP_DATE}?${params}`;
+        const resp = await fetch(fullUrl, {
+          headers: { 'User-Agent': UA, 'Accept': '*/*', 'Accept-Language': 'ja-JP,ja;q=0.9' },
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const buf = await resp.arrayBuffer();
+        let text;
+        try { text = new TextDecoder('shift-jis').decode(buf); }
+        catch (_) { text = new TextDecoder('utf-8').decode(buf); }
+        // Extract productCode and productName directly via regex to avoid JSON.parse issues
+        // with SBI's non-standard JSON (unquoted keys, embedded HTML, etc.)
+        const body = [];
+        const codeRe = /"productCode"\s*:\s*"([^"]+)"/g;
+        const nameRe = /"productName"\s*:\s*"([^"]+)"/g;
+        let cm, nm;
+        while ((cm = codeRe.exec(text)) !== null && (nm = nameRe.exec(text)) !== null) {
+          body.push({ productCode: cm[1], productName: nm[1] });
+        }
+        return json({ body });
       } catch (e) {
         return json({ error: e.message, body: [] }, 502);
       }
