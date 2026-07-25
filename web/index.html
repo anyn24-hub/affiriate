@@ -1782,7 +1782,7 @@ function initHeader(){
   }else{
     const nd=puDays.find(n=>n>day);const nm=nd?d.getMonth()+1:d.getMonth()+2;const ndd=nd||puDays[0];
     const preDayDate=ndd-1;
-    puLine=`<div style="font-size:10px;color:var(--muted);margin-top:3px">予約投稿: ${nm}/${preDayDate}</div>`;
+    puLine=`<div style="font-size:10px;color:var(--muted);margin-top:3px">次PU: ${nm}/${ndd}（予約: ${nm}/${preDayDate}）</div>`;
   }
   const el=document.getElementById('hdrDate');
   el.style.textAlign='right';
