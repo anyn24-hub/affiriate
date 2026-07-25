@@ -101,6 +101,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <option value="高料率①">💰 高料率①</option>
         <option value="高料率②" id="catOptHr2">💎 高料率②</option>
         <option value="ポイントアップ投稿" id="catOptPointup">⭐ ポイントアップ投稿（5・0のつく日 / 予約投稿用）</option>
+        <option value="月末まとめ" id="catOptMonthly">📅 月末まとめ投稿</option>
       </select>
       <div id="catTimeHint" style="font-size:11px;color:var(--cyan);font-weight:700;margin-top:5px"></div>
     </div>
@@ -137,6 +138,24 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <div class="btn-row mt8">
           <button class="btn btn-green" onclick="copyPointupPost()" style="flex:1">📋 X用にコピー</button>
           <button class="btn btn-ghost btn-sm" onclick="generatePointupPost()">🔄 投稿文を再生成</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 月末まとめ投稿 -->
+    <div id="monthlyArea" style="display:none;margin-top:4px">
+      <div id="monthlyBadge" style="text-align:center;font-size:13px;font-weight:700;padding:10px;border-radius:10px;margin-bottom:12px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);color:#60a5fa"></div>
+      <button class="btn btn-full" style="background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:16px;padding:15px" onclick="generateMonthlyPost()">📅 まとめ投稿文を生成</button>
+      <div id="monthlyPostSection" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">📝 投稿文</div>
+        <div class="out-box" id="monthlyPostBox" contenteditable="true" oninput="onMonthlyPostInput()"></div>
+        <div class="char-row">
+          <span style="font-size:12px;color:var(--muted)">投稿先: X のみ（リンクなし）</span>
+          <span class="char-cnt char-ok" id="monthlyCharCount">0 / 280文字</span>
+        </div>
+        <div class="btn-row mt8">
+          <button class="btn btn-green" onclick="copyMonthlyPost()" style="flex:1">📋 X用にコピー</button>
+          <button class="btn btn-ghost btn-sm" onclick="generateMonthlyPost()">🔄 再生成</button>
         </div>
       </div>
     </div>
@@ -265,6 +284,7 @@ const CAT_TIME = {
   'ふるさと納税': '⏰ 20:00',
   '高料率②':     '⏰ 22:00',
   'ポイントアップ投稿': '⏰ 08:00',
+  '月末まとめ': '⏰ 20:00',
 };
 
 // テンプレート本文（タグなし）。URL・タグは generatePointupPost() で動的に付与
@@ -381,6 +401,25 @@ function cleanProductName(raw) {
   return t;
 }
 
+function trimNameArea(n){
+  const ta=document.getElementById('nameArea'+n);
+  if(!ta)return;
+  let v=ta.value;
+  // 【】（）()の中身を除去（SEOワード・ランキング表記など）
+  v=v.replace(/【[^】]{0,20}】/g,'').replace(/（[^）]{0,20}）/g,'').replace(/\([^)]{0,20}\)/g,'');
+  // 送料・ランキング・セール系ワードを削除
+  v=v.replace(/送料無料|楽天[0-9]*位|ランキング[0-9]*位|ポイント[0-9]*倍|レビュー[0-9万件以上]+|[0-9]+%OFF|セール|SALE|クーポン/gi,'');
+  // cleanProductNameでさらに整形
+  v=cleanProductName(v);
+  // 長すぎたら30文字で切る
+  if(v.length>30)v=v.slice(0,30).trimEnd()+'…';
+  ta.value=v;
+  setF('name'+n,v);
+  updateNameWarn(ta,n);
+  autoResizeTA(ta);
+  toast('商品名を整形しました ✓');
+}
+
 // Step 2: 最終バリデーション（クリーニング済み名前に対して判定）
 function validateProductForPost(name, cat) {
   if (!name || name.length < 2) return false;
@@ -445,9 +484,12 @@ function onCatChange(){
   const cat=document.getElementById('catSel').value;
   const isAuto=RANK_AUTO_CATS.includes(cat);
   const isPointup=cat==='ポイントアップ投稿';
-  document.getElementById('autoFetchArea').style.display=(isAuto&&!isPointup)?'block':'none';
-  document.getElementById('highRateArea').style.display=(!isAuto&&!isPointup)?'block':'none';
+  const isMonthly=cat==='月末まとめ';
+  document.getElementById('autoFetchArea').style.display=(isAuto&&!isPointup&&!isMonthly)?'block':'none';
+  document.getElementById('highRateArea').style.display=(!isAuto&&!isPointup&&!isMonthly)?'block':'none';
   document.getElementById('pointupArea').style.display=isPointup?'block':'none';
+  document.getElementById('monthlyArea').style.display=isMonthly?'block':'none';
+  if(isMonthly) initMonthlyArea();
   document.getElementById('autoResultArea').style.display='none';
   document.getElementById('autoConfirmArea').style.display='none';
   document.getElementById('autoPostSection').style.display='none';
@@ -520,6 +562,72 @@ function copyPointupPost(){
   const text=document.getElementById('pointupPostBox').textContent||'';
   cp(text);
 }
+// ═══ MONTHLY SUMMARY POST ════════════════════════════════════
+function initMonthlyArea(){
+  const d=new Date();
+  const day=d.getDate();
+  const month=d.getMonth()+1;
+  const daysInMonth=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  const badge=document.getElementById('monthlyBadge');
+  if(day>=25){
+    badge.textContent=`📅 ${month}月のまとめ投稿を作れます（月末${daysInMonth}日まで）`;
+  }else{
+    badge.textContent=`📅 月末まとめ投稿は25日以降がおすすめです（今月は${month}/${daysInMonth}まで）`;
+  }
+  document.getElementById('monthlyPostSection').style.display='none';
+}
+function buildMonthlyPost(){
+  const d=new Date();
+  const month=d.getMonth()+1;
+  // 履歴から今月の投稿アイテムを取得
+  const hist=loadHistArr();
+  const thisMonth=hist.filter(e=>{
+    if(!e.ts)return false;
+    return new Date(e.ts).getMonth()+1===month;
+  });
+  // カテゴリ別に集計
+  const catCount={};
+  thisMonth.forEach(e=>{if(e.cat)catCount[e.cat]=(catCount[e.cat]||0)+1;});
+  const topCats=Object.entries(catCount).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([c])=>c);
+  const catLabels={'ガジェット':'ガジェット','スイーツ':'スイーツ','美容':'スキンケア','ふるさと納税':'ふるさと納税','高料率①':'日用品','高料率②':'日用品'};
+  const catStr=topCats.map(c=>catLabels[c]||c).filter((v,i,a)=>a.indexOf(v)===i).join('・');
+  const templates=[
+    `${month}月に紹介したものを振り返ってみると、\n${catStr?`${catStr}まわりが多かった。`:''}\n\n気になったものをまとめています。\nよかったらプロフィールからどうぞ。\n\n#楽天市場 #おすすめ`,
+    `今月（${month}月）の偏愛セレクト、まとめました。\n\n${catStr?`${catStr}を中心に、`:``}生活の質が上がりそうなものを選んできた1か月。\n\nプロフィールのリンクからどうぞ。\n\n#楽天市場 #生活の質を上げる`,
+    `${month}月もいろいろ調べて選んだ。\n\n${catStr?`${catStr}まわりを中心に、`:''}毎日使えそうなものばかり。\n気になるものがあればプロフィールから。\n\n#楽天 #おすすめ #生活の質を上げる`,
+  ];
+  return templates[Math.floor(Math.random()*templates.length)];
+}
+function generateMonthlyPost(){
+  const post=buildMonthlyPost();
+  const box=document.getElementById('monthlyPostBox');
+  box.textContent=post;
+  document.getElementById('monthlyPostSection').style.display='block';
+  const c=xchars(post);
+  const el=document.getElementById('monthlyCharCount');
+  el.textContent=`${c} / 280文字`;
+  el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');
+}
+function onMonthlyPostInput(){
+  const t=document.getElementById('monthlyPostBox').textContent||'';
+  const c=xchars(t);
+  const el=document.getElementById('monthlyCharCount');
+  el.textContent=`${c} / 280文字`;
+  el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');
+}
+function copyMonthlyPost(){
+  cp(document.getElementById('monthlyPostBox').textContent||'');
+}
+
+// ページロード時: 月末（25日以降）はカテゴリ選択肢に「今月！」を付加
+function initMonthlyOption(){
+  const day=new Date().getDate();
+  if(day>=25){
+    const opt=document.getElementById('catOptMonthly');
+    if(opt)opt.textContent='📅 月末まとめ投稿（今月！）';
+  }
+}
+
 function jumpToPointup(){
   const sel=document.getElementById('catSel');
   sel.value='ポイントアップ投稿';
@@ -576,9 +684,12 @@ function renderProductCard(it, i, cat){
       <button onclick="rerollProduct(${i+1})" style="font-size:10px;padding:3px 8px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;flex-shrink:0" title="この商品だけ別の商品に入れ替える">🔄 入替</button>
       ${it.imageUrl?`<img src="/api/proxy-image?url=${encodeURIComponent(it.imageUrl)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:``}
     </div>
-    <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">
-      投稿用商品名
-      <span id="namewarn${i+1}" style="color:var(--red);margin-left:6px;display:${weak?'inline':'none'}">⚠ ブランド名を追加してください</span>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;flex:1">
+        投稿用商品名
+        <span id="namewarn${i+1}" style="color:var(--red);margin-left:6px;display:${weak?'inline':'none'}">⚠ ブランド名を追加してください</span>
+      </div>
+      <button onclick="trimNameArea(${i+1})" style="font-size:10px;padding:3px 8px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;flex-shrink:0" title="商品名を整形（不要な括弧・SEO文字列を除去）">✨ 整形</button>
     </div>
     <textarea class="ftarea" id="nameArea${i+1}" style="font-size:13px;padding:9px 11px;min-height:44px;resize:none;overflow:hidden;${borderStyle}"
       placeholder="販売名をそのまま、または短く修正"
@@ -1215,7 +1326,15 @@ function buildPostText(cat, extra){
   }
 
   const sep=isHighRate?'｜':' ▷ ';
-  const tagFull='\n\n#PR #楽天市場';
+  const CAT_HASHTAG={
+    'スイーツ':'#スイーツ',
+    'ガジェット':'#ガジェット',
+    '美容':'#スキンケア',
+    'ふるさと納税':'#ふるさと納税',
+  };
+  const extraTag=CAT_HASHTAG[cat]?` ${CAT_HASHTAG[cat]}`:'';
+  const tagFull=`\n\n#PR #楽天市場${extraTag}`;
+  const tagMid=`\n\n#PR${extraTag}`;
   const tagShort='\n\n#PR';
   const nums=['①','②','③'];
 
@@ -1246,10 +1365,15 @@ function buildPostText(cat, extra){
   let result=assemble((n)=>n, true, tagFull);
   if(!result||!validateFinalPost(result))return null;
 
-  // Step2: 260超 → #楽天市場を削除
+  // Step2: 260超 → カテゴリタグ付き #PR のみ
   if(xchars(result)>260){
-    const r1b=assemble((n)=>n, true, tagShort);
+    const r1b=assemble((n)=>n, true, tagMid);
     if(r1b&&validateFinalPost(r1b))result=r1b;
+  }
+  // Step2b: まだ260超 → #PRのみ
+  if(xchars(result)>260){
+    const r1c=assemble((n)=>n, true, tagShort);
+    if(r1c&&validateFinalPost(r1c))result=r1c;
   }
 
   // Step3: 280超 → コメントなしで再構築
@@ -1656,7 +1780,7 @@ function initHeader(){
   el.innerHTML=`<div>${d.getMonth()+1}/${d.getDate()}（${wd}）</div>`+puLine;
 }
 (function(){
-  initHeader();onCatChange();applyHrNames();renderHistory();
+  initHeader();onCatChange();applyHrNames();renderHistory();initMonthlyOption();
   const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
   const day=d.getDate();
   const puDays=[5,10,15,20,25,30];
