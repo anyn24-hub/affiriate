@@ -171,10 +171,13 @@ a{color:var(--cyan);text-decoration:none}
     <span class="chevron">▼</span>
   </div>
   <div class="section-body">
-    <button class="big-btn gold" id="allFetchBtn" onclick="fetchAllCompanies()" style="margin-top:4px">
-      <span class="bico">🤖</span><div class="btxt"><div class="blabel">🇯🇵🇺🇸🇨🇳 決算企業を自動取得</div><div class="bsub">SBI証券から直近5日間の決算発表企業を取得（日本 6社 + 米国 4社・中国は件数のみ）</div></div><span class="barr">▶</span>
+    <div class="info cyan">SBI証券の決算発表スケジュールを開き、<strong>日本株・米国株・中国株・香港株</strong>の発表予定を確認します。表示内容をGeminiまたはChatGPTに貼り付け、投稿候補企業を抽出してください。</div>
+    <a class="big-btn gold" href="https://www.sbisec.co.jp/ETGate/?_ControlID=WPLETmgR001Control&_PageID=WPLETmgR001Mdtl20&_DataStoreID=DSWPLETmgR001Control&_ActionID=DefaultAID&burl=iris_economicCalendar&cat1=market&cat2=economicCalender&dir=tl1-cal%7Ctl2-schedule%7Ctl3-stock%7Ctl4-calsel&file=index.html&getFlg=on&OutSide=on" target="_blank" rel="noopener" style="margin-top:10px">
+      <span class="bico">🏦</span><div class="btxt"><div class="blabel">SBI決算発表スケジュールを開く</div><div class="bsub">日本・米国・中国・香港の決算予定を確認</div></div><span class="barr">↗</span>
+    </a>
+    <button class="big-btn cyan" onclick="copyAiPrompt()" style="margin-top:8px">
+      <span class="bico">🤖</span><div class="btxt"><div class="blabel">AI抽出用プロンプトをコピー</div><div class="bsub">本日日付を自動挿入 / Gemini・ChatGPTへ貼り付けて企業リストを抽出</div></div><span class="barr">📋</span>
     </button>
-    <div id="allFetchResult" style="display:none;margin-top:10px"></div>
   </div>
 </div>
 
@@ -347,7 +350,64 @@ function addToExcluded(entries){
   try{ localStorage.setItem(KEYS.excluded, JSON.stringify(trimmed)); }catch{}
 }
 // ─────────────────────────────────────────
-// STEP 1: SBI AUTO-FETCH — JAPAN + US (JSONP) + CN (Worker)
+// STEP 1: AI PROMPT
+// ─────────────────────────────────────────
+function getMarketDates(){
+  const pad = n => String(n).padStart(2,'0');
+  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const prevBiz = d => { const r=new Date(d); do{r.setDate(r.getDate()-1);}while(r.getDay()===0||r.getDay()===6); return r; };
+  const jst = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
+  const jpOpen  = jst.getDay()>=1&&jst.getDay()<=5;
+  const jpClose = jst.getHours()>15||(jst.getHours()===15&&jst.getMinutes()>=30);
+  const jpDate  = (jpOpen&&jpClose) ? fmt(jst) : fmt(prevBiz(jst));
+  const jpNote  = (jpOpen&&jpClose) ? '本日分（15:30以降クローズ済み）' : '前営業日分（まだ市場開場中または週末）';
+  const et = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const usOpen  = et.getDay()>=1&&et.getDay()<=5;
+  const usClose = et.getHours()>=16;
+  const usDate  = (usOpen&&usClose) ? fmt(et) : fmt(prevBiz(et));
+  const usNote  = (usOpen&&usClose) ? '本日分（16:00 ET以降クローズ済み）' : '前営業日分（まだ市場開場中または週末）';
+  const hkt = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Hong_Kong'}));
+  const hkOpen  = hkt.getDay()>=1&&hkt.getDay()<=5;
+  const hkClose = hkt.getHours()>=16;
+  const hkDate  = (hkOpen&&hkClose) ? fmt(hkt) : fmt(prevBiz(hkt));
+  const hkNote  = (hkOpen&&hkClose) ? '本日分（16:00 HKT以降クローズ済み）' : '前営業日分（まだ市場開場中または週末）';
+  const todayJst = fmt(jst);
+  return { jpDate, jpNote, usDate, usNote, hkDate, hkNote, todayJst };
+}
+function copyAiPrompt(){
+  const { jpDate, jpNote, usDate, usNote, hkDate, hkNote, todayJst } = getMarketDates();
+  const prompt = `現在日時（JST）：${todayJst}
+以下のSBI証券 決算発表スケジュールページにアクセスし、決算発表企業を地域別に抽出してください。
+
+URL：
+${SBI_URL}
+
+【地域別 対象日と状況】
+・日本（東証）：対象日 ${jpDate}（${jpNote}）
+・米国（NYSE/NASDAQ）：対象日 ${usDate}（${usNote}）
+・中国/香港（HKEX）：対象日 ${hkDate}（${hkNote}）
+
+出力形式（この形式のみで回答してください）：
+| 国 | 証券コード | 企業名（ローマ字） | 発表日 |
+|---|---|---|---|
+| 日本 | XXXX | Toyota Motor Corporation | ${jpDate} |
+（各地域5社ずつ、同形式で続ける）
+
+【地域別ルール（厳守）】
+・各地域の「対象日」の発表企業を最低5社出力すること
+・対象日の発表が5社未満の場合は直近の過去データにさかのぼって補足（発表日を正確に記載）
+・企業名はすべてローマ字（英語表記）で出力すること
+・例示の「XXXX / Toyota Motor Corporation」は形式説明用。実際のデータを入れること
+・表以外の説明文は不要
+
+【重要】日本・米国・中国/香港 それぞれ最低5社ずつ、合計15社以上出力すること。
+
+最後に抽出した全企業の社名をローマ字表記でコンマ区切りで1行で出力してください（例：Toyota Motor, Sony Group, Apple, TSMC, Tencent, ...）`;
+  copyText(prompt);
+}
+
+// ─────────────────────────────────────────
+// STEP 1: SBI AUTO-FETCH — JAPAN + US (JSONP) + CN (Worker) [legacy/fallback]
 // ─────────────────────────────────────────
 // ↓ デプロイ後にCloudflare WorkerのURLをここに設定
 const SBI_CN_WORKER = 'https://sbi-cn-proxy.anyn-1122-kobe.workers.dev';
