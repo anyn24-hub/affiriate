@@ -412,7 +412,7 @@ function trimNameArea(n){
   // cleanProductNameでさらに整形
   v=cleanProductName(v);
   // 長すぎたら30文字で切る
-  if(v.length>30)v=v.slice(0,30).trimEnd()+'…';
+  if(v.length>30)v=v.slice(0,30).trimEnd();
   ta.value=v;
   setF('name'+n,v);
   updateNameWarn(ta,n);
@@ -620,11 +620,20 @@ function copyMonthlyPost(){
 }
 
 // ページロード時: 月末（25日以降）はカテゴリ選択肢に「今月！」を付加
-function initMonthlyOption(){
-  const day=new Date().getDate();
-  if(day>=25){
-    const opt=document.getElementById('catOptMonthly');
-    if(opt)opt.textContent='📅 月末まとめ投稿（今月！）';
+function initSpecialOptions(){
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
+  const day=d.getDate();
+  const lastDay=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+
+  // ポイントアップ: PU前日（4,9,14,19,24,29）のみ表示
+  const puPreDays=[4,9,14,19,24,29];
+  if(!puPreDays.includes(day)){
+    document.getElementById('catOptPointup')?.remove();
+  }
+
+  // 月末まとめ: 最終日の前日のみ表示
+  if(day !== lastDay-1){
+    document.getElementById('catOptMonthly')?.remove();
   }
 }
 
@@ -1780,7 +1789,7 @@ function initHeader(){
   el.innerHTML=`<div>${d.getMonth()+1}/${d.getDate()}（${wd}）</div>`+puLine;
 }
 (function(){
-  initHeader();onCatChange();applyHrNames();renderHistory();initMonthlyOption();
+  initHeader();onCatChange();applyHrNames();renderHistory();initSpecialOptions();
   const d=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Tokyo'}));
   const day=d.getDate();
   const puDays=[5,10,15,20,25,30];
