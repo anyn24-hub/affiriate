@@ -70,7 +70,9 @@ async function sbiJsonpFetch(url) {
   // Strip JSONP wrapper: cb({...}) or cb([...])
   const m = text.match(/^[^(]+\(([\s\S]*)\)\s*;?\s*$/);
   if (!m) throw new Error('JSONP parse error');
-  return JSON.parse(m[1]);
+  // SBI returns relaxed JSON with trailing commas — strip them before parsing
+  const cleaned = m[1].replace(/,(\s*[}\]])/g, '$1');
+  return JSON.parse(cleaned);
 }
 
 export default {
