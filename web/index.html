@@ -404,15 +404,7 @@ function cleanProductName(raw) {
 function trimNameArea(n){
   const ta=document.getElementById('nameArea'+n);
   if(!ta)return;
-  let v=ta.value;
-  // 【】（）()の中身を除去（SEOワード・ランキング表記など）
-  v=v.replace(/【[^】]{0,20}】/g,'').replace(/（[^）]{0,20}）/g,'').replace(/\([^)]{0,20}\)/g,'');
-  // 送料・ランキング・セール系ワードを削除
-  v=v.replace(/送料無料|楽天[0-9]*位|ランキング[0-9]*位|ポイント[0-9]*倍|レビュー[0-9万件以上]+|[0-9]+%OFF|セール|SALE|クーポン/gi,'');
-  // cleanProductNameでさらに整形
-  v=cleanProductName(v);
-  // 長すぎたら30文字で切る
-  if(v.length>30)v=v.slice(0,30).trimEnd();
+  let v=trimHighRateName(ta.value);
   ta.value=v;
   setF('name'+n,v);
   updateNameWarn(ta,n);
