@@ -328,27 +328,36 @@ function extractCode(s){
   if(/^[A-Za-z0-9]{1,6}$/.test(s) && !/[^\x00-\x7F]/.test(s) && !NOISE.test(s)) return s.toUpperCase();
   return null;
 }
-function getExcluded(){
+const EXCLUDE_DAYS = 3; // 直近N日以内に抽出した会社を除外
+
+function loadExcludedRaw(){
   try{
-    const raw = localStorage.getItem(KEYS.excluded)||'[]';
-    const parsed = JSON.parse(raw);
-    const arr = Array.isArray(parsed) ? parsed : raw.split(/[,、\n]/).map(s=>s.trim()).filter(Boolean);
-    return arr.map(e=>extractCode(e)).filter(Boolean);
+    const parsed = JSON.parse(localStorage.getItem(KEYS.excluded)||'[]');
+    if(!Array.isArray(parsed)) return [];
+    // Migrate old format (string[]) → {code, ts}[]
+    return parsed.map(e => typeof e === 'string' ? { code: extractCode(e), ts: 0 } : e).filter(e=>e.code);
   }catch{ return []; }
 }
+function getExcluded(){
+  const cutoff = Date.now() - EXCLUDE_DAYS * 86400000;
+  return loadExcludedRaw().filter(e => e.ts >= cutoff).map(e => e.code);
+}
 function addToExcluded(entries){
-  // Load raw array (without extractCode, to preserve order)
-  let current;
-  try{
-    const raw = JSON.parse(localStorage.getItem(KEYS.excluded)||'[]');
-    current = Array.isArray(raw) ? raw.map(e=>extractCode(e)).filter(Boolean) : [];
-  }catch{ current = []; }
-  const seen = new Set(current);
+  const current = loadExcludedRaw();
+  const seen = new Set(current.map(e=>e.code));
+  const now = Date.now();
   entries.forEach(e=>{
     const code = extractCode(e);
-    if(code && !seen.has(code)){ current.push(code); seen.add(code); }
+    if(!code) return;
+    if(seen.has(code)){
+      // Update timestamp to now so the window resets
+      const existing = current.find(x=>x.code===code);
+      if(existing) existing.ts = now;
+    } else {
+      current.push({ code, ts: now });
+      seen.add(code);
+    }
   });
-  // Keep up to 1000 entries (codes are tiny; this covers years of history)
   const trimmed = current.slice(-1000);
   try{ localStorage.setItem(KEYS.excluded, JSON.stringify(trimmed)); }catch{}
 }
@@ -853,8 +862,8 @@ ${companies}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ①X投稿文（全角=2pt・英数=1pt・絵文字=2pt・改行=1pt、合計200pt以内。超過する場合はインサイトを短くして必ず200pt以内に収めること）
 【文字数削減ルール・必ず適用】
-・社名は投資家が使う最短の通称/略称のみ使用（正式名不要）：ホールディングス→HD、株式会社→㈱、グループ→Grp、インターナショナル→Intl、テクノロジー→Tech、コーポレーション→Corp
-・例：三菱UFJフィナンシャル・グループ→三菱UFJ-FG、日本電信電話→NTT
+・社名は正式名称を基本とし、長い場合のみ以下の標準略語で短縮（一般投資家が見て分かる範囲で）：ホールディングス→HD、株式会社/㈱は省略可、グループ→Grp、インターナショナル→Intl
+・知名度が低い企業は略しすぎず、社名から事業が分かる程度に留める
 ・不要な半角スペースは全て削除
 ・数値単位は最短表記（例：1,234百万円→1,234百万・$12.3M→$12.3M）
 形式：
@@ -908,8 +917,8 @@ PR文（以下4パターンから決算内容に応じて1つだけ選び、そ�
 
 ①X投稿文（全角=2pt・英数=1pt・絵文字=2pt・改行=1pt、合計200pt以内。超過する場合はインサイトを短くして必ず200pt以内に収めること）
 【文字数削減ルール・必ず適用】
-・社名は投資家が使う最短の通称/略称のみ使用（正式名不要）：ホールディングス→HD、株式会社→㈱、グループ→Grp、インターナショナル→Intl、テクノロジー→Tech、コーポレーション→Corp
-・例：三菱UFJフィナンシャル・グループ→三菱UFJ-FG、日本電信電話→NTT
+・社名は正式名称を基本とし、長い場合のみ以下の標準略語で短縮（一般投資家が見て分かる範囲で）：ホールディングス→HD、株式会社/㈱は省略可、グループ→Grp、インターナショナル→Intl
+・知名度が低い企業は略しすぎず、社名から事業が分かる程度に留める
 ・不要な半角スペースは全て削除
 ・数値単位は最短表記（例：1,234百万円→1,234百万・$12.3M→$12.3M）
 形式：
