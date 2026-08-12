@@ -183,7 +183,8 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
           <div class="ng-box" id="autoNgBox"></div>
           <div class="btn-row mt8">
             <button class="btn btn-green" onclick="copyAutoPost()" style="flex:1">📋 X用にコピー</button>
-            <button class="btn btn-ghost btn-sm" onclick="regenPostOnly()">🔄 投稿文を再生成</button>
+            <button class="btn btn-ghost btn-sm" onclick="shortenPost()">✂️ 短縮</button>
+            <button class="btn btn-ghost btn-sm" onclick="regenPostOnly()">🔄 再生成</button>
           </div>
         </div>
         <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
@@ -232,7 +233,8 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <div class="ng-box" id="ngBox"></div>
         <div class="btn-row mt8">
           <button class="btn btn-green" onclick="copyPost()" style="flex:1">📋 X用にコピー</button>
-          <button class="btn btn-ghost btn-sm" onclick="regenPostOnly()">🔄 投稿文を再生成</button>
+          <button class="btn btn-ghost btn-sm" onclick="shortenPost()">✂️ 短縮</button>
+          <button class="btn btn-ghost btn-sm" onclick="regenPostOnly()">🔄 再生成</button>
         </div>
         <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
           <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700">📸 投稿用画像</div>
@@ -404,15 +406,7 @@ function cleanProductName(raw) {
 function trimNameArea(n){
   const ta=document.getElementById('nameArea'+n);
   if(!ta)return;
-  let v=ta.value;
-  // 【】（）()の中身を除去（SEOワード・ランキング表記など）
-  v=v.replace(/【[^】]{0,20}】/g,'').replace(/（[^）]{0,20}）/g,'').replace(/\([^)]{0,20}\)/g,'');
-  // 送料・ランキング・セール系ワードを削除
-  v=v.replace(/送料無料|楽天[0-9]*位|ランキング[0-9]*位|ポイント[0-9]*倍|レビュー[0-9万件以上]+|[0-9]+%OFF|セール|SALE|クーポン/gi,'');
-  // cleanProductNameでさらに整形
-  v=cleanProductName(v);
-  // 長すぎたら30文字で切る
-  if(v.length>30)v=v.slice(0,30).trimEnd();
+  let v=trimHighRateName(ta.value);
   ta.value=v;
   setF('name'+n,v);
   updateNameWarn(ta,n);
@@ -1418,6 +1412,59 @@ function buildPostText(cat, extra){
   }
 
   return result;
+}
+
+// イントロなし・名前短縮・#PRのみの短縮版
+function buildCompactPost(cat){
+  const isHighRate=cat==='高料率①'||cat==='高料率②';
+  const maxSlots=isHighRate?1:3;
+  const prods=Array.from({length:maxSlots},(_,i)=>({
+    name:getF(`name${i+1}`),url:getF(`url${i+1}`)
+  })).filter(p=>p.name||p.url);
+  if(!prods.length)return null;
+  const nums=['①','②','③'];
+  function getBaseName(p){return cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');}
+  // URLオーバーヘッド: イントロなし + #PRのみ
+  const tag='\n\n#PR';
+  let si=0;
+  const ls=prods.map((p,i)=>{
+    let name=getBaseName(p);if(!name)return null;
+    if(name.length>20)name=name.slice(0,20).trimEnd();
+    const prefix=isHighRate?'':`${nums[si++]}`;
+    return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
+  }).filter(Boolean).join('\n');
+  if(!ls)return null;
+  let result=ls+tag;
+  // さらに超えていたら名前を15字に詰める
+  if(xchars(result)>280){
+    si=0;
+    const ls2=prods.map((p,i)=>{
+      let name=getBaseName(p);if(!name)return null;
+      if(name.length>15)name=name.slice(0,15).trimEnd();
+      const prefix=isHighRate?'':`${nums[si++]}`;
+      return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
+    }).filter(Boolean).join('\n');
+    if(ls2)result=ls2+tag;
+  }
+  return autoNG(result);
+}
+
+function shortenPost(){
+  const cat=document.getElementById('catSel').value;
+  const compact=buildCompactPost(cat);
+  if(!compact){toast('短縮できませんでした',true);return;}
+  const isAuto=RANK_AUTO_CATS.includes(cat);
+  if(isAuto){
+    const box=document.getElementById('autoPostBox');
+    box.textContent=compact;
+    updateAutoCounter(compact);
+    runAutoNGCheck(compact);
+  }else{
+    const box=document.getElementById('postBox');
+    box.textContent=compact;
+    updateCounter(compact);
+  }
+  toast('イントロを省いた短縮版に変更しました（🔄 再生成で元に戻せます）');
 }
 
 function generatePost(){
