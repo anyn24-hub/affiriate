@@ -200,10 +200,10 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
     <!-- 高料率 -->
     <div id="highRateArea" style="display:none;margin-top:4px">
-      <a href="https://affiliate.rakuten.co.jp/link/high_ranking?l-id=af_header_search_02" target="_blank" rel="noopener"
+      <a id="hrLinkBtn" href="https://affiliate.rakuten.co.jp/link/high_ranking?l-id=af_header_search_02" target="_blank" rel="noopener"
         style="display:flex;align-items:center;gap:11px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:13px;text-decoration:none;color:var(--text)">
-        <span style="font-size:20px">💰</span>
-        <div style="flex:1"><div style="font-size:14px;font-weight:800">楽天アフィリエイト管理画面を開く</div><div style="font-size:11px;color:var(--muted);margin-top:2px">高料率ランキングからアフィリエイトHTMLを取得</div></div>
+        <span id="hrLinkIcon" style="font-size:20px">💰</span>
+        <div style="flex:1"><div id="hrLinkTitle" style="font-size:14px;font-weight:800">楽天アフィリエイト管理画面を開く</div><div id="hrLinkSub" style="font-size:11px;color:var(--muted);margin-top:2px">高料率ランキングからアフィリエイトHTMLを取得</div></div>
         <span style="color:var(--muted);font-size:14px">↗</span>
       </a>
       <div class="fg">
@@ -497,6 +497,20 @@ function onCatChange(){
   if(cat==='高料率①'||cat==='高料率②'){
     const names=loadHrNames();
     document.getElementById('hrNameInput').value=names[cat]||'';
+    const btn=document.getElementById('hrLinkBtn');
+    if(btn){
+      if(cat==='高料率②'){
+        btn.href='https://affiliate.rakuten.co.jp/recommend/uplist/?l-id=af_header_search_03';
+        document.getElementById('hrLinkIcon').textContent='💎';
+        document.getElementById('hrLinkTitle').textContent='楽天アフィリエイト管理画面を開く';
+        document.getElementById('hrLinkSub').textContent='おすすめアップリストからアフィリエイトHTMLを取得';
+      }else{
+        btn.href='https://affiliate.rakuten.co.jp/link/high_ranking?l-id=af_header_search_02';
+        document.getElementById('hrLinkIcon').textContent='💰';
+        document.getElementById('hrLinkTitle').textContent='楽天アフィリエイト管理画面を開く';
+        document.getElementById('hrLinkSub').textContent='高料率ランキングからアフィリエイトHTMLを取得';
+      }
+    }
   }
   if(isPointup){
     const day=new Date().getDate();
