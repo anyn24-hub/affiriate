@@ -496,7 +496,8 @@ function onCatChange(){
   for(let i=1;i<=3;i++){['name','url','imageUrl'].forEach(k=>setF(k+i,''));}
   if(cat==='高料率①'||cat==='高料率②'){
     const names=loadHrNames();
-    document.getElementById('hrNameInput').value=names[cat]||'';
+    const hrNameEl=document.getElementById('hrNameInput');
+    if(hrNameEl)hrNameEl.value=names[cat]||'';
     const btn=document.getElementById('hrLinkBtn');
     if(btn){
       if(cat==='高料率②'){
