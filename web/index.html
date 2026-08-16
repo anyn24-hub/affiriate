@@ -1424,27 +1424,37 @@ function buildCompactPost(cat){
   if(!prods.length)return null;
   const nums=['①','②','③'];
   function getBaseName(p){return cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');}
-  // URLオーバーヘッド: イントロなし + #PRのみ
+
+  // イントロ: 2段落目（\n\n以降）だけ使う
+  const pool=INTRO[cat]||INTRO['高料率①'];
+  const fullIntro=Array.isArray(pool)?pool[Math.floor(Math.random()*pool.length)]:pool;
+  const shortIntro=fullIntro.includes('\n\n')?fullIntro.split('\n\n')[1].trim():fullIntro.trim();
+
   const tag='\n\n#PR';
-  let si=0;
-  const ls=prods.map((p,i)=>{
-    let name=getBaseName(p);if(!name)return null;
-    if(name.length>20)name=name.slice(0,20).trimEnd();
-    const prefix=isHighRate?'':`${nums[si++]}`;
-    return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
-  }).filter(Boolean).join('\n');
-  if(!ls)return null;
-  let result=ls+tag;
-  // さらに超えていたら名前を15字に詰める
-  if(xchars(result)>200){
-    si=0;
-    const ls2=prods.map((p,i)=>{
+  function makeLines(maxName){
+    let si=0;
+    return prods.map((p,i)=>{
       let name=getBaseName(p);if(!name)return null;
-      if(name.length>15)name=name.slice(0,15).trimEnd();
+      if(maxName&&name.length>maxName)name=name.slice(0,maxName).trimEnd();
       const prefix=isHighRate?'':`${nums[si++]}`;
       return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
     }).filter(Boolean).join('\n');
-    if(ls2)result=ls2+tag;
+  }
+
+  // Step1: 短いイントロ + 商品名フル
+  let ls=makeLines(null);
+  if(!ls)return null;
+  let result=`${shortIntro}\n\n${ls}${tag}`;
+
+  // Step2: 200超 → 名前を20字に
+  if(xchars(result)>200){
+    ls=makeLines(20);
+    result=`${shortIntro}\n\n${ls}${tag}`;
+  }
+  // Step3: まだ200超 → イントロも省く
+  if(xchars(result)>200){
+    ls=makeLines(20);
+    result=ls+tag;
   }
   return autoNG(result);
 }
