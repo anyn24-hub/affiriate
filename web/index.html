@@ -133,7 +133,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <div class="out-box" id="pointupPostBox" contenteditable="true" oninput="onPointupPostInput()"></div>
         <div class="char-row">
           <span style="font-size:12px;color:var(--muted)">投稿先: X のみ</span>
-          <span class="char-cnt char-ok" id="pointupCharCount">0 / 280文字</span>
+          <span class="char-cnt char-ok" id="pointupCharCount">0 / 200文字</span>
         </div>
         <div class="btn-row mt8">
           <button class="btn btn-green" onclick="copyPointupPost()" style="flex:1">📋 X用にコピー</button>
@@ -151,7 +151,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
         <div class="out-box" id="monthlyPostBox" contenteditable="true" oninput="onMonthlyPostInput()"></div>
         <div class="char-row">
           <span style="font-size:12px;color:var(--muted)">投稿先: X のみ（リンクなし）</span>
-          <span class="char-cnt char-ok" id="monthlyCharCount">0 / 280文字</span>
+          <span class="char-cnt char-ok" id="monthlyCharCount">0 / 200文字</span>
         </div>
         <div class="btn-row mt8">
           <button class="btn btn-green" onclick="copyMonthlyPost()" style="flex:1">📋 X用にコピー</button>
@@ -178,7 +178,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
           <div class="out-box" id="autoPostBox" contenteditable="true" oninput="onAutoPostInput()"></div>
           <div class="char-row">
             <span style="font-size:12px;color:var(--muted)">投稿先: X のみ</span>
-            <span class="char-cnt char-ok" id="autoCharCount">0 / 280文字</span>
+            <span class="char-cnt char-ok" id="autoCharCount">0 / 200文字</span>
           </div>
           <div class="ng-box" id="autoNgBox"></div>
           <div class="btn-row mt8">
@@ -227,7 +227,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
           <div class="out-box" id="postBox" contenteditable="true" oninput="onPostInput()"></div>
           <div class="char-row">
             <span style="font-size:12px;color:var(--muted)">投稿先: X のみ</span>
-            <span class="char-cnt char-ok" id="charCount">0 / 280文字</span>
+            <span class="char-cnt char-ok" id="charCount">0 / 200文字</span>
           </div>
         </div>
         <div class="ng-box" id="ngBox"></div>
@@ -531,8 +531,8 @@ function buildPointupPost(){
   const urlPart=url?'\n'+url:'';
   const withMarket=body+urlPart+'\n\n#PR #楽天市場';
   const withoutMarket=body+urlPart+'\n\n#PR';
-  if(xchars(withMarket)<=280)return withMarket;
-  if(xchars(withoutMarket)<=280)return withoutMarket;
+  if(xchars(withMarket)<=200)return withMarket;
+  if(xchars(withoutMarket)<=200)return withoutMarket;
   return withoutMarket;
 }
 function generatePointupPost(){
@@ -546,8 +546,8 @@ function updatePointupCounter(text){
   const t=text||document.getElementById('pointupPostBox').textContent||'';
   const c=xchars(t);
   const el=document.getElementById('pointupCharCount');
-  el.textContent=`${c} / 280文字`;
-  el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');
+  el.textContent=`${c} / 200文字`;
+  el.className='char-cnt '+(c>200?'char-over':c>180?'char-warn':'char-ok');
 }
 function onPointupPostInput(){
   updatePointupCounter();
@@ -599,15 +599,15 @@ function generateMonthlyPost(){
   document.getElementById('monthlyPostSection').style.display='block';
   const c=xchars(post);
   const el=document.getElementById('monthlyCharCount');
-  el.textContent=`${c} / 280文字`;
-  el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');
+  el.textContent=`${c} / 200文字`;
+  el.className='char-cnt '+(c>200?'char-over':c>180?'char-warn':'char-ok');
 }
 function onMonthlyPostInput(){
   const t=document.getElementById('monthlyPostBox').textContent||'';
   const c=xchars(t);
   const el=document.getElementById('monthlyCharCount');
-  el.textContent=`${c} / 280文字`;
-  el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');
+  el.textContent=`${c} / 200文字`;
+  el.className='char-cnt '+(c>200?'char-over':c>180?'char-warn':'char-ok');
 }
 function copyMonthlyPost(){
   cp(document.getElementById('monthlyPostBox').textContent||'');
@@ -958,9 +958,9 @@ async function confirmAndGenerate(){
 
 // Auto post helpers
 function onAutoPostInput(){const t=document.getElementById('autoPostBox').textContent||'';updateAutoCounter(t);runAutoNGCheck(t);}
-function updateAutoCounter(t){const c=xchars(t);const el=document.getElementById('autoCharCount');el.textContent=`${c} / 280文字`;el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');}
+function updateAutoCounter(t){const c=xchars(t);const el=document.getElementById('autoCharCount');el.textContent=`${c} / 200文字`;el.className='char-cnt '+(c>200?'char-over':c>180?'char-warn':'char-ok');}
 function runAutoNGCheck(text){const found=NG_WORDS.filter(w=>text.includes(w));const box=document.getElementById('autoNgBox');if(found.length){box.className='ng-box show ng-warn';box.innerHTML=`🚫 NGワード: ${found.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`;}else{box.className='ng-box show ng-ok';box.textContent='✅ NGワードなし';}}
-function copyAutoPost(){const t=document.getElementById('autoPostBox').textContent||'';const c=xchars(t);if(c>280){toast(`${c}文字です。280文字以内に収めてください`,true);return;}cp(t);}
+function copyAutoPost(){const t=document.getElementById('autoPostBox').textContent||'';const c=xchars(t);if(c>200){toast(`${c}文字です。200文字以内に収めてください`,true);return;}cp(t);}
 function downloadAutoImage(){
   const c=document.getElementById('autoCanvas');
   try{
@@ -1369,24 +1369,24 @@ function buildPostText(cat, extra){
   if(!result||!validateFinalPost(result))return null;
 
   // Step2: 260超 → カテゴリタグ付き #PR のみ
-  if(xchars(result)>260){
+  if(xchars(result)>180){
     const r1b=assemble((n)=>n, true, tagMid);
     if(r1b&&validateFinalPost(r1b))result=r1b;
   }
   // Step2b: まだ260超 → #PRのみ
-  if(xchars(result)>260){
+  if(xchars(result)>180){
     const r1c=assemble((n)=>n, true, tagShort);
     if(r1c&&validateFinalPost(r1c))result=r1c;
   }
 
   // Step3: 280超 → コメントなしで再構築
-  if(xchars(result)>280){
+  if(xchars(result)>200){
     const r2=assemble((n)=>n, false, tagShort);
     if(r2&&validateFinalPost(r2))result=r2;
   }
 
   // Step4: まだ280超 → 名前を残り文字数から動的に切り詰める
-  if(xchars(result)>280){
+  if(xchars(result)>200){
     // 名前部分を除いたオーバーヘッドを計算
     const nameSum=prods.reduce((s,p)=>s+getBaseName(p).length,0);
     const overhead=xchars(result)-nameSum;
@@ -1398,9 +1398,9 @@ function buildPostText(cat, extra){
   }
 
   // 最終セーフティ: 万が一まだ超えていたら1文字ずつ削る
-  if(xchars(result)>280){
+  if(xchars(result)>200){
     const lines=result.split('\n');
-    while(xchars(result)>280&&lines.length>0){
+    while(xchars(result)>200&&lines.length>0){
       // 最後の非URL・非タグ行を短縮
       for(let i=lines.length-1;i>=0;i--){
         if(lines[i]&&!lines[i].startsWith('http')&&!lines[i].startsWith('#')){
@@ -1424,46 +1424,27 @@ function buildCompactPost(cat){
   if(!prods.length)return null;
   const nums=['①','②','③'];
   function getBaseName(p){return cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');}
-
-  // イントロ: 現INTROの2段落目（\n\n以降）だけ使う
-  const pool=INTRO[cat]||INTRO['高料率①'];
-  const fullIntro=Array.isArray(pool)?pool[Math.floor(Math.random()*pool.length)]:pool;
-  const shortIntro=fullIntro.includes('\n\n')?fullIntro.split('\n\n')[1].trim():fullIntro.trim();
-
-  // ハッシュタグ: #PRのみ（カテゴリタグ削除）
+  // URLオーバーヘッド: イントロなし + #PRのみ
   const tag='\n\n#PR';
-
   let si=0;
   const ls=prods.map((p,i)=>{
-    const name=getBaseName(p);if(!name)return null;
+    let name=getBaseName(p);if(!name)return null;
+    if(name.length>20)name=name.slice(0,20).trimEnd();
     const prefix=isHighRate?'':`${nums[si++]}`;
     return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
   }).filter(Boolean).join('\n');
   if(!ls)return null;
-
-  let result=`${shortIntro}\n\n${ls}${tag}`;
-
-  // 280超なら名前を短縮
-  if(xchars(result)>280){
+  let result=ls+tag;
+  // さらに超えていたら名前を15字に詰める
+  if(xchars(result)>200){
     si=0;
     const ls2=prods.map((p,i)=>{
-      let name=getBaseName(p);if(!name)return null;
-      if(name.length>20)name=name.slice(0,20).trimEnd();
-      const prefix=isHighRate?'':`${nums[si++]}`;
-      return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
-    }).filter(Boolean).join('\n');
-    if(ls2)result=`${shortIntro}\n\n${ls2}${tag}`;
-  }
-  // それでも超えるならイントロも省く
-  if(xchars(result)>280){
-    si=0;
-    const ls3=prods.map((p,i)=>{
       let name=getBaseName(p);if(!name)return null;
       if(name.length>15)name=name.slice(0,15).trimEnd();
       const prefix=isHighRate?'':`${nums[si++]}`;
       return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
     }).filter(Boolean).join('\n');
-    if(ls3)result=ls3+tag;
+    if(ls2)result=ls2+tag;
   }
   return autoNG(result);
 }
@@ -1521,8 +1502,8 @@ function generatePost(){
 function autoNG(t){let r=t;Object.entries(NG_REPLACE).forEach(([b,g])=>{r=r.replace(new RegExp(b,'g'),g);});return r;}
 function runNGCheck(text){const found=NG_WORDS.filter(w=>text.includes(w));const box=document.getElementById('ngBox');if(found.length){box.className='ng-box show ng-warn';box.innerHTML=`🚫 NGワード: ${found.map(w=>`<strong>${escH(w)}</strong>`).join('、')}`;}else{box.className='ng-box show ng-ok';box.textContent='✅ NGワードなし';}}
 function onPostInput(){const t=document.getElementById('postBox').textContent||'';updateCounter(t);runNGCheck(t);}
-function updateCounter(t){const c=xchars(t);const el=document.getElementById('charCount');el.textContent=`${c} / 280文字`;el.className='char-cnt '+(c>280?'char-over':c>240?'char-warn':'char-ok');}
-function copyPost(){const t=document.getElementById('postBox').textContent||'';const c=xchars(t);if(c>280){toast(`${c}文字です。280文字以内に収めてください`,true);return;}const ng=NG_WORDS.filter(w=>t.includes(w));if(ng.length){if(!confirm(`NGワード「${ng[0]}」が含まれています。このままコピーしますか？`))return;}cp(t);}
+function updateCounter(t){const c=xchars(t);const el=document.getElementById('charCount');el.textContent=`${c} / 200文字`;el.className='char-cnt '+(c>200?'char-over':c>180?'char-warn':'char-ok');}
+function copyPost(){const t=document.getElementById('postBox').textContent||'';const c=xchars(t);if(c>200){toast(`${c}文字です。200文字以内に収めてください`,true);return;}const ng=NG_WORDS.filter(w=>t.includes(w));if(ng.length){if(!confirm(`NGワード「${ng[0]}」が含まれています。このままコピーしますか？`))return;}cp(t);}
 
 // ═══ IMAGE GENERATION ════════════════════════════════════════
 function loadImg(src){
