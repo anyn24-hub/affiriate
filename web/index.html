@@ -1424,27 +1424,46 @@ function buildCompactPost(cat){
   if(!prods.length)return null;
   const nums=['①','②','③'];
   function getBaseName(p){return cleanProductName(isHighRate?trimHighRateName(p.name||''):p.name||'');}
-  // URLオーバーヘッド: イントロなし + #PRのみ
+
+  // イントロ: 現INTROの2段落目（\n\n以降）だけ使う
+  const pool=INTRO[cat]||INTRO['高料率①'];
+  const fullIntro=Array.isArray(pool)?pool[Math.floor(Math.random()*pool.length)]:pool;
+  const shortIntro=fullIntro.includes('\n\n')?fullIntro.split('\n\n')[1].trim():fullIntro.trim();
+
+  // ハッシュタグ: #PRのみ（カテゴリタグ削除）
   const tag='\n\n#PR';
+
   let si=0;
   const ls=prods.map((p,i)=>{
-    let name=getBaseName(p);if(!name)return null;
-    if(name.length>20)name=name.slice(0,20).trimEnd();
+    const name=getBaseName(p);if(!name)return null;
     const prefix=isHighRate?'':`${nums[si++]}`;
     return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
   }).filter(Boolean).join('\n');
   if(!ls)return null;
-  let result=ls+tag;
-  // さらに超えていたら名前を15字に詰める
+
+  let result=`${shortIntro}\n\n${ls}${tag}`;
+
+  // 280超なら名前を短縮
   if(xchars(result)>280){
     si=0;
     const ls2=prods.map((p,i)=>{
+      let name=getBaseName(p);if(!name)return null;
+      if(name.length>20)name=name.slice(0,20).trimEnd();
+      const prefix=isHighRate?'':`${nums[si++]}`;
+      return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
+    }).filter(Boolean).join('\n');
+    if(ls2)result=`${shortIntro}\n\n${ls2}${tag}`;
+  }
+  // それでも超えるならイントロも省く
+  if(xchars(result)>280){
+    si=0;
+    const ls3=prods.map((p,i)=>{
       let name=getBaseName(p);if(!name)return null;
       if(name.length>15)name=name.slice(0,15).trimEnd();
       const prefix=isHighRate?'':`${nums[si++]}`;
       return `${prefix}${name}\n${p.url||'（URL未入力）'}`;
     }).filter(Boolean).join('\n');
-    if(ls2)result=ls2+tag;
+    if(ls3)result=ls3+tag;
   }
   return autoNG(result);
 }
