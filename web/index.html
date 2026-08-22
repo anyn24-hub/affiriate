@@ -1395,18 +1395,7 @@ function buildPostText(cat, extra){
     if(r&&validateFinalPost(r))result=r;
   }
 
-  // Step4: まだ200超 → 名前を動的短縮（カテゴリタグは残す）
-  if(xchars(result)>200){
-    const nameSum=prods.reduce((s,p)=>s+getBaseName(p).length,0);
-    const overhead=xchars(result)-nameSum;
-    const available=Math.max(0,200-overhead-3);
-    const maxPerName=Math.max(8,Math.floor(available/prods.length));
-    function dynTrim(n){return n.length>maxPerName?n.slice(0,maxPerName).trimEnd()+'…':n;}
-    const r=assemble(dynTrim, false, tagMid);
-    if(r&&validateFinalPost(r))result=r;
-  }
-
-  // Step5: それでも200超 → 最終手段で#PRのみ
+  // Step4: それでも200超 → 最終手段で#PRのみ
   if(xchars(result)>200){
     const r=assemble((n)=>n, false, tagShort);
     if(r&&validateFinalPost(r))result=r;
