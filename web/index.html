@@ -1379,44 +1379,43 @@ function buildPostText(cat, extra){
     return autoNG(t);
   }
 
-  // Step1: コメントあり（通常）
+  // Step1: コメントあり + フルタグ
   let result=assemble((n)=>n, true, tagFull);
   if(!result||!validateFinalPost(result))return null;
 
-  // Step2: 260超 → カテゴリタグ付き #PR のみ
+  // Step2: 180超 → #楽天市場を落とす（カテゴリタグは残す）
   if(xchars(result)>180){
-    const r1b=assemble((n)=>n, true, tagMid);
-    if(r1b&&validateFinalPost(r1b))result=r1b;
-  }
-  // Step2b: まだ260超 → #PRのみ
-  if(xchars(result)>180){
-    const r1c=assemble((n)=>n, true, tagShort);
-    if(r1c&&validateFinalPost(r1c))result=r1c;
+    const r=assemble((n)=>n, true, tagMid);
+    if(r&&validateFinalPost(r))result=r;
   }
 
-  // Step3: 280超 → コメントなしで再構築
+  // Step3: 200超 → コメントなし（カテゴリタグは残す）
   if(xchars(result)>200){
-    const r2=assemble((n)=>n, false, tagShort);
-    if(r2&&validateFinalPost(r2))result=r2;
+    const r=assemble((n)=>n, false, tagMid);
+    if(r&&validateFinalPost(r))result=r;
   }
 
-  // Step4: まだ280超 → 名前を残り文字数から動的に切り詰める
+  // Step4: まだ200超 → 名前を動的短縮（カテゴリタグは残す）
   if(xchars(result)>200){
-    // 名前部分を除いたオーバーヘッドを計算
     const nameSum=prods.reduce((s,p)=>s+getBaseName(p).length,0);
     const overhead=xchars(result)-nameSum;
-    const available=Math.max(0,280-overhead-3); // 3文字バッファ
+    const available=Math.max(0,200-overhead-3);
     const maxPerName=Math.max(8,Math.floor(available/prods.length));
-    function dynTrim(n){ return n.length>maxPerName?n.slice(0,maxPerName).trimEnd()+'…':n; }
-    const r3=assemble(dynTrim, false, tagShort);
-    if(r3&&validateFinalPost(r3))result=r3;
+    function dynTrim(n){return n.length>maxPerName?n.slice(0,maxPerName).trimEnd()+'…':n;}
+    const r=assemble(dynTrim, false, tagMid);
+    if(r&&validateFinalPost(r))result=r;
   }
 
-  // 最終セーフティ: 万が一まだ超えていたら1文字ずつ削る
+  // Step5: それでも200超 → 最終手段で#PRのみ
+  if(xchars(result)>200){
+    const r=assemble((n)=>n, false, tagShort);
+    if(r&&validateFinalPost(r))result=r;
+  }
+
+  // 最終セーフティ: 1文字ずつ削る
   if(xchars(result)>200){
     const lines=result.split('\n');
     while(xchars(result)>200&&lines.length>0){
-      // 最後の非URL・非タグ行を短縮
       for(let i=lines.length-1;i>=0;i--){
         if(lines[i]&&!lines[i].startsWith('http')&&!lines[i].startsWith('#')){
           if(lines[i].length>2){lines[i]=lines[i].slice(0,-2)+'…';break;}
